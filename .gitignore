@@ -41,3 +41,5 @@ web/coverage/
 .vercel/
 __pycache__/
 .venv/
+
+web/.next-local/

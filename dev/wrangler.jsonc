@@ -1,0 +1,17 @@
+{
+ "$schema":"../node_modules/wrangler/config-schema.json",
+ "name":"zelumi-local-demo",
+ "main":"worker.mjs",
+ "compatibility_date":"2026-11-01",
+ "compatibility_flags":["nodejs_compat"],
+ "workers_dev":false,
+ "vars":{
+  "APP_ORIGIN":"https://localhost:3000",
+  "TELEGRAM_BOT_TOKEN":"999000:local_demo_only",
+  "TELEGRAM_BOT_USERNAME":"local_demo_bot",
+  "BOT_TIMEZONE":"America/Sao_Paulo",
+  "TELEGRAM_WEBHOOK_SECRET":"local_demo_webhook_disabled_00000000"
+ },
+ "dev":{"ip":"127.0.0.1","port":8788,"local_protocol":"http"},
+ "d1_databases":[{"binding":"DB","database_name":"zelumi-local-demo","database_id":"00000000-0000-0000-0000-000000000099","migrations_dir":"../cloudflare/migrations"}]
+}
