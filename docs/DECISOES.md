@@ -16,15 +16,15 @@ Atualizado em 02/11/2026. Este documento reúne as decisões da conversa e difer
 
 | Parte | Decisão | Situação |
 | --- | --- | --- |
-| Interface do novo site | Next.js + TypeScript | Definido; ainda não implementado |
-| Estilização | Tailwind CSS | Definido; ainda não implementado |
-| Componentes | shadcn/ui, personalizados | Definido; ainda não implementado |
+| Interface do novo site | Next.js + TypeScript | Base implementada e publicada; dados financeiros pendentes |
+| Estilização | Tailwind CSS | Implementado no site |
+| Componentes | shadcn/ui, personalizados | Button e Card implementados |
 | Backend e bot | Cloudflare Workers | Bot implementado e publicado |
 | Banco de dados | Cloudflare D1 | Em uso pelo bot; site ainda não conectado |
-| Autenticação do site | Apenas Telegram nesta fase | Definido; ainda não implementado |
+| Autenticação do site | Apenas Telegram nesta fase | Widget clássico + sessão implementados; confirmação humana pendente |
 | Operação inicial | Priorizar franquias gratuitas e acompanhar consumo | Sem compromisso de gratuidade ilimitada |
 
-Exportação estática do Next.js com API no Worker foi recomendada. O modo final de publicação do novo site, a organização do repositório e o endereço do painel ainda precisam ser fechados antes da implementação. Não confundir a escolha de Next.js com aprovação de um adaptador específico (vinext/OpenNext).
+Next.js exporta arquivos estáticos em `web/out`, servidos junto da API no Worker existente. Site e bot ficam no mesmo repositório e no mesmo domínio Cloudflare. Não utiliza adaptador de SSR, vinext ou OpenNext.
 
 Zod foi sugerido para validação, mas nenhuma biblioteca de validação, autenticação, gráficos ou acesso aos dados foi escolhida definitivamente.
 
@@ -33,7 +33,7 @@ Zod foi sugerido para validação, mas nenhuma biblioteca de validação, autent
 - Única forma de login escolhida: Telegram. E-mail/senha e outros provedores ficam fora desta fase.
 - Cada usuário deve acessar apenas seus próprios registros, com validação no backend.
 - Cadastro aberto no site e no bot, sem lista de IDs ou aprovação manual. O usuário pode divulgar o link individualmente, mas qualquer pessoa que chegar ao serviço pode entrar pelo Telegram. Cada pessoa vê somente seus próprios dados.
-- A direção aprovada é usar o Login Widget clássico oficial do Telegram, manter um perfil interno e uma sessão protegida no site. A validação, os cookies e o vínculo pelo ID numérico ainda não foram implementados.
+- O site usa o Login Widget clássico oficial do Telegram, perfil interno e sessão protegida. Validação, cookies e vínculo pelo ID numérico estão implementados; o teste humano da autorização externa ainda deve ser confirmado.
 - Token do bot, segredo do webhook e futuras credenciais de login permanecem no servidor; nunca em arquivos públicos.
 
 ## Telas aprovadas para a primeira versão
@@ -100,7 +100,7 @@ Paleta-base aceita; contrastes finais devem ser validados nas telas:
 | Texto | Café escuro `#302721` | Creme claro `#F5EDE5` |
 | Bordas | Areia `#E7DDD3` | Cinza quente `#403730` |
 
-Seguir o tema do dispositivo, oferecer Claro/Escuro/Sistema e salvar a preferência foi proposto como comportamento do seletor. Ainda não está implementado.
+O site acompanha o tema do dispositivo e oferece Claro/Escuro/Sistema no Perfil. A preferência é salva somente neste navegador; credenciais não vão para localStorage.
 
 ## Logo e símbolo escolhidos
 
@@ -109,7 +109,7 @@ Seguir o tema do dispositivo, oferecer Claro/Escuro/Sistema e salvar a preferên
 - Laranja queimado no tema claro; laranja suave no escuro.
 - Símbolo isolado para foto do bot, favicon e espaços pequenos.
 - A escolha define a direção visual; ajustes ópticos e exportações finais podem ser feitos ao aplicá-lo.
-- Os arquivos de estudo estão prontos, mas a marca ainda não foi aplicada no site ou na foto do bot.
+- A marca foi aplicada no novo site e no favicon. A foto e o nome do bot ainda são provisórios.
 
 Arquivos:
 
@@ -139,9 +139,7 @@ As opções 1 (Z contínuo) e 3 (Horizonte) foram exploradas; a opção escolhid
 
 ## Próxima etapa combinada
 
-Com as prévias de **Entrada e Perfil aprovadas**, fechar o modo de hospedagem do Next.js e o fluxo técnico de autenticação. Em seguida, consolidar o desenho técnico para revisão e planejar a implementação do site. O usuário pediu discutir as decisões por partes; não iniciar migrações amplas ou adicionar funcionalidades apenas porque foram citadas como possibilidades.
-
-Antes de implementar, fechar também o modo de hospedagem do Next.js e os detalhes de autenticação. Para usar dados reais no painel, implementar a regra de parcelas mensais e validar as permissões da API.
+Confirmar o login Telegram com a conta real no domínio publicado e a continuidade do bot. Depois, detalhar a API financeira e a distribuição de parcelas por mês para conectar Visão geral e Lançamentos. A base do site está publicada, mas essas páginas ainda apresentam conexão pendente. Não iniciar funcionalidades apenas porque foram citadas como possibilidades.
 
 ## Prévia visual da Visão geral
 
@@ -167,7 +165,7 @@ O usuário confirmou que gostou das duas telas. Manter como referência o desenh
 
 ## Desenho técnico de hospedagem e autenticação
 
-A arquitetura de Next.js estático na Cloudflare com autenticação/sessão/API no Worker foi aceita para detalhamento. A proposta técnica foi registrada em [hospedagem e autenticação](./superpowers/specs/2026-11-02-zelumi-hospedagem-autenticacao-design.md) e passou por revisão independente sem lacunas importantes para o planejamento. O documento ainda aguarda revisão do usuário antes da implementação.
+A arquitetura de Next.js estático na Cloudflare com autenticação/sessão/API no Worker foi aceita e implementada após aprovação do usuário. O desenho está registrado em [hospedagem e autenticação](./superpowers/specs/2026-11-02-zelumi-hospedagem-autenticacao-design.md), com revisão independente do desenho e do código.
 
 Como escolhas técnicas propostas, o desenho coloca os assets e a API no mesmo endereço do Worker atual e define sessão de sete dias com cookie protegido. A proposta original de OIDC com PKCE foi substituída pelo Login Widget clássico na revisão abaixo, preservando o vínculo pelo ID numérico do Telegram; a exigência inicial de lista de usuários também foi substituída por cadastro aberto. Os endpoints financeiros e a migração para parcelas mensais continuam pendentes de detalhamento.
 
@@ -181,7 +179,7 @@ O usuário confirmou, pela resposta “Success! Domain updated.” do BotFather,
 
 O desenho técnico anterior propunha OIDC. Após conferir a interface disponível, o usuário aprovou seguir com o **Login Widget clássico**, verificando no Worker os dados assinados com o token do bot já existente. Não são necessários Client ID ou Client Secret nesse método. O desenho técnico foi atualizado; não misturar validação do widget clássico, OIDC e Telegram Web Apps.
 
-O plano está em [site e login Telegram](./superpowers/plans/2026-11-02-zelumi-site-login-telegram.md). A primeira entrega planejada inclui estrutura Next.js/TypeScript/Tailwind/shadcn, botão oficial Telegram, validação no servidor, sessão e Perfil reais. Visão geral e Lançamentos terão estado explícito de conexão pendente, sem misturar dados fictícios com a conta. API financeira e parcelas mensais continuam sendo a entrega seguinte. Nenhum novo login, frontend ou migração de autenticação foi implementado/publicado ainda.
+O plano está em [site e login Telegram](./superpowers/plans/2026-11-02-zelumi-site-login-telegram.md). A primeira entrega implementa estrutura Next.js/TypeScript/Tailwind/shadcn, botão oficial Telegram, validação no servidor, sessão e Perfil reais. Visão geral e Lançamentos mostram conexão pendente, sem misturar dados fictícios com a conta. API financeira e parcelas mensais continuam sendo a entrega seguinte.
 
 Escolhas técnicas do implementador no plano: assets no mesmo Worker/endereço, sessão de sete dias, cookie protegido, fluxo temporário de dez minutos e proteções CSRF/replay. A aparência do botão incorporado obedece às opções oficiais do Telegram, mantendo o restante da identidade visual aprovada. Não há nova configuração obrigatória a pedir no BotFather para começar essa implementação.
 
@@ -191,4 +189,8 @@ O usuário aprovou executar o plano diretamente nesta sessão, mantendo um repos
 
 Entrada, Perfil, temas e saída de sessão têm implementação real, junto da autenticação HMAC no Worker e tabelas aditivas de perfil/sessão no D1. Visão geral e Lançamentos exibem conexão pendente; sem exemplos financeiros na conta. O widget oficial é incorporado em um iframe com CSP própria porque seu parser de callback exige `eval`; o painel principal não recebe essa permissão. A mensagem desse iframe é validada por origem e janela antes do envio à API. O token do bot nunca entra no frontend.
 
-Verificação local até aqui: testes de backend/D1, componentes, tipos, build estático e dry-run do Worker passaram; as rotas/headers foram conferidos no Wrangler local. A publicação e o teste de login humano ainda devem ser registrados abaixo quando ocorrerem. A existência do código não comprova que uma conta real concluiu a autorização externa.
+Verificação: 50 testes de backend/D1 e 9 de interface passaram, junto com tipos, build estático e dry-run do Worker. A revisão independente encontrou duas corridas de sessão, ambas reproduzidas por testes e corrigidas. Firefox verificou hidratação, layout desktop/mobile sem overflow e tema escuro. No ambiente local, uma identidade assinada somente com token falso confirmou cookies, Perfil e logout reais.
+
+Publicado em `https://financeiro-testes-bot.miudo.workers.dev`, versão `e40e45aa-a2b5-4d95-a19c-4788c9f66ba5`. Migração aditiva `0002_web_auth.sql` aplicada. Páginas200, sessão anônima401 sem apagar cookies, API desconhecidaJSON404, asset inexistente404, saúde200 e webhook sem segredo401 conferidos em produção. O widget oficial carregou no Firefox pelo domínio vinculado. Webhook ativo, sem updates pendentes ou último erro de entrega.
+
+Pendências externas: confirmação humana de login/Perfil com a conta real e `/hoje` no bot após essa publicação, solicitadas ao usuário. CPU por requisição e folga nas cotas gratuitas não foram medidas; não houve ativação de plano pago. GitHub permanece para depois: branch `feat/zelumi-web-login` preservada, sem push ou merge.

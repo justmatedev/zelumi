@@ -7,6 +7,8 @@
 - D1: `financeiro-testes`, já vinculado em `wrangler.jsonc`.
 - Webhook registrado em 02/11/2026. Dois lançamentos locais foram importados.
 - Segredos configurados no Worker; valores permanecem fora deste documento.
+- Site e autenticação publicados em 02/11/2026, versão `e40e45aa-a2b5-4d95-a19c-4788c9f66ba5`; migração aditiva `0002_web_auth.sql` aplicada.
+- Rotas públicas/protegidas e widget oficial conferidos em produção. Teste com a conta Telegram real e `/hoje` após esse deploy aguardam confirmação do usuário. CPU por requisição não foi medida.
 
 O bot local deve permanecer parado enquanto o webhook estiver ativo. As etapas abaixo documentam a configuração e servem para manutenção; não é necessário recriar o banco ou o bot.
 
@@ -151,6 +153,6 @@ Referências: [Workers Free](https://developers.cloudflare.com/workers/platform/
 
 ## Cadastro aberto
 
-O bot aceita novos usuários pela conversa privada, sem liberação manual de IDs. A identificação e os dados continuam vinculados ao remetente Telegram validado; grupos são ignorados e callbacks não acessam registros de outra pessoa. A variável antiga `TELEGRAM_ALLOWED_USER_IDS`, caso ainda exista no ambiente local ou remoto, é ignorada pelo código e não precisa ser preenchida. O login do futuro site seguirá a mesma política de cadastro automático, com sessão validada no servidor.
+O bot aceita novos usuários pela conversa privada, sem liberação manual de IDs. A identificação e os dados continuam vinculados ao remetente Telegram validado; grupos são ignorados e callbacks não acessam registros de outra pessoa. A variável antiga `TELEGRAM_ALLOWED_USER_IDS`, caso ainda exista no ambiente local ou remoto, é ignorada pelo código e não precisa ser preenchida. O login do site segue a mesma política de cadastro automático, com sessão validada no servidor.
 
-A retirada da liberação manual foi publicada em 02/11/2026 no Worker existente, versão `d94ae31f-0d72-4073-b51e-464adffcc8ac`. Os registros não precisaram de migração. A abertura do login do site está descrita no desenho técnico e será implementada junto da autenticação real.
+A retirada da liberação manual do bot foi publicada em 02/11/2026 na versão `d94ae31f-0d72-4073-b51e-464adffcc8ac`. Os registros não precisaram de migração. A base do site com cadastro aberto foi publicada depois, na versão indicada no topo.
