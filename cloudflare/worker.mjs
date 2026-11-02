@@ -41,8 +41,8 @@ export function createWorker({apiFactory=createTelegram,clock=()=>new Date()}={}
       if(auth)return auth;
       const finance=await handleFinance(request,env,{nowMs:clock().getTime()});if(finance)return finance;
       if(path==='/health'&&request.method==='GET') {
-        try {settings(env);await assertBotBinding(env);return Response.json({service:'financeiro-testes-bot',status:'configured'});}
-        catch {return Response.json({service:'financeiro-testes-bot',status:'not_configured'},{status:503});}
+        try {settings(env);await assertBotBinding(env);return Response.json({service:'zelumi-bot',status:'configured'});}
+        catch {return Response.json({service:'zelumi-bot',status:'not_configured'},{status:503});}
       }
       if(path!=='/telegram/webhook')return env.ASSETS?env.ASSETS.fetch(request):new Response('Not found',{status:404});
       if(request.method!=='POST')return new Response('Method not allowed',{status:405,headers:{Allow:'POST'}});

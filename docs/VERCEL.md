@@ -31,7 +31,7 @@ Depois de validar a publicação e a API no novo endereço:
 3. Entrar novamente pelo novo domínio. Cookies anteriores pertencem ao endereço antigo; a nova sessão encontra os mesmos registros pelo ID Telegram.
 4. Conferir Perfil, totais com `/mes`, edição/exclusão de um lançamento de teste e resposta de `/hoje` com o bot local desligado.
 
-O webhook continua em `https://financeiro-testes-bot.miudo.workers.dev/telegram/webhook`. Não recriar o banco, reimportar registros ou trocar o token do bot durante esta migração. O bot definitivo é `@zelumi_bot`, com nome Zelumi. A transição está registrada em [TROCA-BOT.md](./TROCA-BOT.md); a foto pode ser ajustada separadamente.
+O webhook continua no Worker configurado em `../wrangler.jsonc`, na rota `/telegram/webhook`. Não recriar o banco, reimportar registros ou trocar o token do bot durante esta migração. O bot definitivo é `@zelumi_bot`, com nome Zelumi. A transição está registrada em [BOT.md](./BOT.md); a foto pode ser ajustada separadamente.
 
 ## Estado da publicação — 02/11/2026
 
@@ -41,7 +41,7 @@ Worker atualizado para `APP_ORIGIN=https://usezelumi.vercel.app`, versão `6a9b9
 
 Verificações: 69 testes de backend/D1, 15 de interface, tipos, build/export e dry-run passaram. Em produção, as quatro páginas e o documento do widget retornaram 200; a API anônima retornou JSON 401 sem cache; rota desconhecida retornou 404 e método incorreto 405. O início do login pelo domínio Vercel retornou 200 com o bot correto e cookie HttpOnly/Secure/SameSite=Lax preservado. Origens externas, preview e endereço antigo retornaram 403. Saúde do Worker 200 e webhook sem segredo 401. A revisão independente não encontrou problemas críticos ou importantes.
 
-Atualização posterior: o usuário criou o bot definitivo `@zelumi_bot` e confirmou a vinculação de `usezelumi.vercel.app` a ele no BotFather. O Worker foi atualizado para esse bot, versão `5994e736-d2c5-4158-b527-3a22bee0c81b`, preservando os 7 lançamentos e perfis. A troca está registrada em [TROCA-BOT.md](./TROCA-BOT.md).
+Atualização posterior: o usuário criou o bot definitivo `@zelumi_bot` e confirmou a vinculação de `usezelumi.vercel.app` a ele no BotFather. O Worker foi atualizado para esse bot, versão `5994e736-d2c5-4158-b527-3a22bee0c81b`, preservando os 7 lançamentos e perfis. A troca está registrada em [BOT.md](./BOT.md).
 
 Validação externa concluída: o usuário confirmou resposta do novo `@zelumi_bot` a `/hoje` com o programa local desligado, além de novo login pelo Telegram com Perfil e lançamentos anteriores corretos em `https://usezelumi.vercel.app`.
 

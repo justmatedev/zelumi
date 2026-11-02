@@ -45,7 +45,7 @@ async function main() {
   if(action==='db:create') {
     const source=readFileSync(resolve(root,'wrangler.jsonc'),'utf8');
     if(!source.includes('00000000-0000-0000-0000-000000000000'))throw new Error('Já existe um D1 vinculado. Use cf:db:migrate.');
-    return run(['d1','create','financeiro-testes','--binding','DB','--update-config']);
+    return run(['d1','create','zelumi','--binding','DB','--update-config']);
   }
   if(action==='db:migrate'){remoteReady();return run(['d1','migrations','apply','DB','--remote']);}
   if(action==='db:migrate:local')return run(['d1','migrations','apply','DB','--local']);
@@ -75,7 +75,7 @@ async function main() {
     for(let attempt=0;attempt<5;attempt++) {
       try {
         const health=await fetch(new URL('/health',url),{signal:AbortSignal.timeout(15000)});
-        ready=health.ok&&(await health.json()).service==='financeiro-testes-bot';
+        ready=health.ok&&(await health.json()).service==='zelumi-bot';
       } catch { /* Um endereço workers.dev recém-criado pode não ter HTTPS pronto. */ }
       if(ready)break;
       if(attempt<4){console.log('Aguardando o HTTPS do Worker ficar disponível...');await delay(15000);}

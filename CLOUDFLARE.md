@@ -2,13 +2,15 @@
 
 ## Publicação atual
 
-Versão atual do Worker: `5fef82b1-b92e-42d5-8f23-93323aee09f3`, publicada em 02/11/2026 com o bot definitivo **@zelumi_bot** e site em **https://usezelumi.vercel.app**. A ajuda (`/ajuda`, `/start`, `/help`) inclui o link do site e o botão **Abrir meu painel**. Bot, D1 e webhook continuam na Cloudflare. A migração aditiva `0004_bot_transition.sql` permitiu trocar o vínculo sem reimportar dados; a comparação antes/depois confirmou os 7 lançamentos, projeções e perfis idênticos. O usuário confirmou o domínio Telegram, resposta real de `/hoje` com o programa local desligado e novo login com conta e lançamentos corretos. Veja [docs/TROCA-BOT.md](./docs/TROCA-BOT.md) e [docs/VERCEL.md](./docs/VERCEL.md).
+Worker, subdomínio e D1 foram migrados para Zelumi em 02/11/2026. A publicação Vercel precisa usar o destino atualizado de `web/vercel.json`. Detalhes em [NOMES-INFRAESTRUTURA.md](./docs/NOMES-INFRAESTRUTURA.md).
+
+Versão atual do Worker: `48a86744-734d-412a-97e7-deafee1f817a`, publicada em 02/11/2026 com o bot definitivo **@zelumi_bot** e site em **https://usezelumi.vercel.app**. A ajuda (`/ajuda`, `/start`, `/help`) inclui o link do site e o botão **Abrir meu painel**. Bot, D1 e webhook continuam na Cloudflare. A migração aditiva `0004_bot_transition.sql` permitiu trocar o vínculo sem reimportar dados; a comparação antes/depois confirmou os 7 lançamentos, projeções e perfis idênticos. O usuário confirmou o domínio Telegram, resposta real de `/hoje` com o programa local desligado e novo login com conta e lançamentos corretos. Veja [docs/BOT.md](./docs/BOT.md) e [docs/VERCEL.md](./docs/VERCEL.md).
 
 Marco financeiro anterior: `d3edc342-66e2-43fa-b1b1-05d3578bab11`, publicado em 02/11/2026 com migração aditiva `0003_finance.sql`. Naquele endereço, o usuário confirmou os dados reais, totais iguais aos de `/mes` e edição/exclusão em um lançamento de teste. A versão de autenticação listada abaixo é outro marco anterior.
 
-- Worker: `https://financeiro-testes-bot.miudo.workers.dev`
-- Saúde/configuração: `https://financeiro-testes-bot.miudo.workers.dev/health`
-- D1: `financeiro-testes`, já vinculado em `wrangler.jsonc`.
+- Worker: `https://zelumi-bot.zelumi.workers.dev`
+- Saúde/configuração: `https://zelumi-bot.zelumi.workers.dev/health`
+- D1: `zelumi`, já vinculado em `wrangler.jsonc`.
 - Webhook registrado em 02/11/2026. Dois lançamentos locais foram importados.
 - Segredos configurados no Worker; valores permanecem fora deste documento.
 - Site e autenticação publicados em 02/11/2026, versão `e40e45aa-a2b5-4d95-a19c-4788c9f66ba5`; migração aditiva `0002_web_auth.sql` aplicada.
@@ -53,7 +55,7 @@ Em rollback, manter todas as tabelas e dados. A versão anterior ignora os novos
 
 ### Rollback
 
-Após trocar de bot, um rollback de versão precisa manter token, username e vínculo D1 compatíveis. Não voltar isoladamente a uma versão que usa o bot antigo; conferir o procedimento coordenado em [docs/TROCA-BOT.md](./docs/TROCA-BOT.md).
+Após trocar de bot, um rollback de versão precisa manter token, username e vínculo D1 compatíveis. Não voltar isoladamente a uma versão que usa o bot antigo; conferir o procedimento coordenado em [docs/BOT.md](./docs/BOT.md).
 
 Antes de publicar, registrar o ID de versão atual retornado por `npm run cf:versions`. Se for necessário voltar, usar Wrangler `rollback ID_DA_VERSAO` com a mesma autenticação local dos scripts. As tabelas novas permanecem no D1; não apagar tabelas nem tentar desfazer a migração de banco. A versão anterior do bot ignora essas tabelas. O rollback de código também restaura os assets da versão selecionada; uma versão anterior ao site continuará atendendo somente o bot. Não trocar o webhook.
 
@@ -83,7 +85,7 @@ npm run cf:db:create
 npm run cf:db:migrate
 ```
 
-O primeiro comando cria `financeiro-testes` e atualiza o binding `DB` em `wrangler.jsonc`. O identificador `00000000-0000-0000-0000-000000000000` é apenas um marcador local; não é um banco remoto real. Os scripts bloqueiam publicação enquanto ele não for substituído pelo ID retornado pelo serviço. Se o Wrangler solicitar seleção de conta, escolha a sua conta gratuita.
+O primeiro comando cria `zelumi` e atualiza o binding `DB` em `wrangler.jsonc`. O identificador `00000000-0000-0000-0000-000000000000` é apenas um marcador local; não é um banco remoto real. Os scripts bloqueiam publicação enquanto ele não for substituído pelo ID retornado pelo serviço. Se o Wrangler solicitar seleção de conta, escolha a sua conta gratuita.
 
 Se a criação informar que já existe um banco com esse nome, encontre seu ID no painel D1 e atualize `database_id` em `wrangler.jsonc`, mantendo um único binding `DB`. Não crie bancos repetidos para contornar erros.
 
@@ -116,7 +118,7 @@ npm run cf:deploy
 npm run cf:secrets
 ```
 
-O deploy informa a URL `https://financeiro-testes-bot.SEUSUBDOMINIO.workers.dev`. Se a Cloudflare pedir um subdomínio workers.dev, escolha um; não é uma compra de domínio.
+O deploy informa a URL `https://zelumi-bot.SEUSUBDOMINIO.workers.dev`. Se a Cloudflare pedir um subdomínio workers.dev, escolha um; não é uma compra de domínio.
 
 `cf:secrets` lê o `.env` que já foi configurado para o bot local e envia dois segredos à sua conta Cloudflare pelo stdin do Wrangler, sem colocar valores nos argumentos do terminal:
 
@@ -132,7 +134,7 @@ O fuso fica em `BOT_TIMEZONE` na seção `vars` de `wrangler.jsonc`; o padrão �
 Confirme que o bot local está parado. Usando a URL real retornada pelo deploy:
 
 ```sh
-npm run cf:activate -- https://financeiro-testes-bot.SEUSUBDOMINIO.workers.dev
+npm run cf:activate -- https://zelumi-bot.SEUSUBDOMINIO.workers.dev
 npm run cf:webhook:status
 ```
 

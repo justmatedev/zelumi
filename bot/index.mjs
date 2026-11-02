@@ -11,7 +11,7 @@ export function config(env) {
   const timezone = env.BOT_TIMEZONE || 'America/Sao_Paulo';
   try { new Intl.DateTimeFormat('pt-BR', {timeZone:timezone}).format(); }
   catch { throw new Error('BOT_TIMEZONE inválido. Use, por exemplo, America/Sao_Paulo.'); }
-  return { token, timezone, path: resolvePath(env.BOT_DB_PATH || './data/miudo.sqlite') };
+  return { token, timezone, path: resolvePath(env.BOT_DB_PATH || './data/zelumi.sqlite') };
 }
 
 export async function flushOutbox(store, api) {

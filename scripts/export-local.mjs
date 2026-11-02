@@ -35,7 +35,7 @@ if(process.argv[1] && import.meta.url===pathToFileURL(resolve(process.argv[1])).
   try {
     const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
     if(existsSync(resolve(root,'.env')))process.loadEnvFile(resolve(root,'.env'));
-    const count=exportLocal(resolve(root,process.env.BOT_DB_PATH||'data/miudo.sqlite'),resolve(root,'data/cloudflare-import.sql'));
+    const count=exportLocal(resolve(root,process.env.BOT_DB_PATH||'data/zelumi.sqlite'),resolve(root,'data/cloudflare-import.sql'));
     console.log(`${count} registro(s) exportado(s) para data/cloudflare-import.sql. Nenhum dado foi enviado. O arquivo é privado e está ignorado pelo Git.`);
   } catch(error){console.error(error.message);process.exitCode=1;}
 }

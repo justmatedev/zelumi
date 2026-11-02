@@ -32,7 +32,7 @@
     },
     {
       "src": "/((?:auth|api)(?:/.*)?)",
-      "dest": "https://financeiro-testes-bot.miudo.workers.dev/$1",
+      "dest": "https://zelumi-bot.zelumi.workers.dev/$1",
       "headers": {
         "Cache-Control": "no-store",
         "CDN-Cache-Control": "no-store",
