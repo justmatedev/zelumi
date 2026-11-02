@@ -1,0 +1,10 @@
+CREATE TABLE web_users (owner TEXT PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT, username TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+CREATE TABLE web_sessions (token_hash TEXT PRIMARY KEY, owner TEXT NOT NULL REFERENCES web_users(owner), created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL);
+CREATE INDEX web_sessions_expiry ON web_sessions(expires_at);
+CREATE INDEX web_sessions_owner ON web_sessions(owner);
+CREATE TABLE web_auth_flows (token_hash TEXT PRIMARY KEY, csrf_hash TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL);
+CREATE INDEX web_auth_flows_expiry ON web_auth_flows(expires_at);
+CREATE TABLE web_auth_accepts (flow_hash TEXT PRIMARY KEY, payload_hash TEXT NOT NULL UNIQUE, attempt_id TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL);
+CREATE INDEX web_auth_accepts_created ON web_auth_accepts(created_at);
+CREATE TABLE web_auth_limits (network_key TEXT NOT NULL, window_start INTEGER NOT NULL, count INTEGER NOT NULL, PRIMARY KEY(network_key,window_start));
+CREATE INDEX web_auth_limits_window ON web_auth_limits(window_start);
