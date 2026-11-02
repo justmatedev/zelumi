@@ -1,10 +1,10 @@
 # Zelumi
 
-As decisões de produto, stack, telas e identidade visual estão em [docs/DECISOES.md](./docs/DECISOES.md). Esse registro distingue o que já funciona do que foi aprovado para implementação.
+O padrão atual de marca e interface está no [Guia visual do Zelumi](./design/GUIA-VISUAL.md), com valores compartilhados em [tokens.css](./web/app/tokens.css). As decisões de produto, stack e telas ficam em [docs/DECISOES.md](./docs/DECISOES.md), que preserva o histórico das aprovações.
 
-Gerenciamento financeiro com registros rápidos pelo Telegram. O bot funciona em Cloudflare Workers + D1; o novo site usa Next.js, TypeScript, Tailwind e componentes shadcn/ui personalizados. O interpretador do bot usa regras, sem IA.
+Gerenciamento financeiro com registros rápidos pelo Telegram. O bot funciona em Cloudflare Workers + D1; o site usa Next.js, TypeScript, Tailwind e componentes shadcn/ui personalizados. O interpretador do bot usa regras, sem IA.
 
-O guia de [primeiro envio ao GitHub](./docs/GITHUB.md) descreve o repositório privado, arquivos incluídos/excluídos e a validação sem credenciais reais.
+O guia do [repositório no GitHub](./docs/GITHUB.md) descreve o repositório privado, arquivos incluídos/excluídos e a validação sem credenciais reais.
 
 A configuração do endereço `usezelumi.vercel.app`, com site na Vercel e backend na Cloudflare, está em [docs/VERCEL.md](./docs/VERCEL.md).
 
@@ -14,7 +14,8 @@ Este é um único repositório para o produto inteiro. Ao enviar ao GitHub, use 
 
 | Pasta | Conteúdo |
 | --- | --- |
-| `web/` | Novo site Next.js: Entrada, Perfil, temas e estrutura das telas financeiras |
+| `web/` | Site Next.js: Entrada, Visão geral, Lançamentos, Perfil e componentes |
+| `dev/` | Conta fictícia e configuração isolada do desenvolvimento local |
 | `bot/` | Conversas, comandos, Telegram API e armazenamento SQLite local |
 | `cloudflare/` | Worker, autenticação, API financeira, D1, migrações e fila de respostas |
 | `finance/` | Modelo compartilhado, validação, projeções e consultas mensais |
@@ -24,32 +25,49 @@ Este é um único repositório para o produto inteiro. Ao enviar ao GitHub, use 
 | `design/` | Logos escolhidos, fontes e licenças da identidade visual |
 | `shared/` | Interpretador de mensagens e cálculo de parcelas usados pelo bot e site |
 
-`.env`, `.dev.vars`, `.wrangler`, `data`, `node_modules`, `.next` e `web/out` são locais/gerados e ficam fora do Git. Envie os dois `package-lock.json`, `.env.example`, `.dev.vars.example` e as migrações SQL. Credenciais do Wrangler nunca devem ir para o GitHub. Configurar o remoto e fazer o primeiro envio é uma etapa separada, descrita em [docs/GITHUB.md](./docs/GITHUB.md).
+`.env`, `.dev.vars`, `.wrangler`, `data`, `node_modules`, `.next`, `.next-local` e `web/out` são locais/gerados e ficam fora do Git. Envie os dois `package-lock.json`, `.env.example`, `.dev.vars.example` e as migrações SQL. Credenciais do Wrangler nunca devem ir para o GitHub. Para conferir o conteúdo e preparar novos envios, seguir [docs/GITHUB.md](./docs/GITHUB.md).
 
-## Novo site: desenvolvimento
+## Desenvolver o site localmente
 
-Requer Node.js >=22.16.0 e npm. Instale os dois pacotes:
+Requisitos: Node.js 22.16 ou superior, npm e OpenSSL (normalmente já disponível no Linux).
+
+Na pasta principal `zelumi`, na primeira vez:
 
 ```sh
 npm ci
 npm --prefix web ci
-npm run web:check
+npm run dev
 ```
 
-`npm run web:dev` oferece desenvolvimento visual com Next.js; a API de autenticação pertence ao Worker e não estará disponível nesse servidor isolado. Para executar site + API no mesmo endereço local:
+Nas próximas vezes, execute somente `npm run dev`. O comando aplica as migrações locais automaticamente, cria uma conta de teste com cinco lançamentos fictícios no mês do primeiro uso e inicia Next.js e API. Abra **https://localhost:3000** e clique em **Entrar com conta de teste**. Aceite o aviso do certificado autoassinado de desenvolvimento. Use exatamente `localhost`, pois a origem das operações é validada.
+
+Alterações nas telas aparecem ao salvar; alterações da API são recarregadas pelo Wrangler. `Ctrl+C` encerra os dois servidores. Se uma porta estiver ocupada, encerre o servidor anterior; são usadas 3000 (site) e 8788 (API interna).
+
+Esse ambiente usa a configuração `dev/wrangler.jsonc`, um token fictício e o D1 `zelumi-local-demo`, persistido em `.wrangler/local-dev/`. Não requer Telegram, conta Cloudflare nem arquivo `.env`. Os lançamentos podem ser editados/apagados e essas mudanças permanecem após reiniciar. O seed não recria dados apagados; as datas ficam no mês em que ele foi criado. O SQLite do bot, o D1 publicado e o banco usado pelo comando antigo `cf:dev` são separados.
+
+O login de teste pertence a uma entrada Worker exclusiva de desenvolvimento. O build publicado continua estático e usa o login Telegram.
+
+### Verificações
+
+Para conferir uma instalação nova ou regenerar os tipos após limpar os caches:
 
 ```sh
-cp .dev.vars.example .dev.vars
 npm run web:build
-npm run cf:db:migrate:local
-npm run cf:dev
+npm --prefix web test
+npm test
 ```
 
-O Wrangler usa HTTPS em `https://localhost:8787` (pode ser necessário aceitar o certificado local). A configuração de exemplo usa credenciais falsas e banco local, sem acessar registros da produção. O login real do Telegram deve ser testado no domínio HTTPS vinculado no BotFather; copiar o exemplo não autoriza localhost.
+O build inclui a checagem TypeScript e a conferência da exportação. Depois de gerar os tipos, `npm run web:check` reúne tipos, testes de interface e build novamente. Os testes usam bancos locais e Telegram simulado; o emulador D1 precisa poder abrir portas locais.
 
-O site usa autenticação real e consulta os mesmos registros do bot publicado. Visão geral mostra receitas, despesas e parcelas do mês; Lançamentos oferece busca por nome, filtros, detalhes, edição e exclusão da compra inteira. Editar recalcula todas as parcelas, inclusive meses anteriores; excluir remove a compra em todos os meses. O exemplo “pão 10” da entrada é somente ilustrativo.
+### Fluxos alternativos
 
-Verificações: `npm test` (backend, SQLite e D1 local), `npm --prefix web test` (interface), `npm run web:check` (tipos, interface, build e export) e `npm run cf:check` (build e dry-run do Worker). Os testes não enviam mensagens ao Telegram real. O emulador D1 precisa poder abrir portas locais.
+- `npm run web:dev`: inicia somente o Next.js; a API pertence ao Worker e não está disponível nesse servidor isolado.
+- `npm run cf:dev`: compila o frontend e serve a exportação junto ao Worker em **https://localhost:8787**, com configuração própria de autenticação. Para preparar esse banco local, executar antes `npm run cf:db:migrate:local`. Esse fluxo é útil para conferir o pacote estático, mas não substitui o modo com conta de teste para ajustar as telas.
+- `npm run cf:check`: build e dry-run do Worker, sem publicar.
+
+A configuração de exemplo do fluxo `cf:dev` usa token fictício. Copiá-la não habilita login real pelo Telegram em localhost; essa integração é validada no domínio HTTPS vinculado ao bot.
+
+Na publicação, o site consulta os registros reais da mesma conta Telegram. Visão geral distribui as parcelas pelos meses; editar ou excluir atua sobre a compra inteira, inclusive parcelas anteriores. O desenvolvimento local usa seu próprio D1 fictício.
 
 ## Arquivos de variáveis
 
@@ -59,6 +77,7 @@ Verificações: `npm test` (backend, SQLite e D1 local), `npm --prefix web test`
 | `.env.example` | Modelo sem credenciais para criar o `.env` |
 | `.dev.vars` | Sobrescritas do Worker local; ignorado pelo Git |
 | `.dev.vars.example` | Credenciais fictícias para `cf:dev` quando `.dev.vars` não existe |
+| `dev/local.env` | Arquivo sem credenciais, usado explicitamente pelo launcher para não carregar o ambiente real |
 | Cloudflare Secrets | Token Telegram, segredo do webhook e chave independente do proxy em produção |
 | Vercel Environment Variables | Somente `VERCEL_PROXY_SECRET` para o proxy; sem token Telegram ou segredo do webhook |
 
@@ -93,7 +112,7 @@ Abra `.env` no editor e preencha `TELEGRAM_BOT_TOKEN` com o token do BotFather. 
 ```dotenv
 TELEGRAM_BOT_TOKEN=TOKEN_FORNECIDO_PELO_BOTFATHER
 BOT_TIMEZONE=America/Sao_Paulo
-BOT_DB_PATH=./data/miudo.sqlite
+BOT_DB_PATH=./data/zelumi.sqlite
 ```
 
 Inicie:
@@ -147,7 +166,7 @@ Também aceita a consulta `quanto gastei hoje?`. **Comportamento atual:** `/mes`
 
 ### Dados e funcionamento
 
-- Neste modo local, os registros ficam em `data/miudo.sqlite`, com separação pelo ID do Telegram. Na versão publicada, ficam no D1; o site compartilha a identidade Telegram e consulta os mesmos registros por API autenticada. O SQLite de desenvolvimento local é separado do D1 publicado. O nome legado `miudo.sqlite` é preservado para continuar acessando os bancos existentes; renomear o projeto não migra nem recria esse arquivo.
+- Neste modo local, os registros ficam em `data/zelumi.sqlite`, com separação pelo ID do Telegram. Na versão publicada, ficam no D1; o site compartilha a identidade Telegram e consulta os mesmos registros por API autenticada. O SQLite de desenvolvimento local é separado do D1 publicado. O banco local padrão é `zelumi.sqlite`; ele é independente dos dados publicados e começa vazio. Um banco vinculado a outro bot não deve ser reutilizado para o Zelumi.
 - Cursor de atualização, alterações financeiras e respostas pendentes são persistidos em uma transação SQLite. Reenvios do mesmo `update_id` não duplicam o lançamento.
 - Respostas que falham por rede ou limite de uso ficam na fila para nova tentativa. Uma confirmação pode aparecer duas vezes se o processo cair após enviá-la e antes de confirmar sua entrega localmente; o lançamento financeiro continua único.
 - Conversas de grupo são ignoradas. Áudios, imagens, transferências, pagamentos de fatura e lembretes automáticos ainda não estão disponíveis.

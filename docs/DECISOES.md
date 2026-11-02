@@ -8,7 +8,7 @@ Atualizado em 02/11/2026. Este documento reúne as decisões da conversa e difer
 - Objetivo: gerenciamento financeiro pessoal com registro rápido de receitas e despesas pelo Telegram e acompanhamento visual pelo site.
 - Telegram: entrada cotidiana de lançamentos, perguntas sobre informações faltantes, correção, desfazer e consultas.
 - Site: visão mensal, consulta e gerenciamento dos lançamentos reais do mesmo usuário.
-- “Miúdo” e “Financeiro — Testes” são nomes anteriores/provisórios. A pasta local e os textos ativos foram atualizados para Zelumi. Os identificadores da infraestrutura e o caminho do SQLite local continuam com nomes legados; a troca desses recursos é uma etapa separada.
+- A identidade ativa é Zelumi, com bot `@zelumi_bot` e banco local padrão `data/zelumi.sqlite`. A migração dos identificadores remotos está descrita em [NOMES-INFRAESTRUTURA.md](./NOMES-INFRAESTRUTURA.md).
 - Username `@zelumi_bot` criado e validado, e endereço `usezelumi.vercel.app` publicado. Disponibilidade jurídica da marca e de domínio próprio não foi verificada; não apresentar exclusividade como confirmada.
 - A assinatura “suas finanças em poucas palavras” foi sugerida, mas não foi escolhida explicitamente como slogan definitivo.
 
@@ -84,12 +84,14 @@ Sintaxes já implementadas no interpretador:
 
 ## Identidade visual aprovada
 
+O padrão de aplicação atual foi consolidado no [Guia visual do Zelumi](../design/GUIA-VISUAL.md), com [tokens compartilhados](../web/app/tokens.css). Esta seção preserva a direção aprovada; consultar o guia para construir novas telas e manter os ajustes recentes de leitura, componentes e navegação.
+
 - Estilo: acolhedor, organizado e com personalidade; evitar aparência financeira excessivamente tradicional.
 - Temas: **claro e escuro**, ambos desenhados desde o início.
 - Cor principal: **laranja queimado**. Violeta/lavanda foi rejeitado como cor principal.
 - Tipografia: **Manrope para títulos e marca; Inter para textos e valores**.
 - Formas suaves, cantos levemente arredondados, sombras discretas e destaque para a leitura dos números.
-- Diferenciar receitas, despesas e alertas com rótulos/sinais além da cor. A paleta semântica desses estados ainda precisa ser definida.
+- Diferenciar receitas, despesas e alertas com rótulos/sinais além da cor. O padrão atual usa verde para receitas/positivo e o destaque da marca para despesas/ações; os estados e as restrições de uso estão no guia visual. Uma paleta adicional de alertas exige definição e validação próprias.
 
 Paleta-base aceita; contrastes finais devem ser validados nas telas:
 
@@ -175,7 +177,7 @@ O usuário aprovou retirar a liberação manual em ambos. No bot, a identidade d
 
 ### Configuração do domínio Telegram e escolha de protocolo
 
-O usuário confirmou, pela resposta “Success! Domain updated.” do BotFather, a vinculação de `financeiro-testes-bot.miudo.workers.dev` ao bot `@financeiro_lab_482_bot` usando `/setdomain`. Essa confirmação corresponde à configuração do Login Widget clássico; não comprova cadastro OIDC nem emissão de Client ID/Client Secret. A documentação oficial distingue o widget clássico em `https://core.telegram.org/widgets/login-legacy` do fluxo OIDC em `https://core.telegram.org/bots/telegram-login`.
+O usuário confirmou, pela resposta “Success! Domain updated.” do BotFather, a vinculação do domínio Cloudflare então utilizado ao bot de testes então utilizado usando `/setdomain`. Essa confirmação corresponde à configuração do Login Widget clássico; não comprova cadastro OIDC nem emissão de Client ID/Client Secret. A documentação oficial distingue o widget clássico em `https://core.telegram.org/widgets/login-legacy` do fluxo OIDC em `https://core.telegram.org/bots/telegram-login`.
 
 O desenho técnico anterior propunha OIDC. Após conferir a interface disponível, o usuário aprovou seguir com o **Login Widget clássico**, verificando no Worker os dados assinados com o token do bot já existente. Não são necessários Client ID ou Client Secret nesse método. O desenho técnico foi atualizado; não misturar validação do widget clássico, OIDC e Telegram Web Apps.
 
@@ -191,7 +193,7 @@ Entrada, Perfil, temas e saída de sessão têm implementação real, junto da a
 
 Verificação: 50 testes de backend/D1 e 9 de interface passaram, junto com tipos, build estático e dry-run do Worker. A revisão independente encontrou duas corridas de sessão, ambas reproduzidas por testes e corrigidas. Firefox verificou hidratação, layout desktop/mobile sem overflow e tema escuro. No ambiente local, uma identidade assinada somente com token falso confirmou cookies, Perfil e logout reais.
 
-Publicado em `https://financeiro-testes-bot.miudo.workers.dev`, versão `e40e45aa-a2b5-4d95-a19c-4788c9f66ba5`. Migração aditiva `0002_web_auth.sql` aplicada. Páginas200, sessão anônima401 sem apagar cookies, API desconhecidaJSON404, asset inexistente404, saúde200 e webhook sem segredo401 conferidos em produção. O widget oficial carregou no Firefox pelo domínio vinculado. Webhook ativo, sem updates pendentes ou último erro de entrega.
+Publicado no endereço Cloudflare então utilizado, versão `e40e45aa-a2b5-4d95-a19c-4788c9f66ba5`. Migração aditiva `0002_web_auth.sql` aplicada. Páginas200, sessão anônima401 sem apagar cookies, API desconhecidaJSON404, asset inexistente404, saúde200 e webhook sem segredo401 conferidos em produção. O widget oficial carregou no Firefox pelo domínio vinculado. Webhook ativo, sem updates pendentes ou último erro de entrega.
 
 Validação externa concluída: o usuário confirmou que entrou pelo Telegram, viu a conta correta no Perfil e recebeu a resposta de `/hoje` com o programa local desligado. CPU por requisição e folga nas cotas gratuitas não foram medidas; não houve ativação de plano pago. GitHub permanece para depois: branch `feat/zelumi-web-login` preservada, sem push ou merge.
 
@@ -217,7 +219,7 @@ Os planos, especificações e notas auxiliares foram removidos de `docs/superpow
 
 O usuário aprovou padronizar a pasta local como `zelumi`, atualizar os textos do bot e as instruções e separar o interpretador em `shared/parser.mjs`, com atualização dos imports. O protótipo antigo de `dist/` e seu comando `npm start` foram retirados. A configuração original do Sites foi arquivada em [archive/sites-hosting.json](./archive/sites-hosting.json), preservando a identidade anterior sem alterar o Site remoto.
 
-O SQLite local mantém `data/miudo.sqlite` e a configuração `BOT_DB_PATH`, preservando os dados existentes. O Worker, D1, webhook, endereço publicado e username do bot continuam com os identificadores atuais. Esta preparação não publica as mudanças nem faz push ao GitHub.
+O SQLite local usava o caminho disponível naquela etapa; a configuração atual é `BOT_DB_PATH=./data/zelumi.sqlite`. Os dados anteriores foram preservados em backup privado externo ao projeto. O Worker, D1, webhook, endereço publicado e username do bot continuam com os identificadores atuais. Esta preparação não publica as mudanças nem faz push ao GitHub.
 
 Verificação após renomear a pasta: 66 testes de backend/D1 e 15 testes de interface passaram, junto com tipos, build/export e dry-run do Worker. Os links locais foram conferidos e o conteúdo do parser foi preservado integralmente na mudança de caminho. Reabrir a pasta `zelumi` no editor após a renomeação local.
 
@@ -233,12 +235,29 @@ Publicação realizada: o usuário confirmou a variável do proxy na Vercel e a 
 
 ### Bot definitivo — Zelumi / @zelumi_bot
 
-O usuário criou o bot definitivo, ID numérico `9056845961`, e informou o token somente no `.env` local. A integração foi trocada do bot de testes `9133953215`, preservando o mesmo D1 e os dados pelo ID do usuário Telegram. A migração `0004_bot_transition.sql` troca apenas estado operacional e vínculo; as sessões anteriores foram revogadas e é necessário entrar novamente pelo bot novo.
+O usuário criou o bot definitivo, ID numérico `9056845961`, e informou o token somente no `.env` local. A integração foi trocada de um bot de testes, preservando o mesmo D1 e os dados pelo ID do usuário Telegram. A migração `0004_bot_transition.sql` troca apenas estado operacional e vínculo; as sessões anteriores foram revogadas e é necessário entrar novamente pelo bot novo.
 
-A conferência por SHA-256 confirmou os 7 lançamentos, projeções e perfis idênticos antes/depois. Webhook antigo desativado, token anterior preservado em arquivo local ignorado e novo webhook ativo no mesmo Worker, versão `5994e736-d2c5-4158-b527-3a22bee0c81b`. O usuário confirmou `/setdomain` no novo bot. 78 testes backend/D1 e 15 de interface, tipos, build/export e dry-run passaram; uma corrida de sessão encontrada na revisão foi reproduzida e corrigida. Validação externa concluída: o usuário confirmou resposta de `/hoje` no novo bot com o programa local desligado e login real no site com conta e lançamentos anteriores corretos. Procedimento e recuperação em [TROCA-BOT.md](./TROCA-BOT.md).
+A conferência por SHA-256 confirmou os 7 lançamentos, projeções e perfis idênticos antes/depois. Webhook antigo desativado, token anterior preservado em backup privado externo ao projeto e novo webhook ativo no mesmo Worker, versão `5994e736-d2c5-4158-b527-3a22bee0c81b`. O usuário confirmou `/setdomain` no novo bot. 78 testes backend/D1 e 15 de interface, tipos, build/export e dry-run passaram; uma corrida de sessão encontrada na revisão foi reproduzida e corrigida. Validação externa concluída: o usuário confirmou resposta de `/hoje` no novo bot com o programa local desligado e login real no site com conta e lançamentos anteriores corretos. Procedimento e recuperação em [BOT.md](./BOT.md).
 
 ### Acesso ao painel pela ajuda do bot
 
 O usuário aprovou acrescentar `https://usezelumi.vercel.app` e um botão de URL **Abrir meu painel** à resposta de `/ajuda`. `/start` e `/help` reutilizam a mesma resposta. O botão abre o site pelo link comum, sem integração de Mini App. A ajuda preserva perguntas de compra pendentes e não cria lançamentos. Verificação: 79 testes de backend/D1 e build/export/dry-run passaram; o teste novo detectou a ausência do acesso ao painel na versão anterior.
 
 Publicado no Worker na versão `5fef82b1-b92e-42d5-8f23-93323aee09f3`. Webhook permaneceu ativo, sem updates pendentes ou último erro de entrega. Nenhuma compra real foi criada ou alterada para testar a ajuda.
+
+
+### Limpeza aprovada e documentação atual — 02/11/2026
+
+O desenvolvimento principal do site usa `npm run dev`, com Next.js e Worker locais, login de teste e D1 fictício persistente. `web:dev` é o modo isolado de interface e `cf:dev` permanece como alternativa de exportação estática com Worker. O README concentra as instruções atuais, sem duplicação de seções.
+
+A identidade e os padrões atuais ficam no [guia visual](../design/GUIA-VISUAL.md); escopo, correções e capturas estão na [auditoria visual](../design/AUDITORIA-VISUAL.md). A navegação usa layout compartilhado, preferência de barra recolhida e menu modal no celular.
+
+Após a [varredura de arquivos](./INVENTARIO-ARQUIVOS.md), o usuário aprovou a limpeza. Foram retirados os quatro planos internos de `docs/superpowers/`, materiais antigos de `.superpowers/` e logs selecionados, com recuperação privada em `data/manutencao/`. Caches antigos de build/desenvolvimento foram limpos, preservando dependências, o servidor local ativo, o D1, SQLite, backups e autenticação. Os documentos permanentes preservam as decisões dos planos removidos. Nenhum envio ao GitHub ou deploy faz parte desta limpeza.
+
+### Consolidação dos nomes — 02/11/2026
+
+Código e exemplos locais usam Zelumi. As credenciais e o SQLite do ambiente anterior foram retirados da pasta do projeto e preservados em backup privado externo, sem alterar o vínculo dos bancos ou reimportar dados. A etapa local foi seguida pela migração autorizada dos recursos remotos para Zelumi, descrita no guia de infraestrutura.
+
+### Migração da infraestrutura para Zelumi
+
+Após autorizar a janela de manutenção, o usuário confirmou acesso para publicar a Vercel. Worker `zelumi-bot`, subdomínio `zelumi.workers.dev` e D1 `zelumi` preparados e copiados com preservação integral das 13 tabelas e dos 7 lançamentos, conferida por SHA-256 antes de reabrir o processamento. Credenciais e bot permanecem os do Zelumi. Backup privado externo mantém a recuperação. O proxy local foi atualizado; a publicação Vercel e a validação real pelo usuário permanecem pendentes.
