@@ -8,7 +8,7 @@ Atualizado em 02/11/2026. Este documento reúne as decisões da conversa e difer
 - Objetivo: gerenciamento financeiro pessoal com registro rápido de receitas e despesas pelo Telegram e acompanhamento visual pelo site.
 - Telegram: entrada cotidiana de lançamentos, perguntas sobre informações faltantes, correção, desfazer e consultas.
 - Site: visão mensal, consulta e gerenciamento dos lançamentos reais do mesmo usuário.
-- “Miúdo” e “Financeiro — Testes” são nomes anteriores/provisórios. A pasta `miudo`, identificadores de infraestrutura e textos antigos ainda existem; a escolha de Zelumi não significa que já foram renomeados.
+- “Miúdo” e “Financeiro — Testes” são nomes anteriores/provisórios. A pasta local e os textos ativos foram atualizados para Zelumi. Os identificadores da infraestrutura e o caminho do SQLite local continuam com nomes legados; a troca desses recursos é uma etapa separada.
 - Disponibilidade de marca, domínio e usernames de Zelumi ainda não foi verificada. Não apresentar exclusividade como confirmada.
 - A assinatura “suas finanças em poucas palavras” foi sugerida, mas não foi escolhida explicitamente como slogan definitivo.
 
@@ -135,7 +135,7 @@ As opções 1 (Z contínuo) e 3 (Horizonte) foram exploradas; a opção escolhid
 - Data de envio da mensagem para interpretar compras enviadas antes do processamento.
 - Isolamento por usuário, deduplicação de updates e fila persistente de respostas.
 - Publicação registrada em [CLOUDFLARE.md](../CLOUDFLARE.md); o usuário confirmou resposta real com o programa local desligado.
-- Site anterior em HTML/JS, com conversa simulada e dados locais no navegador. Ele não é o novo painel Next.js e não está conectado ao D1.
+- O site anterior em HTML/JS simulava uma conversa e usava dados locais no navegador. Seu código foi retirado após a implementação do painel Next.js; permanece recuperável pelo histórico Git.
 
 ## Próxima etapa combinada
 
@@ -212,3 +212,11 @@ O usuário escolheu preparar primeiro um repositório privado `zelumi`, com o pr
 Foram ampliadas as exclusões de bancos, logs e credenciais locais e definida a normalização de texto para LF. A revisão de caminhos e conteúdo do histórico não encontrou as credenciais locais comparadas nem os padrões de segredo pesquisados. Uma cópia limpa passou instalação pelos lockfiles, 66 testes de backend/D1, 15 de interface, tipos e build/export sem credenciais reais. O código em produção não mudou nesta etapa.
 
 Os planos, especificações e notas auxiliares foram removidos de `docs/superpowers/` a pedido do usuário. Este arquivo preserva as decisões aprovadas; os documentos completos continuam recuperáveis pelo histórico Git.
+
+### Padronização local de nomes e código compartilhado
+
+O usuário aprovou padronizar a pasta local como `zelumi`, atualizar os textos do bot e as instruções e separar o interpretador em `shared/parser.mjs`, com atualização dos imports. O protótipo antigo de `dist/` e seu comando `npm start` foram retirados. A configuração original do Sites foi arquivada em [archive/sites-hosting.json](./archive/sites-hosting.json), preservando a identidade anterior sem alterar o Site remoto.
+
+O SQLite local mantém `data/miudo.sqlite` e a configuração `BOT_DB_PATH`, preservando os dados existentes. O Worker, D1, webhook, endereço publicado e username do bot continuam com os identificadores atuais. Esta preparação não publica as mudanças nem faz push ao GitHub.
+
+Verificação após renomear a pasta: 66 testes de backend/D1 e 15 testes de interface passaram, junto com tipos, build/export e dry-run do Worker. Os links locais foram conferidos e o conteúdo do parser foi preservado integralmente na mudança de caminho. Reabrir a pasta `zelumi` no editor após a renomeação local.

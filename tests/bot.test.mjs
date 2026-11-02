@@ -105,7 +105,7 @@ test('editar mantém início ajustado e data explícita redefine o mês',t=>{
  handleUpdate(store,callback(4,`edit:${r.id}`),options);handleUpdate(store,message(5,'hoje notebook 3600 em 12x'),options);assert.equal(store.list('11')[0].installmentStartMonth,undefined);
 });
 test('dados, perguntas e cursor sobrevivem a reinício',()=>{
- const dir=mkdtempSync(join(tmpdir(),'miudo-test-')),path=join(dir,'bot.sqlite');
+ const dir=mkdtempSync(join(tmpdir(),'zelumi-test-')),path=join(dir,'bot.sqlite');
  let store;
  try{
    store=new Store(path);handleUpdate(store,message(1,'pão 10'),options);handleUpdate(store,message(2,'uber'),options);store.close();

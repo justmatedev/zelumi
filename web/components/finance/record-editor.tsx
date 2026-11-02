@@ -1,7 +1,7 @@
 'use client';
 import {useMemo,useState} from 'react';
 import {expenseCategories,schedule,validateEdit} from '../../../finance/model.mjs';
-import {money} from '../../../dist/parser.mjs';
+import {money} from '../../../shared/parser.mjs';
 import {brl,formatDate,editFields,type EditFields,type RecordDetail} from '@/lib/finance';
 import {Button} from '@/components/ui/button';
 export function RecordEditor({record,onSave,onCancel,busy}:{record:RecordDetail;onSave:(value:EditFields)=>Promise<void>;onCancel:()=>void;busy:boolean}){

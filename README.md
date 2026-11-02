@@ -18,9 +18,9 @@ Este é um único repositório para o produto inteiro. Ao enviar ao GitHub, use 
 | `finance/` | Modelo compartilhado, validação, projeções e consultas mensais |
 | `tests/` | Testes de backend e do bot; interface em `web/tests/` |
 | `scripts/` | Build, verificações, migração local e publicação |
-| `docs/` | Decisões, desenho técnico e plano |
+| `docs/` | Decisões e instruções para GitHub; configuração histórica em `archive/` |
 | `design/` | Logos escolhidos, fontes e licenças da identidade visual |
-| `dist/` | Protótipo antigo e interpretador compartilhado pelo bot; não apagar |
+| `shared/` | Interpretador de mensagens e cálculo de parcelas usados pelo bot e site |
 
 `.env`, `.dev.vars`, `.wrangler`, `data`, `node_modules`, `.next` e `web/out` são locais/gerados e ficam fora do Git. Envie os dois `package-lock.json`, `.env.example`, `.dev.vars.example` e as migrações SQL. Credenciais do Wrangler nunca devem ir para o GitHub. Configurar o remoto e fazer o primeiro envio é uma etapa separada, descrita em [docs/GITHUB.md](./docs/GITHUB.md).
 
@@ -67,7 +67,7 @@ Requer **Node.js 22.16 ou superior** (recomendado: 24 ou superior) e acesso à i
 
 ### 2. Configurar e iniciar
 
-No terminal, entre na raiz do projeto (a pasta local `miudo`, ou `zelumi` após clonar o repositório) e copie o exemplo:
+No terminal, entre na raiz do projeto e copie o exemplo:
 
 ```sh
 cp .env.example .env
@@ -89,7 +89,7 @@ npm run bot
 
 No Telegram, abra o bot que você criou e toque em **Iniciar**. Qualquer pessoa pode começar pela conversa privada, sem aprovação ou cadastro de ID. A identificação é feita pelo Telegram, e cada usuário acessa apenas seus próprios lançamentos. O comando `/id` apenas informa seu identificador, se você quiser consultá-lo.
 
-O token e o banco estão excluídos do Git por `.gitignore`. Não os coloque na pasta pública `dist/`.
+O token e o banco estão excluídos do Git por `.gitignore`. Não os coloque em `web/public/` nem em `web/out/`.
 
 ### 3. Testar na conversa real
 
@@ -132,7 +132,7 @@ Também aceita a consulta `quanto gastei hoje?`. **Comportamento atual:** `/mes`
 
 ### Dados e funcionamento
 
-- Neste modo local, os registros ficam em `data/miudo.sqlite`, com separação pelo ID do Telegram. Na versão publicada, ficam no D1; o site compartilha a identidade Telegram e consulta os mesmos registros por API autenticada. O SQLite de desenvolvimento local é separado do D1 publicado.
+- Neste modo local, os registros ficam em `data/miudo.sqlite`, com separação pelo ID do Telegram. Na versão publicada, ficam no D1; o site compartilha a identidade Telegram e consulta os mesmos registros por API autenticada. O SQLite de desenvolvimento local é separado do D1 publicado. O nome legado `miudo.sqlite` é preservado para continuar acessando os bancos existentes; renomear o projeto não migra nem recria esse arquivo.
 - Cursor de atualização, alterações financeiras e respostas pendentes são persistidos em uma transação SQLite. Reenvios do mesmo `update_id` não duplicam o lançamento.
 - Respostas que falham por rede ou limite de uso ficam na fila para nova tentativa. Uma confirmação pode aparecer duas vezes se o processo cair após enviá-la e antes de confirmar sua entrega localmente; o lançamento financeiro continua único.
 - Conversas de grupo são ignoradas. Áudios, imagens, transferências, pagamentos de fatura e lembretes automáticos ainda não estão disponíveis.
@@ -149,14 +149,6 @@ Também aceita a consulta `quanto gastei hoje?`. **Comportamento atual:** `/mes`
 
 Referência: [Telegram Bot API — getUpdates](https://core.telegram.org/bots/api#getupdates).
 
-## Executar o site de teste
-
-```sh
-npm start
-```
-
-Acesse http://localhost:4173. Essa tela simula a conversa e mantém os dados no localStorage. Inclui resumo, edição, desfazer e exportação CSV. O bot Telegram roda separadamente com `npm run bot`.
-
 ## Verificar o código
 
 ```sh
@@ -167,7 +159,7 @@ Os testes cobrem interpretação de valores e parcelas, persistência após rein
 
 ## Arquivos principais
 
-- `dist/parser.mjs`: interpretador compartilhado pelo site e pelo bot.
+- `shared/parser.mjs`: interpretador compartilhado pelo site e pelo bot.
 - `bot/engine.mjs`: conversa, comandos, autorização e fluxo de edição.
 - `bot/store.mjs`: SQLite, deduplicação e fila de respostas.
 - `bot/telegram.mjs`: cliente HTTP da API, com erros sem token.

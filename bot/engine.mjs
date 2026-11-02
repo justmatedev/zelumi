@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { parse, resolve, schedule } from '../dist/parser.mjs';
+import { parse, resolve, schedule } from '../shared/parser.mjs';
 
 const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const brl = cents => formatter.format(cents / 100);
 const dateFormatters = new Map();
 const normalize = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-const help = `🌱 Sou o Miúdo. Me conte o que entrou ou saiu:
+const help = `🌱 Sou o Zelumi. Me conte o que entrou ou saiu:
 
 pão 10
 uber 23,50

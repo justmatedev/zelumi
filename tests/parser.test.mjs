@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {parse,resolve,money,schedule} from '../dist/parser.mjs';
+import {parse,resolve,money,schedule} from '../shared/parser.mjs';
 const now=new Date(2026,10,1,12);
 test('mensagens curtas e moeda brasileira',()=>{
  assert.equal(parse('pao 10',now).amount,1000);

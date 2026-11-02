@@ -46,7 +46,7 @@ async function main() {
       {command:'desfazer',description:'Desfazer o último lançamento'},
       {command:'cancelar',description:'Cancelar pergunta ou edição'}, {command:'id',description:'Mostrar meu ID do Telegram'}
     ]});
-    console.log(`Miúdo ativo em @${me.username}. Use Ctrl+C para encerrar.`);
+    console.log(`Zelumi ativo em @${me.username}. Use Ctrl+C para encerrar.`);
     console.log('Cadastro aberto: usuários Telegram podem começar pela conversa privada.');
     console.log('Dados em SQLite local. Mantenha apenas uma instância do bot em execução.');
     let failures=0;

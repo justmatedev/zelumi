@@ -61,7 +61,7 @@ O código está preparado para Workers + D1. Nada é publicado por instalar as d
 
 Crie uma conta em https://dash.cloudflare.com/sign-up. Não é necessário contratar um domínio ou plano pago para este teste.
 
-Na pasta `miudo`:
+Na raiz do projeto:
 
 ```sh
 npm install
@@ -98,7 +98,7 @@ npm run cf:export-local
 npm run cf:db:import
 ```
 
-O exportador lê o SQLite configurado em `.env`, sem alterar o banco, e cria `data/cloudflare-import.sql`. O arquivo tem dados financeiros e é ignorado pelo Git; não deve ser enviado pelo chat nem incluído em `dist/`.
+O exportador lê o SQLite configurado em `.env`, sem alterar o banco, e cria `data/cloudflare-import.sql`. O arquivo tem dados financeiros e é ignorado pelo Git; não deve ser enviado pelo chat nem incluído em `web/public/` ou `web/out/`.
 
 A importação preserva IDs antigos, lançamentos, perguntas ainda válidas e identificadores de updates já processados. Assim, mensagens que o Telegram reenviar durante a troca não duplicam registros. Ela usa inserções sem sobrescrever registros existentes e é restrita ao mesmo bot. Respostas pendentes impedem a exportação para evitar perda delas.
 

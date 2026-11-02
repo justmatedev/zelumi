@@ -2,13 +2,13 @@
 
 ## Conteúdo do repositório
 
-Usar um único repositório **privado chamado `zelumi`**, com o conteúdo desta pasta diretamente na raiz. Incluir `web/`, `bot/`, `cloudflare/`, `finance/`, `tests/`, `scripts/`, `docs/`, `design/` e `dist/`, além das configurações e dos dois `package-lock.json`.
+Usar um único repositório **privado chamado `zelumi`**, com o conteúdo desta pasta diretamente na raiz. Incluir `web/`, `bot/`, `cloudflare/`, `finance/`, `tests/`, `scripts/`, `docs/`, `design/` e `shared/`, além das configurações e dos dois `package-lock.json`.
 
-A pasta `dist/` contém o protótipo antigo e o interpretador que o bot ainda reutiliza; não deve ser excluída como se fosse apenas um build. O build do novo site é `web/out/`, que é gerado e ignorado.
+O interpretador compartilhado fica em `shared/parser.mjs`. O protótipo antigo em `dist/` foi retirado, junto com seu comando `npm start`; use `npm run web:dev` para o site atual. O build do site é `web/out/`, que é gerado e ignorado.
 
-Os nomes antigos em arquivos/configurações/documentação permanecem por enquanto, conforme combinado. A renomeação oficial do bot e dos endereços será uma etapa separada. Não reescrever o histórico para este primeiro envio privado.
+A pasta local e os textos ativos usam Zelumi. Nomes antigos permanecem nos registros históricos, no caminho do SQLite local e nos identificadores da infraestrutura. A renomeação oficial do bot e dos endereços será uma etapa separada. Não reescrever o histórico para este primeiro envio privado.
 
-Os estudos visuais descartáveis foram retirados da versão atual: capturas PNG, prévias HTML/CSS/JS, comparações, gerador dos conceitos e logos não escolhidos. `design/` mantém os quatro SVGs da opção 02 e as fontes com suas licenças. O registro de decisões em `docs/DECISOES.md`, as instruções operacionais e o protótipo em `dist/` foram preservados. Os planos e notas auxiliares de `docs/superpowers/` também foram removidos a pedido do usuário. Os arquivos removidos continuam nos commits anteriores e, mantendo o histórico, também serão enviados ao repositório privado.
+Os estudos visuais descartáveis foram retirados da versão atual: capturas PNG, prévias HTML/CSS/JS, comparações, gerador dos conceitos e logos não escolhidos. `design/` mantém os quatro SVGs da opção 02 e as fontes com suas licenças. O registro de decisões em `docs/DECISOES.md` e as instruções operacionais foram preservados. Os planos e notas auxiliares de `docs/superpowers/` também foram removidos a pedido do usuário. Os arquivos removidos continuam nos commits anteriores e, mantendo o histórico, também serão enviados ao repositório privado.
 
 ## O que fica somente na máquina
 
@@ -18,7 +18,7 @@ Guardar exportações financeiras e backups na pasta ignorada `data/`. Migraçõ
 
 IDs de recursos e URLs em `wrangler.jsonc` são configuração do piloto, não credenciais. Um clone não obtém acesso ao D1 remoto sem autorização na conta Cloudflare. Para usar outra infraestrutura, configurar seus próprios recursos antes de publicar.
 
-`.openai/hosting.json` identifica o protótipo anterior do Sites, preservado no histórico. Não é necessário para a publicação atual na Cloudflare; não alterar sua identidade como parte do primeiro envio ao GitHub.
+A configuração do protótipo anterior do Sites foi movida de `.openai/hosting.json` para [docs/archive/sites-hosting.json](./archive/sites-hosting.json), preservando seu identificador original. É um registro histórico, não uma configuração de publicação ativa. O diretório `dist` mencionado nesse registro foi retirado; para recuperar o protótipo completo, use os commits anteriores. Arquivar a configuração local não exclui nem atualiza o Site remoto.
 
 ## Criar o repositório remoto
 

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {schedule} from '../dist/parser.mjs';
+import {schedule} from '../shared/parser.mjs';
 import {validateEdit,readStored,normalizeSearch} from '../finance/model.mjs';
 import {buildProjection,recordVersion} from '../finance/version.mjs';
 const input={description:'Google',type:'despesa',category:'Outros',amount:100000,date:'2026-01-31',installments:12,installmentStartMonth:null};

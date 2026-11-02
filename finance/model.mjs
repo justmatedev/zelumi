@@ -1,4 +1,4 @@
-import {schedule} from '../dist/parser.mjs';
+import {schedule} from '../shared/parser.mjs';
 export {schedule};
 export const expenseCategories=['Alimentação','Transporte','Casa','Saúde','Outros'];
 export const categories=['Receitas',...expenseCategories];

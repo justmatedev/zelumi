@@ -101,7 +101,7 @@ test('Cloudflare Worker com D1 local real',async t=>{
    assert.equal(await count(),1);
  });
  await t.test('importa SQLite sem duplicar dados e preserva perguntas e callbacks antigos',async()=>{
-   await reset();const dir=mkdtempSync(join(tmpdir(),'miudo-export-')),path=join(dir,'local.sqlite'),output=join(dir,'import.sql');
+   await reset();const dir=mkdtempSync(join(tmpdir(),'zelumi-export-')),path=join(dir,'local.sqlite'),output=join(dir,'import.sql');
    let local;
    try{
      local=new Store(path);local.setMeta('bot_id','123');
