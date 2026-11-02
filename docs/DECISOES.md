@@ -110,7 +110,7 @@ O site acompanha o tema do dispositivo e oferece Claro/Escuro/Sistema no Perfil.
 - Laranja queimado no tema claro; laranja suave no escuro.
 - Símbolo isolado para foto do bot, favicon e espaços pequenos.
 - A escolha define a direção visual; ajustes ópticos e exportações finais podem ser feitos ao aplicá-lo.
-- A marca foi aplicada no novo site e no favicon. O bot definitivo foi criado com nome Zelumi e username `@zelumi_bot`; a foto ainda pode ser ajustada.
+- A marca foi aplicada no novo site e no favicon. O bot definitivo usa nome Zelumi e username `@zelumi_bot`; o usuário confirmou a foto com o símbolo da versão escura aplicado ao perfil.
 
 Arquivos:
 
@@ -236,3 +236,7 @@ Publicação realizada: o usuário confirmou a variável do proxy na Vercel e a 
 O usuário criou o bot definitivo, ID numérico `9056845961`, e informou o token somente no `.env` local. A integração foi trocada do bot de testes `9133953215`, preservando o mesmo D1 e os dados pelo ID do usuário Telegram. A migração `0004_bot_transition.sql` troca apenas estado operacional e vínculo; as sessões anteriores foram revogadas e é necessário entrar novamente pelo bot novo.
 
 A conferência por SHA-256 confirmou os 7 lançamentos, projeções e perfis idênticos antes/depois. Webhook antigo desativado, token anterior preservado em arquivo local ignorado e novo webhook ativo no mesmo Worker, versão `5994e736-d2c5-4158-b527-3a22bee0c81b`. O usuário confirmou `/setdomain` no novo bot. 78 testes backend/D1 e 15 de interface, tipos, build/export e dry-run passaram; uma corrida de sessão encontrada na revisão foi reproduzida e corrigida. Validação externa concluída: o usuário confirmou resposta de `/hoje` no novo bot com o programa local desligado e login real no site com conta e lançamentos anteriores corretos. Procedimento e recuperação em [TROCA-BOT.md](./TROCA-BOT.md).
+
+### Acesso ao painel pela ajuda do bot
+
+O usuário aprovou acrescentar `https://usezelumi.vercel.app` e um botão de URL **Abrir meu painel** à resposta de `/ajuda`. `/start` e `/help` reutilizam a mesma resposta. O botão abre o site pelo link comum, sem integração de Mini App. A ajuda preserva perguntas de compra pendentes e não cria lançamentos. Verificação: 79 testes de backend/D1 e build/export/dry-run passaram; o teste novo detectou a ausência do acesso ao painel na versão anterior.

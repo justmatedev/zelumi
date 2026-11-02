@@ -43,6 +43,20 @@ test('aceita usuários novos, isola registros e ignora grupos',t=>{
  handleUpdate(store,message(6,'/hoje',22),options);
  assert.match(drain(store).at(-1).payload.text,/Saídas: R\$\s*0,00/);
 });
+test('ajuda e início oferecem o painel sem encerrar uma compra pendente',t=>{
+ const store=fixture(t);
+ handleUpdate(store,message(1,'pão'),options);drain(store);
+ const pending=store.pending('11');
+ for(const [i,command] of ['/ajuda','/help','/start'].entries()){
+  handleUpdate(store,message(i+2,command),options);
+  const replies=drain(store);assert.equal(replies.length,1);
+  assert.equal(replies[0].method,'sendMessage');
+  assert.match(replies[0].payload.text,/https:\/\/usezelumi\.vercel\.app/);
+  assert.deepEqual(replies[0].payload.reply_markup.inline_keyboard,[[{text:'Abrir meu painel',url:'https://usezelumi.vercel.app'}]]);
+  assert.deepEqual(store.pending('11'),pending);assert.equal(store.list('11').length,0);
+ }
+ handleUpdate(store,message(5,'10'),options);assert.equal(store.list('11')[0].amount,1000);
+});
 test('/id informa a identidade sem exigir liberação ou criar lançamentos',t=>{
  const store=fixture(t);
  handleUpdate(store,message(1,'/id',33),options);

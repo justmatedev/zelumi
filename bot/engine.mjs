@@ -23,7 +23,10 @@ google 12x 80 → 12 parcelas de R$ 80 (total R$ 960)
 /id — seu identificador no Telegram
 /ajuda — mostra esta mensagem
 
-Use Editar para substituir a compra inteira pela mensagem completa. Uso regras, não IA. Aceito texto e datas hoje/ontem. /mes usa as parcelas de cada mês; /hoje usa valores integrais pela data da compra. Seus registros são os mesmos do site Zelumi.`;
+Use Editar para substituir a compra inteira pela mensagem completa. Uso regras, não IA. Aceito texto e datas hoje/ontem. /mes usa as parcelas de cada mês; /hoje usa valores integrais pela data da compra. Seus registros são os mesmos do site Zelumi.
+
+📊 Acompanhe seus lançamentos pelo site:
+https://usezelumi.vercel.app`;
 
 export function localDate(now, timezone) {
   if (!dateFormatters.has(timezone)) dateFormatters.set(timezone, new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }));
@@ -92,7 +95,7 @@ export function handleUpdate(store, update, { timezone = 'America/Sao_Paulo', no
       }
       return;
     }
-    if (['/start','/ajuda','/help'].includes(command)) {reply(help);return;}
+    if (['/start','/ajuda','/help'].includes(command)) {reply(help,[[{text:'Abrir meu painel',url:'https://usezelumi.vercel.app'}]]);return;}
     if (command==='/cancelar' || normalize(text)==='cancelar') {store.clearPending(owner);reply('Tudo certo. Nenhum lançamento pendente.');return;}
     if (command==='/desfazer') { const last=store.recent(owner,1)[0]; if(last) remove(last.id);else reply('Você ainda não tem lançamentos.');return; }
     if(command==='/ultimos') {
