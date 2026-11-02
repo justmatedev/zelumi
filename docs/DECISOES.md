@@ -220,3 +220,11 @@ O usuário aprovou padronizar a pasta local como `zelumi`, atualizar os textos d
 O SQLite local mantém `data/miudo.sqlite` e a configuração `BOT_DB_PATH`, preservando os dados existentes. O Worker, D1, webhook, endereço publicado e username do bot continuam com os identificadores atuais. Esta preparação não publica as mudanças nem faz push ao GitHub.
 
 Verificação após renomear a pasta: 66 testes de backend/D1 e 15 testes de interface passaram, junto com tipos, build/export e dry-run do Worker. Os links locais foram conferidos e o conteúdo do parser foi preservado integralmente na mudança de caminho. Reabrir a pasta `zelumi` no editor após a renomeação local.
+
+### Endereço público e integração Vercel
+
+O usuário escolheu `usezelumi.vercel.app` e já publicou o frontend pelo projeto Vercel `zelumi`, conectado ao GitHub, com Root Directory `web`. Aprovou ajustar login e API mantendo bot, D1 e webhook na Cloudflare. O [guia da Vercel](./VERCEL.md) reúne configuração, ordem de troca, validação e retorno ao endereço anterior.
+
+As rotas em `web/vercel.json` preservam caminhos, cookies, métodos e corpos para `/auth` e `/api`, sem cache de dados autenticados. Os arquivos estáticos têm cabeçalhos próprios, com CSP isolada para o widget Telegram. Uma chave independente `VERCEL_PROXY_SECRET`, configurada somente nos servidores, permite confiar no IP de visitante encaminhado pela Vercel para separar os limites de login. Token Telegram e segredo do webhook não vão para a Vercel.
+
+69 testes de backend/D1 e 15 de interface passaram, junto com tipos, build/export e dry-run. O limite compartilhado pelo IP do proxy foi reproduzido antes da correção. A revisão independente não encontrou problemas críticos ou importantes; o encaminhamento público ainda deve ser conferido antes da troca de `APP_ORIGIN`. O domínio precisa ser vinculado pelo usuário no BotFather após essa preparação.

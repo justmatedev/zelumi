@@ -35,7 +35,9 @@ function localSecrets() {
     process.env.TELEGRAM_WEBHOOK_SECRET=secret;
   }
   if(!/^[A-Za-z0-9_-]{32,256}$/.test(process.env.TELEGRAM_WEBHOOK_SECRET))throw new Error('TELEGRAM_WEBHOOK_SECRET deve conter entre 32 e 256 letras, números, _ ou -.');
-  return {TELEGRAM_BOT_TOKEN:process.env.TELEGRAM_BOT_TOKEN,TELEGRAM_WEBHOOK_SECRET:process.env.TELEGRAM_WEBHOOK_SECRET};
+  const proxy=process.env.VERCEL_PROXY_SECRET;
+  if(proxy&&!/^[a-f0-9]{64}$/.test(proxy))throw new Error('VERCEL_PROXY_SECRET deve conter 64 caracteres hexadecimais minúsculos.');
+  return {TELEGRAM_BOT_TOKEN:process.env.TELEGRAM_BOT_TOKEN,TELEGRAM_WEBHOOK_SECRET:process.env.TELEGRAM_WEBHOOK_SECRET,...(proxy?{VERCEL_PROXY_SECRET:proxy}:{})};
 }
 async function main() {
   if(action==='login')return run(['login','--browser=false']);

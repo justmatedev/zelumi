@@ -1,6 +1,7 @@
 import {AuthStore} from './store.mjs';
 import {verifyTelegramPayload,InvalidTelegramPayload} from './telegram.mjs';
 import {randomToken,hashToken,deriveCsrf,constantTimeEqual} from './crypto.mjs';
+import {loginNetwork} from './network.mjs';
 
 const LOGIN='__Host-zelumi_login',SESSION='__Host-zelumi_session',WEEK=7*86400000;
 const routes=new Map([['/auth/telegram/start','POST'],['/auth/telegram/callback','POST'],['/api/session','GET'],['/api/session/logout','POST']]);
@@ -18,7 +19,7 @@ export async function handleAuth(request,env,{nowMs}) {
   if(path==='/auth/telegram/start') {
    if(Object.keys(data).length)throw new HttpError(400,'Corpo inválido.');
    const flow=randomToken(),csrf=randomToken(),previous=cookie(request,LOGIN);
-   const network=request.cf?request.headers.get('CF-Connecting-IP')||'unknown':'local-development';
+   const network=loginNetwork(request,env);
    const result=await store.startFlow({flowHash:await hashToken(flow),csrfHash:await hashToken(csrf),expiresAt:nowMs+600000,nowMs,networkKey:await deriveCsrf(network,env.TELEGRAM_BOT_TOKEN,'network'),previousFlowHash:previous?await hashToken(previous):null});
    if(!result.allowed)return json({error:'Muitas tentativas. Aguarde alguns minutos.'},429,{'Retry-After':String(result.retryAfter)});
    return json({botUsername:env.TELEGRAM_BOT_USERNAME,csrfToken:csrf},200,{'Set-Cookie':setCookie(LOGIN,flow,600)});

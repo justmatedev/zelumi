@@ -71,6 +71,45 @@ test('sessões web com D1 local',async t=>{
   await reset();for(let i=0;i<5;i++)await start();const blocked=await send('/auth/telegram/start',{});assert.equal(blocked.status,429);assert.ok(Number(blocked.headers.get('retry-after'))>0);
   now+=600000;await start();
  });
+ await t.test('proxy autenticado separa visitantes que compartilham o IP de saída da Vercel',async()=>{
+  await reset();
+  const proxySecret='a'.repeat(64),proxyEnv={...env,VERCEL_PROXY_SECRET:proxySecret};
+  const attempt=ip=>{
+   const request=req('/auth/telegram/start',{}, {headers:{'CF-Connecting-IP':'192.0.2.10','X-Real-IP':ip,'X-Zelumi-Proxy-Secret':proxySecret}});
+   Object.defineProperty(request,'cf',{value:{}});
+   return worker.fetch(request,proxyEnv);
+  };
+  for(let i=0;i<5;i++)assert.equal((await attempt('203.0.113.1')).status,200);
+  assert.equal((await attempt('203.0.113.1')).status,429);
+  assert.equal((await attempt('203.0.113.2')).status,200);
+ });
+ await t.test('cabeçalho de visitante forjado ou inválido não contorna o limite do IP direto',async()=>{
+  await reset();
+  const proxySecret='a'.repeat(64),proxyEnv={...env,VERCEL_PROXY_SECRET:proxySecret};
+  async function attempt(ip,secret){
+   const request=req('/auth/telegram/start',{}, {headers:{'CF-Connecting-IP':'192.0.2.10','X-Real-IP':ip,'X-Zelumi-Proxy-Secret':secret}});
+   Object.defineProperty(request,'cf',{value:{}});
+   return worker.fetch(request,proxyEnv);
+  }
+  for(let i=0;i<5;i++)assert.equal((await attempt(`203.0.113.${i+1}`,'wrong')).status,200);
+  assert.equal((await attempt('203.0.113.99','')).status,429);
+  assert.equal((await attempt('not-an-ip',proxySecret)).status,429);
+ });
+ await t.test('origem Vercel mantém cookies, sessão e logout quando o destino é outro host',async()=>{
+  await reset();
+  const site='https://usezelumi.vercel.app',proxyEnv={...env,APP_ORIGIN:site};
+  const through=(path,data,headers={})=>worker.fetch(new Request('https://backend.workers.dev'+path,{method:data===undefined?'GET':'POST',headers:{Origin:site,'Content-Type':'application/json',...headers},...(data===undefined?{}:{body:JSON.stringify(data)})}),proxyEnv);
+  const begin=await through('/auth/telegram/start',{});assert.equal(begin.status,200);
+  const loginCookie=cookie(begin,'__Host-zelumi_login'),csrf=(await begin.json()).csrfToken;
+  const accepted=await through('/auth/telegram/callback',{telegram:payload()},{Cookie:loginCookie,'X-CSRF-Token':csrf});assert.equal(accepted.status,200);
+  assert.equal(accepted.headers.getSetCookie().length,2);assert.doesNotMatch(accepted.headers.getSetCookie().join(' '),/Domain=/i);
+  const session=cookie(accepted,'__Host-zelumi_session');
+  const info=await through('/api/session',undefined,{Cookie:session});assert.equal(info.status,200);assert.equal(info.headers.get('cache-control'),'no-store');
+  const sessionCsrf=(await info.json()).csrfToken;
+  assert.equal((await through('/api/session/logout',{}, {Cookie:session,'X-CSRF-Token':sessionCsrf,Origin:'https://preview.vercel.app'})).status,403);
+  assert.equal((await through('/api/session/logout',{}, {Cookie:session,'X-CSRF-Token':sessionCsrf})).status,200);
+  assert.equal((await through('/api/session',undefined,{Cookie:session})).status,401);
+ });
  await t.test('mesmo ID reutiliza perfil; outro ID e mesmo nome são outra conta',async()=>{
   await reset();await db.prepare("INSERT INTO cloud_records(id,owner,body) VALUES('existing','11',?)").bind(JSON.stringify({date:'2026-11-02',type:'despesa',amount:1000})).run();
   await callback(await start());await callback(await start(),payload(22));await callback(await start(),payload(11,{username:'novo'}));

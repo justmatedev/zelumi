@@ -6,6 +6,8 @@ Gerenciamento financeiro com registros rápidos pelo Telegram. O bot funciona em
 
 O guia de [primeiro envio ao GitHub](./docs/GITHUB.md) descreve o repositório privado, arquivos incluídos/excluídos e a validação sem credenciais reais.
 
+A configuração do endereço `usezelumi.vercel.app`, com site na Vercel e backend na Cloudflare, está em [docs/VERCEL.md](./docs/VERCEL.md).
+
 ## Organização do repositório
 
 Este é um único repositório para o produto inteiro. Ao enviar ao GitHub, use esta pasta como raiz do repositório `zelumi`, incluindo `web`, `bot`, `cloudflare`, `scripts`, `tests` e `docs`.
@@ -48,6 +50,19 @@ O Wrangler usa HTTPS em `https://localhost:8787` (pode ser necessário aceitar o
 O site usa autenticação real e consulta os mesmos registros do bot publicado. Visão geral mostra receitas, despesas e parcelas do mês; Lançamentos oferece busca por nome, filtros, detalhes, edição e exclusão da compra inteira. Editar recalcula todas as parcelas, inclusive meses anteriores; excluir remove a compra em todos os meses. O exemplo “pão 10” da entrada é somente ilustrativo.
 
 Verificações: `npm test` (backend, SQLite e D1 local), `npm --prefix web test` (interface), `npm run web:check` (tipos, interface, build e export) e `npm run cf:check` (build e dry-run do Worker). Os testes não enviam mensagens ao Telegram real. O emulador D1 precisa poder abrir portas locais.
+
+## Arquivos de variáveis
+
+| Arquivo/local | Uso |
+| --- | --- |
+| `.env` | Credenciais reais do bot local e dos comandos de manutenção Cloudflare; ignorado pelo Git |
+| `.env.example` | Modelo sem credenciais para criar o `.env` |
+| `.dev.vars` | Sobrescritas do Worker local; ignorado pelo Git |
+| `.dev.vars.example` | Credenciais fictícias para `cf:dev` quando `.dev.vars` não existe |
+| Cloudflare Secrets | Token Telegram, segredo do webhook e chave independente do proxy em produção |
+| Vercel Environment Variables | Somente `VERCEL_PROXY_SECRET` para o proxy; sem token Telegram ou segredo do webhook |
+
+`VERCEL_PROXY_SECRET` deve ser igual na Vercel e na Cloudflare. Não usar prefixo `NEXT_PUBLIC_`: essa chave pertence ao encaminhamento no servidor, nunca ao JavaScript do navegador. Alterar `.env` sozinho não atualiza os serviços publicados.
 
 ## Cloudflare Workers + D1 (opção escolhida)
 
