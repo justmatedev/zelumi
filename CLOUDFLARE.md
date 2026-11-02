@@ -2,6 +2,8 @@
 
 ## Publicação atual
 
+Versão financeira atual: `d3edc342-66e2-43fa-b1b1-05d3578bab11`, publicada em02/11/2026 com migração aditiva `0003_finance.sql`. Rotas protegidas e webhook verificados; comparação com dados reais e `/mes` aguarda retorno do usuário. A versão de autenticação listada abaixo é o marco anterior.
+
 - Worker: `https://financeiro-testes-bot.miudo.workers.dev`
 - Saúde/configuração: `https://financeiro-testes-bot.miudo.workers.dev/health`
 - D1: `financeiro-testes`, já vinculado em `wrangler.jsonc`.
@@ -35,7 +37,17 @@ npm run cf:deploy
 
 `cf:check`, `cf:dev` e `cf:deploy` geram o frontend antes de usar o Wrangler. Nenhum dado real nem segredo é necessário no build. O pacote é verificado para impedir inclusão de arquivos privados conhecidos. `cf:deploy` não altera o webhook e não reimporta dados. Os segredos já configurados são preservados; não é necessário repetir `cf:secrets` em cada atualização.
 
-Após publicar, abrir o endereço e entrar pelo Telegram. Conferir nome/username no Perfil, aparência e saída da sessão. Visão geral e Lançamentos mostram conexão pendente; esta entrega não apresenta dados financeiros fictícios como registros da conta. Enviar `/hoje` pelo Telegram com programa local desligado confirma também o bot. Testes automatizados usam D1 local e identidade assinada falsa; não substituem esse teste humano externo.
+Após publicar, abrir o endereço e entrar pelo Telegram. Conferir Perfil e as telas financeiras. A versão financeira usa registros reais do mesmo owner: `/mes` e Visão geral distribuem parcelas; `/hoje` mantém valores integrais pela data da compra. Testes automatizados usam D1 local e identidade assinada falsa; não substituem a comparação de uma compra conhecida pelo próprio usuário.
+
+## Atualização financeira
+
+Migração aditiva `0003_finance.sql`: `finance_projection` é um índice derivado com uma linha por compra, e `finance_operations` guarda recibos idempotentes por 24h. Não altera os corpos financeiros. Triggers invalidam índices ao editar/apagar, inclusive com código antigo em rollback. O histórico antigo é preparado em lotes de 20; consultas não retornam totais parciais enquanto o preparo estiver incompleto.
+
+Edição/exclusão valida sessão, owner, Origin, JSON, CSRF, versão e chave da operação. A compra inteira e o estado do bot são alterados em lote atômico; resposta perdida pode ser reconciliada e reenviada com a mesma chave. Importação avança o snapshot só ao inserir compras novas e preserva perguntas pendentes.
+
+Depois de migrar e publicar, comparar um mês entre site e `/mes`, abrir uma compra parcelada e conferir parcela/total. Testar edição ou exclusão apenas em registro escolhido pelo próprio usuário, com aviso de que afeta todos os meses. Nunca semear compras ou assinar identidade fictícia com o token real em produção.
+
+Em rollback, manter todas as tabelas e dados. A versão anterior ignora os novos índices; os triggers continuam invalidando caches alterados e a preparação os reconstrói ao voltar para a versão nova. Não reimportar registros, trocar webhook ou apagar tabelas para reverter código.
 
 ### Rollback
 

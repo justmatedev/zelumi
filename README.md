@@ -12,7 +12,8 @@ Este é um único repositório para o produto inteiro. Ao enviar ao GitHub, use 
 | --- | --- |
 | `web/` | Novo site Next.js: Entrada, Perfil, temas e estrutura das telas financeiras |
 | `bot/` | Conversas, comandos, Telegram API e armazenamento SQLite local |
-| `cloudflare/` | Worker, autenticação, D1, migrações e fila de respostas |
+| `cloudflare/` | Worker, autenticação, API financeira, D1, migrações e fila de respostas |
+| `finance/` | Modelo compartilhado, validação, projeções e consultas mensais |
 | `tests/` | Testes de backend e do bot; interface em `web/tests/` |
 | `scripts/` | Build, verificações, migração local e publicação |
 | `docs/` | Decisões, desenho técnico e plano |
@@ -42,7 +43,7 @@ npm run cf:dev
 
 O Wrangler usa HTTPS em `https://localhost:8787` (pode ser necessário aceitar o certificado local). A configuração de exemplo usa credenciais falsas e banco local, sem acessar registros da produção. O login real do Telegram deve ser testado no domínio HTTPS vinculado no BotFather; copiar o exemplo não autoriza localhost.
 
-Nesta primeira entrega do site, Entrada e Perfil usam autenticação real; Visão geral e Lançamentos informam que a conexão dos dados está em preparação. Os registros financeiros reais continuam no bot. O exemplo “pão 10” da entrada é somente ilustrativo.
+O site usa autenticação real e consulta os mesmos registros do bot publicado. Visão geral mostra receitas, despesas e parcelas do mês; Lançamentos oferece busca por nome, filtros, detalhes, edição e exclusão da compra inteira. Editar recalcula todas as parcelas, inclusive meses anteriores; excluir remove a compra em todos os meses. O exemplo “pão 10” da entrada é somente ilustrativo.
 
 Verificações: `npm test` (backend, SQLite e D1 local), `npm --prefix web test` (interface), `npm run web:check` (tipos, interface, build e export) e `npm run cf:check` (build e dry-run do Worker). Os testes não enviam mensagens ao Telegram real. O emulador D1 precisa poder abrir portas locais.
 
@@ -120,17 +121,17 @@ Use **Editar** abaixo do registro e envie a mensagem completa, por exemplo `pão
 | --- | --- |
 | `/start` ou `/ajuda` | Instruções e exemplos |
 | `/id` | Seu identificador no Telegram |
-| `/hoje` ou `/resumo` | Entradas, saídas e saldo dos lançamentos de hoje |
-| `/mes` | Resumo deste mês |
+| `/hoje` ou `/resumo` | Entradas, saídas e resultado pela data da compra |
+| `/mes` | Receitas, despesas e parcelas deste mês |
 | `/ultimos` | Últimos 10 registros com botões de edição e desfazer |
 | `/desfazer` | Apaga o último registro criado por você |
 | `/cancelar` | Cancela a pergunta ou edição pendente |
 
-Também aceita a consulta `quanto gastei hoje?`. **Comportamento atual:** os resumos contam compras parceladas pelo valor total na data da compra. A distribuição por mês das parcelas foi aprovada e está pendente de implementação; consulte [as decisões do projeto](./docs/DECISOES.md#regra-aprovada-de-compras-parceladas--implementação-pendente). Não representam saldo bancário nem fechamento de fatura. O cronograma de parcelas é calculado e salvo, com centavos distribuídos para preservar o total.
+Também aceita a consulta `quanto gastei hoje?`. **Comportamento atual:** `/mes` e o site somam as parcelas dos respectivos meses. `/hoje` e `/resumo` usam os valores integrais das compras/receitas cuja data é hoje. A primeira parcela começa no mês da compra por padrão; no site, é possível ajustar o mês inicial. Edição no site atua na compra inteira, incluindo meses anteriores; consulte [as decisões do projeto](./docs/DECISOES.md). Não representam saldo bancário nem fechamento de fatura. O cronograma de parcelas é calculado e salvo, com centavos distribuídos para preservar o total.
 
 ### Dados e funcionamento
 
-- Neste modo local, os registros ficam em `data/miudo.sqlite`, com separação pelo ID do Telegram. Na versão publicada, ficam no D1; o novo site compartilha a identidade Telegram, mas a leitura de lançamentos ainda não está conectada.
+- Neste modo local, os registros ficam em `data/miudo.sqlite`, com separação pelo ID do Telegram. Na versão publicada, ficam no D1; o site compartilha a identidade Telegram e consulta os mesmos registros por API autenticada. O SQLite de desenvolvimento local é separado do D1 publicado.
 - Cursor de atualização, alterações financeiras e respostas pendentes são persistidos em uma transação SQLite. Reenvios do mesmo `update_id` não duplicam o lançamento.
 - Respostas que falham por rede ou limite de uso ficam na fila para nova tentativa. Uma confirmação pode aparecer duas vezes se o processo cair após enviá-la e antes de confirmar sua entrega localmente; o lançamento financeiro continua único.
 - Conversas de grupo são ignoradas. Áudios, imagens, transferências, pagamentos de fatura e lembretes automáticos ainda não estão disponíveis.
@@ -170,3 +171,7 @@ Os testes cobrem interpretação de valores e parcelas, persistência após rein
 - `bot/store.mjs`: SQLite, deduplicação e fila de respostas.
 - `bot/telegram.mjs`: cliente HTTP da API, com erros sem token.
 - `bot/index.mjs`: configuração e processo de long polling.
+
+## Consistência dos lançamentos
+
+A busca não diferencia acentos/maiúsculas e pesquisa todas as parcelas. A primeira consulta pode preparar índices antigos em lotes, sem mostrar totais parciais. Alterações concorrentes entre bot e site pedem revisão da versão atual. Reenvios de edição/exclusão usam chave idempotente; em rede incerta, o site oferece verificar o resultado antes de reenviar. Uma troca de conta encerra editores e limpa consultas da conta anterior. A importação só avança a versão do histórico quando adiciona compras novas e preserva perguntas já pendentes.

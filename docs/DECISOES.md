@@ -16,11 +16,11 @@ Atualizado em 02/11/2026. Este documento reúne as decisões da conversa e difer
 
 | Parte | Decisão | Situação |
 | --- | --- | --- |
-| Interface do novo site | Next.js + TypeScript | Base implementada e publicada; dados financeiros pendentes |
+| Interface do novo site | Next.js + TypeScript | Telas financeiras e dados reais implementados e publicados |
 | Estilização | Tailwind CSS | Implementado no site |
 | Componentes | shadcn/ui, personalizados | Button e Card implementados |
 | Backend e bot | Cloudflare Workers | Bot implementado e publicado |
-| Banco de dados | Cloudflare D1 | Em uso pelo bot; site ainda não conectado |
+| Banco de dados | Cloudflare D1 | Compartilhado pelo bot e pela API financeira do site |
 | Autenticação do site | Apenas Telegram nesta fase | Widget clássico + sessão publicados e confirmados pelo usuário |
 | Operação inicial | Priorizar franquias gratuitas e acompanhar consumo | Sem compromisso de gratuidade ilimitada |
 
@@ -59,7 +59,7 @@ Zod foi sugerido para validação, mas nenhuma biblioteca de validação, autent
 - Conta Telegram vinculada. A indicação do vínculo fica no Perfil; não exibir bolinha de status ou texto de vínculo no cabeçalho.
 - Opção de sair.
 
-## Regra aprovada de compras parceladas — implementação pendente
+## Compras parceladas — regra implementada
 
 - Mostrar o valor de cada parcela no seu respectivo mês, como uma visão mensal de compromissos.
 - Exemplo: compra de R$ 1.000 em 10 parcelas aparece como R$ 100 por mês durante 10 meses.
@@ -72,7 +72,7 @@ Zod foi sugerido para validação, mas nenhuma biblioteca de validação, autent
 - Edição no site atua na compra inteira e recalcula todas as parcelas; sem edição isolada de uma parcela nesta versão. Decisão confirmada pelo usuário após a conexão inicial do site.
 - Fechamento e vencimento de fatura ficam para depois. Esta fase não implementa um ciclo real de cartão de crédito.
 
-**Situação atual:** o bot calcula e armazena o cronograma, mas os resumos ainda somam o valor integral na data da compra. A mudança para parcelas mensais foi aprovada na conversa e ainda precisa ser implementada e testada. O detalhamento do comando diário também precisa ser alinhado a essa mudança.
+**Situação atual:** `/mes` e o site usam as parcelas de cada mês, preservando centavos e o valor total nos detalhes. `/hoje` e `/resumo` mantêm valores integrais pela data da compra, com explicação na resposta. Site permite editar a compra inteira e ajustar seu mês inicial; a exclusão afeta todas as parcelas.
 
 Sintaxes já implementadas no interpretador:
 
@@ -140,7 +140,7 @@ As opções 1 (Z contínuo) e 3 (Horizonte) foram exploradas; a opção escolhid
 
 ## Próxima etapa combinada
 
-Login real e continuidade do bot confirmados pelo usuário. A próxima etapa é detalhar a API financeira e a distribuição de parcelas por mês para conectar Visão geral e Lançamentos. A base do site está publicada, mas essas páginas ainda apresentam conexão pendente. Não iniciar funcionalidades apenas porque foram citadas como possibilidades.
+API financeira e telas conectadas publicadas. A próxima validação é comparar os lançamentos e o mês atual com `/mes`, pelo próprio usuário, e opcionalmente testar edição/exclusão em um registro de teste escolhido por ele. Não iniciar novas funcionalidades apenas porque foram citadas como possibilidades.
 
 ## Prévia visual da Visão geral
 
@@ -196,8 +196,12 @@ Publicado em `https://financeiro-testes-bot.miudo.workers.dev`, versão `e40e45a
 
 Validação externa concluída: o usuário confirmou que entrou pelo Telegram, viu a conta correta no Perfil e recebeu a resposta de `/hoje` com o programa local desligado. CPU por requisição e folga nas cotas gratuitas não foram medidas; não houve ativação de plano pago. GitHub permanece para depois: branch `feat/zelumi-web-login` preservada, sem push ou merge.
 
-### Próxima entrega: dados financeiros
+### Entrega de dados financeiros
 
-O usuário pediu conectar os lançamentos ao site e confirmou **editar a compra inteira e recalcular todas as parcelas**, sem edição isolada. O desenho de [dados reais e parcelas mensais](./superpowers/specs/2026-11-02-zelumi-dados-financeiros-design.md) reúne regras, API, concorrência, busca/filtros, migração e telas. A revisão independente não apontou lacunas importantes para planejar, e o usuário aprovou o desenho explicitamente. O [plano de implementação](./superpowers/plans/2026-11-02-zelumi-dados-financeiros.md) foi escrito e revisado pelo autor, com execução direta preservada; aguarda a revisão final do plano pelo usuário. Nenhuma API financeira, migração dessa fase ou alteração de valores reais foi executada.
+O usuário pediu conectar os lançamentos ao site e confirmou **editar a compra inteira e recalcular todas as parcelas**, sem edição isolada. O desenho de [dados reais e parcelas mensais](./superpowers/specs/2026-11-02-zelumi-dados-financeiros-design.md) reúne regras, API, concorrência, busca/filtros, migração e telas. A revisão independente não apontou lacunas importantes para planejar, e o usuário aprovou o desenho explicitamente. O usuário aprovou o [plano de implementação](./superpowers/plans/2026-11-02-zelumi-dados-financeiros.md), executado diretamente na sessão. API e telas foram implementadas e a migração aditiva0003 foi aplicada; o agente não alterou valores financeiros reais para testar.
 
-Propostas explícitas do implementador para revisão: cálculo mensal no servidor sobre cronogramas existentes; receitas já parceladas seguem seu cronograma; `/hoje` mantém valores integrais pela data da compra com explicação no texto, enquanto `/mes` e site usam parcelas mensais. Os formulários permitem editar a compra toda e excluir todas as suas parcelas, informando o efeito inclusive em meses anteriores.
+Funcionamento aprovado e implementado: cálculo mensal no servidor sobre cronogramas existentes; receitas já parceladas seguem seu cronograma; `/hoje` mantém valores integrais pela data da compra com explicação no texto, enquanto `/mes` e site usam parcelas mensais. Os formulários permitem editar a compra toda e excluir todas as suas parcelas, informando o efeito inclusive em meses anteriores.
+
+Publicado em 02/11/2026, versão `d3edc342-66e2-43fa-b1b1-05d3578bab11`, no Worker existente. 66 testes backend/D1 e15 testes da interface passaram, junto com tipos, build/export e dry-run. A revisão independente identificou três corridas (replay, troca de conta e snapshot na importação), reproduzidas e corrigidas. Firefox verificou overview/histórico/formulário nos temas claro/escuro e celular390px, foco do diálogo, edição e exclusão usando somente usuários e dados locais fictícios.
+
+Em produção, páginas200, endpoints financeiros anônimos401, rota inexistenteJSON404, saúde200 e webhook sem segredo401 conferidos. Webhook ativo, sem mensagens pendentes ou último erro. Comparação mensal e teste opcional de edição/exclusão solicitados ao usuário e ainda sem confirmação. CPU por requisição não medida; startup não substitui essa métrica. Sem ativar plano pago ou enviar GitHub; branch `feat/zelumi-finance` preservada.
