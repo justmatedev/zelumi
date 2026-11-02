@@ -23,7 +23,7 @@ google 12x 80 → 12 parcelas de R$ 80 (total R$ 960)
 /id — seu identificador no Telegram
 /ajuda — mostra esta mensagem
 
-Use Editar para substituir um lançamento pela mensagem completa. Uso regras, não IA. Só aceito texto e datas hoje/ontem. Parcelas entram no resumo pelo valor total da compra. Seus registros ficam no banco do bot, separado do site de teste.`;
+Use Editar para substituir a compra inteira pela mensagem completa. Uso regras, não IA. Aceito texto e datas hoje/ontem. /mes usa as parcelas de cada mês; /hoje usa valores integrais pela data da compra. Seus registros são os mesmos do site Zelumi.`;
 
 export function localDate(now, timezone) {
   if (!dateFormatters.has(timezone)) dateFormatters.set(timezone, new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }));
@@ -56,9 +56,14 @@ export function handleUpdate(store, update, { timezone = 'America/Sao_Paulo', no
       store.setPending(owner, session);
       reply(data.question + '\n\nPara sair, use /cancelar.', cancelButtons(session.token));
     }
-    function save(result, editing) {
+    function save(result, editing, dateWasExplicit=false) {
       const {status,question,...record} = result;
       if (editing && !store.record(owner, editing)) { store.clearPending(owner); reply('Esse lançamento já foi desfeito. Envie uma nova mensagem.'); return; }
+      if(editing){
+        const current=store.record(owner,editing);
+        if(!pending?.originalVersion||current.version!==pending.originalVersion){store.clearPending(owner);reply('Esse lançamento mudou desde o início da edição. Abra Editar novamente para revisar. Nada foi substituído.');return;}
+        if(!dateWasExplicit&&record.date===pending.originalDate&&record.installments===pending.originalInstallments&&pending.originalStartMonth)record.installmentStartMonth=pending.originalStartMonth;
+      }
       record.schedule = schedule(record);
       const id = editing || store.insert(owner, record);
       if(editing) store.replace(owner, id, record);
@@ -82,7 +87,7 @@ export function handleUpdate(store, update, { timezone = 'America/Sao_Paulo', no
         if(action==='undo') remove(recordId);
         else if(action==='edit') {
           if(pending && pending.expires > now.getTime()) {reply('Já existe uma pergunta pendente. Responda ou use /cancelar antes de editar.');return;}
-          startPending({mode:'edit',editing:recordId,originalDate:record.date,question:`Envie o lançamento completo para substituir “${record.description}” (${brl(record.amount)}). Ex.: “pão 12,50”. A data anterior será mantida, a menos que você escreva hoje ou ontem.`});
+          startPending({mode:'edit',editing:recordId,originalVersion:record.version,originalDate:record.date,originalInstallments:record.installments,originalStartMonth:record.installmentStartMonth||null,question:`Envie o lançamento completo para substituir “${record.description}” (${brl(record.amount)}). Ex.: “pão 12,50”. A data anterior será mantida, a menos que você escreva hoje ou ontem. Todas as parcelas serão recalculadas.`});
         }
       }
       return;
@@ -98,22 +103,25 @@ export function handleUpdate(store, update, { timezone = 'America/Sao_Paulo', no
     }
     if (['/hoje','/mes','/resumo'].includes(command) || ['quanto gastei hoje?','quanto gastei hoje','resumo de hoje'].includes(normalize(text))) {
       const monthly=command==='/mes', period=monthly?today.slice(0,7):today;
-      const {income,expense,count}=store.summary(owner,period);
-      reply(`📊 ${monthly?'Este mês':'Hoje'}\nEntradas: ${brl(income)}\nSaídas: ${brl(expense)}\nSaldo dos lançamentos: ${brl(income-expense)}\n${count} lançamento(s). Compras parceladas são contabilizadas pelo total.`);return;
+      const summary=store.summary(owner,period);
+      if(summary.status){reply(summary.status==='preparing'?'Seu histórico está sendo preparado. Envie /mes novamente em instantes.':'Um lançamento antigo precisa de revisão. O resumo não foi calculado para evitar um total incompleto.');return;}
+      const {income,expense,count}=summary;
+      reply(`📊 ${monthly?'Este mês':'Hoje'}\nEntradas: ${brl(income)}\nSaídas: ${brl(expense)}\n${monthly?'Resultado do mês':'Resultado dos lançamentos'}: ${brl(income-expense)}\n${count} ${monthly?'ocorrência(s). Parcelas nos respectivos meses.':'lançamento(s). Valores integrais pela data da compra; /mes distribui as parcelas.'}`);return;
     }
     if(command) {reply('Comando desconhecido. Use /ajuda para ver as opções.');return;}
     if(!text) {reply('Por enquanto, envie texto, como “pão 10”. Áudios e imagens ainda não são interpretados.');return;}
     if(pending && pending.expires <= now.getTime()) {store.clearPending(owner);reply('A pergunta anterior expirou após 30 minutos. Envie novamente a mensagem completa.');return;}
     if(pending?.mode==='amount') {
       const result=resolve(pending.result,text);
-      if(result.status==='ready') save(result,pending.editing);
+      if(result.status==='ready') save(result,pending.editing,pending.dateWasExplicit);
       else reply(result.question,cancelButtons(pending.token));
       return;
     }
     const result=parse(text,parserNow);
     if(pending?.mode==='edit' && !/\b(hoje|ontem)\b/.test(normalize(text))) result.date=pending.originalDate;
-    if(result.status==='ready') save(result,pending?.editing);
-    else if(['missing_amount','ambiguous'].includes(result.status)) startPending({mode:'amount',result,editing:pending?.editing,question:result.question});
+    const dateWasExplicit=/\b(hoje|ontem)\b/.test(normalize(text));
+    if(result.status==='ready') save(result,pending?.editing,dateWasExplicit);
+    else if(['missing_amount','ambiguous'].includes(result.status)) startPending({mode:'amount',result,editing:pending?.editing,originalVersion:pending?.originalVersion,originalDate:pending?.originalDate,originalInstallments:pending?.originalInstallments,originalStartMonth:pending?.originalStartMonth,dateWasExplicit,question:result.question});
     else reply(result.question);
   });
 }

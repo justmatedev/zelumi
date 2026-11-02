@@ -81,16 +81,28 @@ test('cancelamento antigo não cancela nova pergunta e sessão expira',t=>{
  handleUpdate(store,message(5,'10'),{...options,now:new Date(now.getTime()+31*60*1000)});
  assert.equal(store.list('11').length,0);assert.equal(store.pending('11'),null);
 });
-test('resumos consideram receitas, mês e total de parcelas',t=>{
+test('resumo mensal usa parcelas e mantém total no cronograma',t=>{
  const store=fixture(t);
  handleUpdate(store,message(1,'recebi 200 da venda da cadeira'),options);
  handleUpdate(store,message(2,'notebook 3000 em 10x'),options);
  handleUpdate(store,message(3,'ontem pão 10'),options);
  handleUpdate(store,message(4,'/mes'),options);
  const text=drain(store).at(-1).payload.text;
- assert.match(text,/Entradas: R\$\s*200,00/);assert.match(text,/Saídas: R\$\s*3.000,00/);
+ assert.match(text,/Entradas: R\$\s*200,00/);assert.match(text,/Saídas: R\$\s*300,00/);assert.match(text,/Resultado do mês/);
  const record=store.list('11')[1];assert.equal(record.schedule.length,10);
  assert.equal(record.schedule.reduce((s,r)=>s+r.amount,0),300000);
+});
+test('edição pendente detecta alteração externa, inclusive quando falta valor',t=>{
+ const store=fixture(t);handleUpdate(store,message(1,'notebook 1200 em 12x'),options);
+ const r=store.list('11')[0];handleUpdate(store,callback(2,`edit:${r.id}`),options);handleUpdate(store,message(3,'notebook'),options);
+ const body=JSON.parse(store.db.prepare('SELECT body FROM records WHERE id=?').get(r.id).body);store.replace('11',r.id,{...body,description:'Corrigido no site'});
+ handleUpdate(store,message(4,'1300'),options);assert.equal(store.list('11').length,1);assert.equal(store.list('11')[0].description,'Corrigido no site');assert.match(drain(store).at(-1).payload.text,/mudou desde/);
+});
+test('editar mantém início ajustado e data explícita redefine o mês',t=>{
+ const store=fixture(t);handleUpdate(store,message(1,'notebook 1200 em 12x'),options);const r=store.list('11')[0];
+ const body=JSON.parse(store.db.prepare('SELECT body FROM records WHERE id=?').get(r.id).body);store.replace('11',r.id,{...body,installmentStartMonth:'2027-02'});
+ handleUpdate(store,callback(2,`edit:${r.id}`),options);handleUpdate(store,message(3,'notebook 2400 em 12x'),options);assert.equal(store.list('11')[0].schedule[0].date.slice(0,7),'2027-02');
+ handleUpdate(store,callback(4,`edit:${r.id}`),options);handleUpdate(store,message(5,'hoje notebook 3600 em 12x'),options);assert.equal(store.list('11')[0].installmentStartMonth,undefined);
 });
 test('dados, perguntas e cursor sobrevivem a reinício',()=>{
  const dir=mkdtempSync(join(tmpdir(),'miudo-test-')),path=join(dir,'bot.sqlite');

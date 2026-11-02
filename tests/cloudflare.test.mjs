@@ -1,3 +1,4 @@
+import {migrate} from './helpers/d1.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,mkdtempSync,rmSync} from 'node:fs';
@@ -26,9 +27,7 @@ test('Cloudflare Worker com D1 local real',async t=>{
  const platform=await getPlatformProxy({configPath:'tests/wrangler.jsonc',persist:false,remoteBindings:false,envFiles:[resolve('.dev.vars.example')]});
  t.after(()=>platform.dispose());
  const db=platform.env.DB;
- const migration=readFileSync(new URL('../cloudflare/migrations/0001_initial.sql',import.meta.url),'utf8');
- // D1.exec aceita uma instrução por linha; batch preserva o SQL de cada tabela.
- await db.batch(migration.split(';').map(s=>s.trim()).filter(Boolean).map(s=>db.prepare(s)));
+ await migrate(db);
  const env={DB:db,TELEGRAM_BOT_TOKEN:'123:fake',TELEGRAM_WEBHOOK_SECRET:secret,BOT_TIMEZONE:'America/Sao_Paulo'};
  let sent=[];
  const worker=createWorker({clock:()=>now,apiFactory:()=>async(method,payload)=>{sent.push({method,payload});return true;}});

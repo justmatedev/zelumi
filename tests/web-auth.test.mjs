@@ -1,3 +1,4 @@
+import {migrate} from './helpers/d1.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
@@ -16,10 +17,7 @@ const cookie=(res,name)=>res.headers.getSetCookie().find(v=>v.startsWith(`${name
 test('sessões web com D1 local',async t=>{
  const platform=await getPlatformProxy({configPath:'tests/wrangler.jsonc',persist:false,remoteBindings:false,envFiles:[resolve('.dev.vars.example')]});t.after(()=>platform.dispose());
  const db=platform.env.DB;
- for(const name of ['0001_initial.sql','0002_web_auth.sql']){
-  const file=new URL(`../cloudflare/migrations/${name}`,import.meta.url);
-  if(existsSync(file))await db.batch(readFileSync(file,'utf8').split(';').map(s=>s.trim()).filter(Boolean).map(s=>db.prepare(s)));
- }
+ await migrate(db);
  let now=initial;
  const env={DB:db,TELEGRAM_BOT_TOKEN:token,TELEGRAM_WEBHOOK_SECRET:'local_test_secret_with_at_least_32_characters',APP_ORIGIN:origin,TELEGRAM_BOT_USERNAME:'test_bot'};
  const worker=createWorker({clock:()=>new Date(now),apiFactory:()=>async()=>true});

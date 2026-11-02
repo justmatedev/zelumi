@@ -1,6 +1,9 @@
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import {projectionSchema,projectionArgs,projectionInsert,missingSQL,monthlySQL} from '../finance/sql.mjs';
+import {FinanceError,safeTotals} from '../finance/model.mjs';
+import {recordVersion} from '../finance/version.mjs';
 
 export class Store {
   constructor(path) {
@@ -20,6 +23,7 @@ export class Store {
         id INTEGER PRIMARY KEY AUTOINCREMENT, method TEXT NOT NULL, payload TEXT NOT NULL
       );
     `);
+    this.db.exec(projectionSchema('records').join(';')+';');
   }
   getMeta(key) { return this.db.prepare('SELECT value FROM meta WHERE key=?').get(key)?.value; }
   setMeta(key, value) { this.db.prepare('INSERT OR REPLACE INTO meta VALUES (?,?)').run(key, String(value)); }
@@ -40,12 +44,18 @@ export class Store {
   list(owner) { return this.db.prepare('SELECT id, body FROM records WHERE owner=? ORDER BY id').all(owner).map(row => ({...JSON.parse(row.body), id: Number(row.id)})); }
   recent(owner, limit) { return this.db.prepare('SELECT id,body FROM records WHERE owner=? ORDER BY id DESC LIMIT ?').all(owner,limit).map(row=>({...JSON.parse(row.body),id:Number(row.id)})); }
   summary(owner, period) {
+    if(period.length===7){
+      try{for(const r of this.db.prepare(missingSQL('records')).all(owner,20))this.db.prepare(projectionInsert('records')).run(...projectionArgs(owner,r.id,r.body));}
+      catch(error){if(error instanceof FinanceError)return {status:'invalid'};throw error;}
+      if(this.db.prepare(missingSQL('records')).get(owner,1))return {status:'preparing'};
+      return safeTotals({...this.db.prepare(monthlySQL('records')).get(owner,period,period,period)});
+    }
     const row=this.db.prepare(`SELECT COUNT(*) AS count, COALESCE(SUM(CASE WHEN json_extract(body,'$.type')='receita' THEN json_extract(body,'$.amount') ELSE 0 END),0) AS income, COALESCE(SUM(CASE WHEN json_extract(body,'$.type')='despesa' THEN json_extract(body,'$.amount') ELSE 0 END),0) AS expense FROM records WHERE owner=? AND json_extract(body,'$.date') LIKE ?`).get(owner,period+'%');
     return {...row};
   }
-  record(owner, id) { const row = this.db.prepare('SELECT body FROM records WHERE owner=? AND id=?').get(owner, id); return row ? {...JSON.parse(row.body), id: Number(id)} : null; }
-  insert(owner, record) { return Number(this.db.prepare('INSERT INTO records(owner,body) VALUES (?,?)').run(owner, JSON.stringify(record)).lastInsertRowid); }
-  replace(owner, id, record) { return this.db.prepare('UPDATE records SET body=? WHERE owner=? AND id=?').run(JSON.stringify(record), owner, id).changes > 0; }
+  record(owner, id) { const row = this.db.prepare('SELECT body FROM records WHERE owner=? AND id=?').get(owner, id); return row ? {...JSON.parse(row.body),id:Number(id),version:recordVersion(row.body)} : null; }
+  insert(owner, record) {const body=JSON.stringify(record);projectionArgs(owner,'0',body);const id=Number(this.db.prepare('INSERT INTO records(owner,body) VALUES (?,?)').run(owner,body).lastInsertRowid);this.db.prepare(projectionInsert('records')).run(...projectionArgs(owner,id,body));return id;}
+  replace(owner, id, record) {const body=JSON.stringify(record);projectionArgs(owner,id,body);const changed=this.db.prepare('UPDATE records SET body=? WHERE owner=? AND id=?').run(body,owner,id).changes>0;if(changed)this.db.prepare(projectionInsert('records')).run(...projectionArgs(owner,id,body));return changed;}
   remove(owner, id) { return this.db.prepare('DELETE FROM records WHERE owner=? AND id=?').run(owner, id).changes > 0; }
   pending(owner) { const row = this.db.prepare('SELECT body FROM pending WHERE owner=?').get(owner); return row ? JSON.parse(row.body) : null; }
   setPending(owner, value) { this.db.prepare('INSERT OR REPLACE INTO pending VALUES (?,?)').run(owner, JSON.stringify(value)); }
