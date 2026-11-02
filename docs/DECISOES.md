@@ -2,6 +2,14 @@
 
 Atualizado em 02/11/2026. Este documento reúne as decisões da conversa e diferencia o produto planejado do código que já está em funcionamento. Ao mudar uma decisão com o usuário, atualizar este registro.
 
+### Modelos numéricos e datas explícitas no bot — 02/11/2026
+
+Correção dos exemplos enviados pelo usuário: `video game xbox 360 1500` registra R$ 1.500,00 e preserva `Xbox 360` na descrição; `sorvete 7 04/04/2026` registra R$ 7,00 em 4 de abril de 2026. A interpretação distingue números dos modelos Xbox 360, iPhone e PlayStation dos valores e das parcelas. Mensagens ainda ambíguas, como `pão 2 10`, continuam pedindo confirmação do total.
+
+Datas explícitas aceitam dia/mês/ano com ano de quatro dígitos, calendário válido e limites de 1900 a 9990 compatíveis com o painel. São separadas antes da leitura de valores e parcelas. A edição reconhece a data informada e mantém essa escolha durante perguntas pendentes; sem data explícita, preserva a anterior. Ajuda e README refletem os formatos aceitos. Implementação local, sem publicação ou alteração de lançamentos existentes.
+
+Verificação: 97 testes de backend/D1 passaram. As regressões cobrem os exemplos, datas inválidas e bissextas, limites do painel, parcelamentos, edição e perguntas pendentes. A revisão independente identificou remoção indevida de `x` em descrições como `raio x`, corrigida e protegida por teste.
+
 ### Entrada com botão próprio do Zelumi — 02/11/2026
 
 O usuário pediu manter a identidade visual no login, sem substituir o botão do Zelumi pelo botão azul do widget. O botão próprio passa a chamar sincronamente `Telegram.Login.auth` no SDK legado oficial já utilizado. A confirmação abre em janela do Telegram e o retorno continua sujeito à validação HMAC, CSRF, sessão e replay existentes. Isso não migra para o SDK OIDC nem exige novas credenciais ou alteração no BotFather.

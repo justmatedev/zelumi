@@ -148,9 +148,9 @@ Bot: Total R$ 3.000,00, em 10 parcelas
 
 Parcelas: `google 1000 x12` significa R$ 1.000 no total em 12 parcelas; `google 12x 80` significa 12 parcelas de R$ 80, totalizando R$ 960.
 
-Outros testes: `pão 2 10` pede o total; `ontem almoço 35` usa a data de ontem. Em uma pergunta sobre valor, responda só o total ou use `/cancelar`. As perguntas expiram em 30 minutos e continuam disponíveis após reiniciar dentro desse prazo.
+Outros testes: `pão 2 10` pede o total; `ontem almoço 35` usa a data de ontem. `video game xbox 360 1500` registra R$ 1.500,00 e preserva o modelo Xbox 360 na descrição; modelos numéricos de iPhone e PlayStation também são reconhecidos. `sorvete 7 04/04/2026` registra R$ 7,00 em 4 de abril de 2026. Datas explícitas usam dia/mês/ano, com ano de quatro dígitos e validação do calendário. Em uma pergunta sobre valor, responda só o total ou use `/cancelar`. As perguntas expiram em 30 minutos e continuam disponíveis após reiniciar dentro desse prazo.
 
-Use **Editar** abaixo do registro e envie a mensagem completa, por exemplo `pão 12,50`. Isso substitui o registro; mantém a data anterior se você não escrever `hoje` ou `ontem`. Editar a mensagem original pelo próprio Telegram não altera o lançamento. Se quiser corrigir tipo, categoria ou parcelas, descreva novamente a operação; ainda não há editor de campos individuais no bot.
+Use **Editar** abaixo do registro e envie a mensagem completa, por exemplo `pão 12,50`. Isso substitui o registro; mantém a data anterior se você não escrever `hoje`, `ontem` ou uma data como `04/04/2026`. Editar a mensagem original pelo próprio Telegram não altera o lançamento. Se quiser corrigir tipo, categoria ou parcelas, descreva novamente a operação; ainda não há editor de campos individuais no bot.
 
 ### Comandos
 

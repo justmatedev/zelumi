@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { parse, resolve, schedule } from '../shared/parser.mjs';
+import { parse, resolve, schedule, hasExplicitDate } from '../shared/parser.mjs';
 
 const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const brl = cents => formatter.format(cents / 100);
@@ -10,6 +10,8 @@ const help = `🌱 Sou o Zelumi. Me conte o que entrou ou saiu:
 pão 10
 uber 23,50
 ontem almoço 35
+sorvete 7 04/04/2026
+video game xbox 360 1500
 recebi 200 da venda da cadeira
 notebook 3000 em 10x
 google 1000 x12 → total de R$ 1.000 em 12 parcelas
@@ -23,7 +25,7 @@ google 12x 80 → 12 parcelas de R$ 80 (total R$ 960)
 /id — seu identificador no Telegram
 /ajuda — mostra esta mensagem
 
-Use Editar para substituir a compra inteira pela mensagem completa. Uso regras, não IA. Aceito texto e datas hoje/ontem. /mes usa as parcelas de cada mês; /hoje usa valores integrais pela data da compra. Seus registros são os mesmos do site Zelumi.
+Use Editar para substituir a compra inteira pela mensagem completa. Uso regras, não IA. Aceito texto e datas hoje/ontem ou dia/mês/ano. /mes usa as parcelas de cada mês; /hoje usa valores integrais pela data da compra. Seus registros são os mesmos do site Zelumi.
 
 📊 Acompanhe seus lançamentos pelo site:
 https://usezelumi.vercel.app`;
@@ -90,7 +92,7 @@ export function handleUpdate(store, update, { timezone = 'America/Sao_Paulo', no
         if(action==='undo') remove(recordId);
         else if(action==='edit') {
           if(pending && pending.expires > now.getTime()) {reply('Já existe uma pergunta pendente. Responda ou use /cancelar antes de editar.');return;}
-          startPending({mode:'edit',editing:recordId,originalVersion:record.version,originalDate:record.date,originalInstallments:record.installments,originalStartMonth:record.installmentStartMonth||null,question:`Envie o lançamento completo para substituir “${record.description}” (${brl(record.amount)}). Ex.: “pão 12,50”. A data anterior será mantida, a menos que você escreva hoje ou ontem. Todas as parcelas serão recalculadas.`});
+          startPending({mode:'edit',editing:recordId,originalVersion:record.version,originalDate:record.date,originalInstallments:record.installments,originalStartMonth:record.installmentStartMonth||null,question:`Envie o lançamento completo para substituir “${record.description}” (${brl(record.amount)}). Ex.: “pão 12,50”. A data anterior será mantida, a menos que você escreva hoje, ontem ou uma data como 04/04/2026. Todas as parcelas serão recalculadas.`});
         }
       }
       return;
@@ -121,8 +123,8 @@ export function handleUpdate(store, update, { timezone = 'America/Sao_Paulo', no
       return;
     }
     const result=parse(text,parserNow);
-    if(pending?.mode==='edit' && !/\b(hoje|ontem)\b/.test(normalize(text))) result.date=pending.originalDate;
-    const dateWasExplicit=/\b(hoje|ontem)\b/.test(normalize(text));
+    const dateWasExplicit=hasExplicitDate(text);
+    if(pending?.mode==='edit' && !dateWasExplicit) result.date=pending.originalDate;
     if(result.status==='ready') save(result,pending?.editing,dateWasExplicit);
     else if(['missing_amount','ambiguous'].includes(result.status)) startPending({mode:'amount',result,editing:pending?.editing,originalVersion:pending?.originalVersion,originalDate:pending?.originalDate,originalInstallments:pending?.originalInstallments,originalStartMonth:pending?.originalStartMonth,dateWasExplicit,question:result.question});
     else reply(result.question);

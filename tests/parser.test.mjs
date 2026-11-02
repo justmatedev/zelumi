@@ -2,6 +2,39 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {parse,resolve,money,schedule} from '../shared/parser.mjs';
 const now=new Date(2026,10,1,12);
+test('números de modelos ficam na descrição e não disputam o valor',()=>{
+ for(const [text,description,amount,installments] of [
+  ['video game xbox 360 1500','Video game xbox 360',150000,1],
+  ['Xbox 360 R$ 1.500,00','Xbox 360',150000,1],
+  ['iphone 15 4000','Iphone 15',400000,1],
+  ['xbox 360 1500 em 10x','Xbox 360',150000,10],
+  ['xbox 360 10x 150','Xbox 360',150000,10],
+ ]){
+  const r=parse(text,now);
+  assert.equal(r.status,'ready',text);assert.equal(r.description,description,text);
+  assert.equal(r.amount,amount,text);assert.equal(r.installments,installments,text);
+ }
+ const pending=parse('xbox 360',now);
+ assert.equal(pending.status,'missing_amount');assert.equal(resolve(pending,'1500').description,'Xbox 360');
+ assert.equal(parse('pão 2 10',now).status,'ambiguous');
+ assert.equal(parse('xbox 360 2 1500',now).status,'ambiguous');
+ assert.equal(parse('xbox 360,50',now).amount,36050);
+ assert.equal(parse('iphone 15,50',now).amount,1550);
+});
+test('data brasileira explícita não vira valor nem descrição',()=>{
+ for(const text of ['sorvete 7 04/04/2026','04/04/2026 sorvete 7','sorvete no dia 4/4/2026 7']){
+  const r=parse(text,now);
+  assert.equal(r.status,'ready',text);assert.equal(r.amount,700,text);
+  assert.equal(r.date,'2026-04-04',text);assert.equal(r.description,'Sorvete',text);
+ }
+ const r=resolve(parse('sorvete 04/04/2026',now),'7');
+ assert.equal(r.status,'ready');assert.equal(r.date,'2026-04-04');assert.equal(r.amount,700);
+ assert.equal(parse('sorvete 7 29/02/2024',now).date,'2024-02-29');
+ assert.equal(parse('menu do dia por 7 04/04/2026',now).description,'Menu dia');
+ for(const date of ['31/04/2026','29/02/2026','00/04/2026','04/13/2026','04/04/0000','04/04/1899','04/04/9991','04/04/26','04/04/2026 05/04/2026']){
+  assert.equal(parse(`sorvete 7 ${date}`,now).status,'invalid',date);
+ }
+});
 test('categorias prontas reconhecem termos, marcas, plurais e acentos',()=>{
  const cases={
   'Alimentação':['pães','SUPERMERCADO','açaí','iFood','restaurantes'],
@@ -43,6 +76,8 @@ test('classificação não usa trechos de palavras nem adivinha marcas ambíguas
  assert.equal(resolve(parse('veterinário',now),'50').category,'Pets');
 });
 test('limpeza da descrição preserva palavras acentuadas inteiras',()=>{
+ assert.equal(parse('raio x 150',now).description,'Raio x');
+ assert.equal(parse('juros das parcelas 50',now).description,'Juros das parcelas');
  assert.equal(parse('paguei plano de saúde 50',now).description,'Plano saúde');
  assert.equal(parse('plano de sau\u0301de 50',now).description.normalize('NFC'),'Plano saúde');
  assert.equal(parse('plano de sau\u0301de 50',now).category,'Saúde');

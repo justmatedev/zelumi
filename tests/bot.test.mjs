@@ -15,6 +15,33 @@ const callback = (id,data,user=11) => ({update_id:id,callback_query:{id:`q${id}`
 const drain = store => {const results=[];let delivery;while((delivery=store.nextDelivery())){results.push(delivery);store.delivered(delivery.id);}return results;};
 function fixture(t) {const store=new Store(':memory:');t.after(()=>store.close());return store;}
 
+test('registra modelo e data explícita nas mensagens do exemplo',t=>{
+ const store=fixture(t);
+ handleUpdate(store,message(1,'video game xbox 360 1500'),options);
+ handleUpdate(store,message(2,'sorvete 7 04/04/2026'),options);
+ const rows=store.list('11');assert.equal(rows.length,2);
+ assert.equal(rows[0].description,'Video game xbox 360');assert.equal(rows[0].amount,150000);
+ assert.equal(rows[1].date,'2026-04-04');assert.equal(rows[1].amount,700);
+ assert.equal(store.pending('11'),null);
+ assert.match(drain(store).at(-1).payload.text,/04\/04\/2026/);
+});
+test('edição aplica data numérica e mantém a escolha durante pergunta de valor',t=>{
+ const store=fixture(t);
+ handleUpdate(store,message(1,'notebook 1200 em 12x'),options);
+ const r=store.list('11')[0];
+ const body=JSON.parse(store.db.prepare('SELECT body FROM records WHERE id=?').get(r.id).body);
+ store.replace('11',r.id,{...body,installmentStartMonth:'2027-02'});
+ handleUpdate(store,callback(2,`edit:${r.id}`),options);
+ handleUpdate(store,message(3,'notebook 2400 em 12x 04/04/2026'),options);
+ assert.equal(store.list('11')[0].date,'2026-04-04');
+ assert.equal(store.list('11')[0].schedule[0].date,'2026-04-04');
+ handleUpdate(store,callback(4,`edit:${r.id}`),options);
+ handleUpdate(store,message(5,'notebook 05/04/2026'),options);
+ handleUpdate(store,message(6,'1500'),options);
+ assert.equal(store.list('11')[0].date,'2026-04-05');
+ assert.equal(store.list('11')[0].amount,150000);
+});
+
 test('salva despesa uma única vez e mantém cursor',t=>{
  const store=fixture(t),update=message(1,'pão 10');
  assert.equal(handleUpdate(store,update,options),true);
