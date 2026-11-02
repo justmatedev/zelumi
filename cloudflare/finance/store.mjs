@@ -18,7 +18,7 @@ function filter(owner,f,skipCategory=false){
  return {where:'WHERE '+clauses.join(' AND '),args};
 }
 export class FinanceStore {
- constructor(db){this.db=db;}
+ constructor(db,authorization=null){this.db=db;this.authorization=authorization;}
  stmt(sql,...args){return this.db.prepare(sql).bind(...args);}
  state(owner){return this.stmt('SELECT COALESCE((SELECT version FROM cloud_state WHERE owner=?),0) snapshot',owner);}
  async ready(owner){const p=await prepareOwner(this.db,owner);if(p.status!=='ready')fail(p.status==='invalid'?'HISTORY_INVALID':'HISTORY_PREPARING',p.status==='invalid'?'Um lançamento antigo precisa de revisão.':'Preparando seu histórico. Tente novamente em instantes.',503);}
@@ -54,12 +54,17 @@ export class FinanceStore {
   if(edited&&!edited.installmentStartMonth)delete edited.installmentStartMonth;
   const next=edited?JSON.stringify(edited):null,response=next?{ok:true,version:recordVersion(next)}:{ok:true},attempt=randomUUID();
   const gate='EXISTS(SELECT 1 FROM finance_operations WHERE attempt_id=?)';
-  const queries=[this.stmt('DELETE FROM finance_operations WHERE owner=? AND operation_key=? AND expires_at<=?',owner,operationKey,nowMs),this.stmt(`INSERT INTO finance_operations(owner,operation_key,request_hash,attempt_id,record_id,kind,response_json,created_at,expires_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM cloud_records WHERE owner=? AND id=? AND body=?) AND EXISTS(SELECT 1 FROM cloud_state WHERE owner=? AND version=?) ON CONFLICT DO NOTHING`,owner,operationKey,hash,attempt,id,kind,JSON.stringify(response),nowMs,nowMs+86400000,owner,id,old.body,owner,state.snapshot)];
+  // Check the same session and bot in the atomic write, not only before reads.
+  const auth=this.authorization;
+  const authorized=auth?`EXISTS(SELECT 1 FROM web_sessions WHERE token_hash=? AND owner=? AND expires_at>?) AND (NOT EXISTS(SELECT 1 FROM cloud_meta WHERE key='bot_id') OR EXISTS(SELECT 1 FROM cloud_meta WHERE key='bot_id' AND value=?))`:'1';
+  const authArgs=auth?[auth.sessionHash,owner,nowMs,auth.botId]:[];
+  const queries=[this.stmt(`DELETE FROM finance_operations WHERE owner=? AND operation_key=? AND expires_at<=? AND ${authorized}`,owner,operationKey,nowMs,...authArgs),this.stmt(`INSERT INTO finance_operations(owner,operation_key,request_hash,attempt_id,record_id,kind,response_json,created_at,expires_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM cloud_records WHERE owner=? AND id=? AND body=?) AND EXISTS(SELECT 1 FROM cloud_state WHERE owner=? AND version=?) AND ${authorized} ON CONFLICT DO NOTHING`,owner,operationKey,hash,attempt,id,kind,JSON.stringify(response),nowMs,nowMs+86400000,owner,id,old.body,owner,state.snapshot,...authArgs)];
   queries.push(next?this.stmt(`UPDATE cloud_records SET body=? WHERE owner=? AND id=? AND ${gate}`,next,owner,id,attempt):this.stmt(`DELETE FROM cloud_records WHERE owner=? AND id=? AND ${gate}`,owner,id,attempt));
   if(next)queries.push(this.stmt(projectionInsert('cloud_records',gate),...projectionArgs(owner,id,next),attempt));
   queries.push(this.stmt(`UPDATE cloud_state SET version=version+1 WHERE owner=? AND ${gate}`,owner,attempt));
   const result=await this.db.batch(queries);
   if(result[1].meta.changes===1)return response;
+  if(auth&&!await this.stmt(`SELECT 1 allowed WHERE ${authorized}`,...authArgs).first())fail('SESSION_ENDED','Sessão encerrada. Entre novamente.',401);
   const duplicate=await this.receipt(owner,operationKey,hash,nowMs);if(duplicate)return duplicate;
   fail('RECORD_CHANGED','O histórico mudou durante a ação. Recarregue para tentar novamente.');
  }

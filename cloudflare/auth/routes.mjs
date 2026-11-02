@@ -2,6 +2,7 @@ import {AuthStore} from './store.mjs';
 import {verifyTelegramPayload,InvalidTelegramPayload} from './telegram.mjs';
 import {randomToken,hashToken,deriveCsrf,constantTimeEqual} from './crypto.mjs';
 import {loginNetwork} from './network.mjs';
+import {assertBotBinding} from '../bot-binding.mjs';
 
 const LOGIN='__Host-zelumi_login',SESSION='__Host-zelumi_session',WEEK=7*86400000;
 const routes=new Map([['/auth/telegram/start','POST'],['/auth/telegram/callback','POST'],['/api/session','GET'],['/api/session/logout','POST']]);
@@ -14,6 +15,7 @@ export async function handleAuth(request,env,{nowMs}) {
  if(request.method!==method)return json({error:'Método não permitido.'},405,{Allow:method});
  try {
   const origin=config(env),store=new AuthStore(env.DB);
+  await assertBotBinding(env);
   if(method==='POST'&&request.headers.get('Origin')!==origin)throw new HttpError(403,'Origem não autorizada.');
   const data=method==='POST'?await body(request):null;
   if(path==='/auth/telegram/start') {

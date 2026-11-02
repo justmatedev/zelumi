@@ -49,7 +49,7 @@ export class D1Store {
     }
     handler();
     const gate='EXISTS (SELECT 1 FROM cloud_processed WHERE id=? AND attempt=?)';
-    const statements=[this.stmt(`INSERT OR IGNORE INTO cloud_processed(id,owner,attempt,created_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM cloud_state WHERE owner=? AND version=?)`,this.update,this.owner,this.attempt,this.now.getTime(),this.owner,this.version)];
+    const statements=[this.stmt(`INSERT OR IGNORE INTO cloud_processed(id,owner,attempt,created_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM cloud_state WHERE owner=? AND version=?) AND EXISTS(SELECT 1 FROM cloud_meta WHERE key='bot_id' AND value=?)`,this.update,this.owner,this.attempt,this.now.getTime(),this.owner,this.version,this.botId)];
     for(const {sql,args} of this.ops) statements.push(this.stmt(sql.replaceAll('$GATE',gate),...args,this.update,this.attempt));
     statements.push(this.stmt(`UPDATE cloud_state SET version=version+1 WHERE owner=? AND ${gate}`,this.owner,this.update,this.attempt));
     const result=await this.db.batch(statements);

@@ -135,6 +135,7 @@ test('sessões web com D1 local',async t=>{
   assert.equal((await callback(f)).status,200);
  });
  await t.test('falha da limpeza de auth não interrompe reenvio do bot',async()=>{
+  await db.prepare("INSERT OR IGNORE INTO cloud_meta VALUES('bot_id','123')").run();
   await db.prepare("INSERT INTO cloud_outbox(update_id,method,payload) VALUES(999,'sendMessage','{}')").run();
   let sent=0;
   const isolated=createWorker({clock:()=>new Date(now),apiFactory:()=>async()=>{sent++;return true;}});

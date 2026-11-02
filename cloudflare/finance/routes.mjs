@@ -14,7 +14,7 @@ export async function handleFinance(request,env,{nowMs}){
  const methods=match?['GET','PUT','DELETE']:['GET'];if(!methods.includes(request.method))return json({error:'Método não permitido.'},405,{Allow:methods.join(', ')});
  try{
   const context=await getSessionContext(request,env,nowMs);if(!context)return json({error:'Sessão encerrada. Entre novamente.'},401);
-  const store=new FinanceStore(context.db),owner=context.owner;
+  const store=new FinanceStore(context.db,context.authorization),owner=context.owner;
   if(match){
    const id=match[1];if(!uuid.test(id)&&! /^[1-9]\d{0,18}$/.test(id))invalid();params(url,[]);
    if(request.method==='GET')return json(await store.detail(owner,id));

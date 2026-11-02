@@ -7,6 +7,7 @@ import {handleAuth} from './auth/routes.mjs';
 import {cleanupAuth} from './auth/store.mjs';
 import {handleFinance} from './finance/routes.mjs';
 import {cleanupFinance} from './finance/store.mjs';
+import {assertBotBinding} from './bot-binding.mjs';
 
 function settings(env) {
   if(!/^\d+:[A-Za-z0-9_-]+$/.test(env.TELEGRAM_BOT_TOKEN||''))throw new Error('Token ausente.');
@@ -40,7 +41,7 @@ export function createWorker({apiFactory=createTelegram,clock=()=>new Date()}={}
       if(auth)return auth;
       const finance=await handleFinance(request,env,{nowMs:clock().getTime()});if(finance)return finance;
       if(path==='/health'&&request.method==='GET') {
-        try {settings(env);return Response.json({service:'financeiro-testes-bot',status:'configured'});}
+        try {settings(env);await assertBotBinding(env);return Response.json({service:'financeiro-testes-bot',status:'configured'});}
         catch {return Response.json({service:'financeiro-testes-bot',status:'not_configured'},{status:503});}
       }
       if(path!=='/telegram/webhook')return env.ASSETS?env.ASSETS.fetch(request):new Response('Not found',{status:404});
@@ -58,7 +59,7 @@ export function createWorker({apiFactory=createTelegram,clock=()=>new Date()}={}
         await handleUpdate(store,update,{...config,now});
         // Só devolve 200 depois do commit. Em erro no D1 o Telegram deve reenviar.
         // A fila persistente permite confirmar o webhook mesmo com Telegram fora.
-        await deliver(env.DB,apiFactory(env.TELEGRAM_BOT_TOKEN),{now:now.getTime(),updateId:update.update_id});
+        await deliver(env.DB,apiFactory(env.TELEGRAM_BOT_TOKEN),{now:now.getTime(),updateId:update.update_id,botId:config.botId});
         return new Response('OK');
       }catch{
         // Não registrar corpo das mensagens, token ou URLs de API.
@@ -68,8 +69,8 @@ export function createWorker({apiFactory=createTelegram,clock=()=>new Date()}={}
     },
     async scheduled(_event,env) {
       try{
-        settings(env);
-        await deliver(env.DB,apiFactory(env.TELEGRAM_BOT_TOKEN),{now:clock().getTime()});
+        const config=settings(env);
+        await deliver(env.DB,apiFactory(env.TELEGRAM_BOT_TOKEN),{now:clock().getTime(),botId:config.botId});
         // Mantém deduplicação por 7 dias (a fila de entrada Telegram dura até 24h).
         await env.DB.prepare('DELETE FROM cloud_processed WHERE created_at<?').bind(clock().getTime()-7*86400000).run();
       }catch{console.error('Falha ao reenviar respostas pendentes.');}
