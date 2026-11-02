@@ -29,3 +29,26 @@ test('parcelas e arredondamento sem perder centavos',()=>{
  assert.equal(installments[1].date,'2026-02-28');
  assert.equal(schedule({...a,date:'2026-12-31'})[1].date,'2027-01-31');
 });
+
+test('valor total seguido de x12 não vira mil parcelas',()=>{
+ for(const text of ['google 1000 x12','Google R$ 1.000,00 x12','google x12 1000','google 1000 X12']) {
+  const r=parse(text,now);
+  assert.equal(r.status,'ready',text);assert.equal(r.amount,100000,text);
+  assert.equal(r.installments,12,text);assert.equal(r.description,'Google',text);
+  const rows=schedule(r);
+  assert.equal(rows.length,12);assert.equal(rows[0].amount,8334);
+  assert.equal(rows.reduce((sum,row)=>sum+row.amount,0),100000);
+ }
+ const each=parse('google 12x 80',now);
+ assert.equal(each.amount,96000);assert.equal(each.installments,12);assert.equal(each.description,'Google');
+ assert.equal(parse('google 1000 em 12x',now).amount,100000);
+});
+test('marcador de parcelas sem valor pede total e mantém quantidade',()=>{
+ const r=parse('google x12',now);
+ assert.equal(r.status,'missing_amount');assert.equal(r.installments,12);
+ const ready=resolve(r,'1000');assert.equal(ready.amount,100000);assert.equal(ready.installments,12);
+ assert.equal(parse('google 1000 x0',now).status,'invalid');
+ assert.equal(parse('google 1000 x121',now).status,'invalid');
+ assert.equal(parse('google 1000 x12 80',now).status,'ambiguous');
+ assert.equal(parse('google 12x 80 1000',now).status,'ambiguous');
+});
