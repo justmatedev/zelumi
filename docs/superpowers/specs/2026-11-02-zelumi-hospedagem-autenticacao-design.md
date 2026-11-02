@@ -1,6 +1,6 @@
 # Zelumi — hospedagem e autenticação do painel
 
-Data: 02/11/2026. Estado: proposta técnica para revisão do usuário.
+Data: 02/11/2026. Estado: direção aprovada para planejamento; detalhes técnicos abaixo são escolhas do implementador. Cadastro aberto no site e no bot e uso do Login Widget clássico aprovados explicitamente. Esta revisão substitui a proposta anterior de OIDC.
 
 ## 1. Objetivo e alcance
 
@@ -15,7 +15,7 @@ O objetivo desta fase não é publicar uma tela com valores fictícios como se f
 - `cloudflare/worker.mjs` atende `/telegram/webhook` e `/health`; o cron reenvia respostas pendentes.
 - O Worker `financeiro-testes-bot` está publicado em `https://financeiro-testes-bot.miudo.workers.dev`.
 - D1 `financeiro-testes`, já vinculado em `wrangler.jsonc`, guarda compras e receitas em `cloud_records`. A coluna `owner` é o ID numérico do usuário Telegram, convertido em texto.
-- O bot limita o acesso pela lista `TELEGRAM_ALLOWED_USER_IDS` e evita duplicações por `update_id`, com controle de versão por usuário.
+- O bot identifica o remetente da conversa privada e evita duplicações por `update_id`, com controle de versão por usuário. A restrição anterior por `TELEGRAM_ALLOWED_USER_IDS` foi retirada conforme a nova política de cadastro aberto.
 - Não existem API de sessão nem login de usuário no Worker.
 - `dist/` contém o simulador antigo, publicado separadamente pelo Sites. A identidade desse Site está em `.openai/hosting.json`.
 - `design/zelumi/` contém estudos HTML/JS, fontes e logos. As telas de login são simulações, sem credenciais.
@@ -55,43 +55,40 @@ Permite funcionalidades de servidor do framework, mas exigiria outra configuraç
 
 ## 5. Login oficial pelo Telegram
 
-Usar **OpenID Connect, Authorization Code Flow com PKCE S256**, por redirecionamento de página inteira, sem popup ou biblioteca externa de widget no navegador nesta fase.
+Usar **Login Widget clássico oficial**, no modo callback JavaScript (`data-onauth`), com verificação HMAC-SHA-256 no Worker. O usuário aprovou esse caminho após configurar o domínio pelo `/setdomain`. A documentação atual denomina este método legado; OIDC é uma possibilidade futura, não parte desta implementação.
 
-Escopos: `openid profile`. Não solicitar telefone, e-mail ou permissão adicional de envio de mensagens para realizar o login.
+Não solicitar telefone, e-mail ou permissão adicional de envio de mensagens (`data-request-access`) para realizar o login. O botão incorporado é o oficial do Telegram e tem opções de aparência limitadas; preservar o restante do desenho aprovado sem criar uma imitação do botão.
 
 ### Preparação externa
 
-No BotFather, configurar o login do mesmo bot do piloto, registrar a origem HTTPS da aplicação e o retorno exato:
+Já concluída pelo usuário: domínio `financeiro-testes-bot.miudo.workers.dev` vinculado ao bot `@financeiro_lab_482_bot`, com resposta “Success! Domain updated.”. Não cadastrar a URL de callback como domínio. Não é necessário obter Client ID ou Client Secret para esse método.
 
-`https://financeiro-testes-bot.miudo.workers.dev/auth/telegram/callback`
-
-Obter Client ID e Client Secret de login. O Client Secret de OIDC é uma credencial distinta do token da Bot API; não assumir que um substitui o outro. Configurá-lo no armazenamento de segredos da Cloudflare, por stdin ou pelo painel, sem imprimir valores.
+Configuração pública no Worker: `APP_ORIGIN=https://financeiro-testes-bot.miudo.workers.dev` e `TELEGRAM_BOT_USERNAME=financeiro_lab_482_bot`. Reaproveitar `TELEGRAM_BOT_TOKEN`, já armazenado como segredo do Worker. Validar antes da publicação que o username corresponde ao mesmo token, usando `getMe` sem imprimir credenciais.
 
 ### Fluxo
 
-1. O botão da tela de entrada navega para `GET /auth/telegram/start`.
-2. O Worker cria `state`, `nonce` e um verificador PKCE aleatórios, salva um fluxo de curta duração no D1 e coloca um cookie temporário HttpOnly para vinculá-lo ao navegador solicitante.
-3. O Worker redireciona para a autorização do Telegram, com callback fixo e previamente cadastrado. Não aceitar destinos de retorno arbitrários fornecidos pelo navegador.
-4. O Telegram devolve `code` e `state` para `GET /auth/telegram/callback`.
-5. O Worker confere cookie, state, expiração e uso único. O consumo do fluxo deve ser atômico no D1, para callbacks concorrentes não reutilizarem a autorização.
-6. O Worker troca o code por tokens no servidor, usando Client Secret e o verificador PKCE.
-7. Validar a assinatura do ID token pelas chaves oficiais, o algoritmo esperado, emissor, audiência, validade temporal e nonce. Usar biblioteca mantida compatível com Web Crypto/Workers; não escrever um verificador JWT próprio. `jose` é a proposta técnica, sujeita à verificação de compatibilidade no plano.
-8. Extrair o ID Telegram autenticado, verificar a lista de usuários liberados e criar/atualizar apenas o perfil correspondente.
-9. Criar uma sessão própria da aplicação e redirecionar para `/visao-geral/`, sem levar tokens para o frontend ou para a URL final.
+1. A entrada faz `POST /auth/telegram/start`, JSON, com Origin exatamente igual a `APP_ORIGIN`. O Worker cria um fluxo de 10 minutos, cookie temporário `__Host-zelumi_login` HttpOnly e desafio CSRF independente retornado no JSON. Guardar hashes dos valores no D1; substituir o fluxo anterior desse navegador ao reiniciar.
+2. O frontend monta o widget oficial com o username retornado e mantém o desafio somente em memória. O callback do widget envia os dados para `POST /auth/telegram/callback`, em JSON, com o desafio em `X-CSRF-Token`. Não utilizar callback por query string nem aceitar identidade via GET.
+3. O Worker exige Origin exato, JSON, corpo de no máximo 16 KiB, cookie de fluxo válido e desafio correspondente. Não permitir CORS externo. Essa vinculação ao navegador é necessária porque a assinatura clássica do Telegram não contém state ou nonce da aplicação.
+4. Validar tipos e campos obrigatórios (`id`, `first_name`, `auth_date`, `hash`) e opcionais documentados (`last_name`, `username`, `photo_url`), rejeitando arrays, objetos, campos desconhecidos e coerções ambíguas. Canonicalizar números seguros para texto, preservar os valores textuais assinados, ordenar campos sem `hash`, unir com `\n`, calcular HMAC-SHA-256 com chave SHA-256 do token do bot e comparar em tempo constante.
+5. Aceitar `auth_date` com idade de até 5 minutos e tolerância futura de 30 segundos. A idade é verificada pelo relógio do servidor. Rejeitar ID inválido ou assinatura inválida antes de criar perfil ou sessão.
+6. Consumir o fluxo e registrar uso único da assinatura em lote atômico no D1 junto com perfil e sessão. Concorrência ou retorno repetido não pode criar outra sessão. Uma assinatura já aceita é bloqueada mesmo em outro fluxo durante sua janela de validade.
+7. Criar/atualizar somente o perfil do ID Telegram validado, sem lista de usuários ou aprovação manual. Usar sempre texto React para apresentação; não carregar `photo_url` externo nesta fase.
+8. Criar a sessão da aplicação, remover o cookie temporário e devolver sucesso. O frontend navega para o destino fixo `/visao-geral/`. Não aceitar destino de retorno arbitrário.
 
-Dados de `code`, state, cookies e tokens não são registrados em logs. Respostas de autenticação e sessão usam `Cache-Control: no-store`.
+Não registrar payload de login, hashes de autenticação, desafios, cookies ou tokens em logs. Respostas de autenticação e sessão usam `Cache-Control: no-store` e não expõem esses dados em URLs. Se o widget for bloqueado pelo navegador, mostrar erro com opção de tentar novamente; não oferecer login falso nem solicitar token do bot ao usuário.
 
 ## 6. Identidade e proteção dos registros
 
-O campo OIDC `sub` e o ID numérico Telegram **não são intercambiáveis**. O escopo `profile` fornece o claim `id`, que deve ser validado como ID numérico positivo seguro e convertido para a forma textual canônica usada por `cloud_records.owner`.
+O campo `id` do payload Telegram assinado deve ser validado como inteiro positivo seguro e convertido para a forma textual canônica usada por `cloud_records.owner`.
 
-- Registrar a relação entre emissor/subject OIDC e o ID Telegram em uma tabela de usuários, com unicidade de ambas as identidades.
-- Para o mesmo ID Telegram, reusar o usuário existente; rejeitar uma associação conflitante, sem transferir dados automaticamente.
+- Usar o ID Telegram canônico como chave única na tabela de usuários. Para o mesmo ID, atualizar somente os campos de apresentação validados, sem transferir dados ou criar outra identidade.
 - Não usar `@username`, nome, foto ou um ID enviado pelo frontend como prova de identidade. Nome e username são dados de apresentação; username pode estar ausente ou mudar.
-- Caso o ID obrigatório esteja ausente ou inválido, rejeitar o login; não tentar interpretar `sub` como o ID da Bot API.
+- Caso o ID obrigatório esteja ausente ou inválido, rejeitar o login, sem alternativas baseadas em nome ou username.
 - Preservar `cloud_records.owner` e os registros existentes; não requer recadastro de despesas ou cópia para um novo banco.
 - Toda consulta financeira futura deverá obter o owner a partir da sessão verificada e aplicar esse escopo no SQL.
-- Continuar usando `TELEGRAM_ALLOWED_USER_IDS` como autorização do piloto. Confirmar autorização no login e em cada acesso protegido; remover o ID da lista deve bloquear sessões existentes, mesmo antes de expirarem.
+- Cadastro aberto: qualquer identidade Telegram validada pode criar seu perfil automaticamente. `TELEGRAM_ALLOWED_USER_IDS` não participa da autenticação nem da autorização. A autorização de dados continua obrigatória por owner em cada operação.
+- O bot também aceita usuários novos sem aprovação ou login prévio no site. No primeiro login do site, criar ou atualizar o perfil pelo mesmo ID Telegram e reconhecer os registros já existentes, sem duplicar contas. Nome e username fornecidos em callbacks ou mensagens não substituem a identidade assinada do login.
 
 ## 7. Sessões e saída
 
@@ -99,38 +96,38 @@ Propostas do implementador para revisão:
 
 - Sessão da aplicação com duração absoluta de **7 dias**, sem renovação automática nesta fase.
 - Cookie `__Host-zelumi_session`, com valor aleatório de pelo menos 256 bits, `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/`, sem atributo Domain e com prazo alinhado ao servidor.
-- Guardar somente o hash do token de sessão no D1, junto com usuário, criação, expiração e token de proteção CSRF. Não guardar token de sessão ou JWT em localStorage.
+- Guardar somente o hash do token de sessão no D1, junto com usuário, criação e expiração. Derivar o desafio CSRF da sessão usando HMAC com separação de domínio e segredo do servidor, sem revelar o token de sessão. Não guardar credenciais em localStorage.
 - Fluxo de login válido por **10 minutos**, com cookie temporário protegido e limpeza após sucesso, recusa ou expiração.
 - Validar sessão e autorização pelo banco em cada requisição protegida; não manter cache que permita reutilizar sessão revogada.
 - `POST /api/session/logout` invalida a sessão atual no D1 e apaga o cookie. Não desconecta a conta Telegram, não revoga outras sessões e não altera o uso do bot.
 - GET não deve executar operações destrutivas. Logout e futuras alterações exigem Origin igual à origem configurada, JSON e token CSRF da sessão em header. Sem CORS aberto para origens externas.
 - Usar a rotina agendada existente para limpar sessões e fluxos expirados. A expiração é sempre verificada na requisição, independentemente dessa limpeza.
-- Requisições de início de login têm limitação de tentativas na aplicação, com ponto de partida de 5 inícios por 10 minutos por identificador de rede e armazenamento temporário. O plano deve definir uma implementação que não adicione serviço pago ou exponha identificadores em logs.
+- Requisições de início de login têm limite de 5 por janela fixa de 10 minutos por identificador de rede, em uma tabela D1. Identificador derivado por HMAC do IP confiável fornecido pela Cloudflare, com separação de domínio; não armazenar o IP bruto. No ambiente local, usar chave fixa de desenvolvimento, sem confiar em `X-Forwarded-For`. Não adicionar serviço pago.
 
-O prazo de sessão do Zelumi não depende do prazo do ID token usado no login: o token é verificado no início, e a sessão é controlada pela aplicação. Logins novos dependem do Telegram; uma sessão já válida pode continuar acessando a API enquanto os serviços do Zelumi estiverem disponíveis.
+O prazo de sessão do Zelumi é controlado pela aplicação. Logins novos dependem do Telegram; uma sessão já válida pode continuar acessando a API enquanto os serviços do Zelumi estiverem disponíveis.
 
 ## 8. Contratos mínimos desta fase
 
 | Rota | Função |
 | --- | --- |
-| `GET /auth/telegram/start` | Inicia autorização OIDC e redireciona |
-| `GET /auth/telegram/callback` | Valida retorno e cria sessão |
-| `GET /api/session` | Retorna perfil mínimo da sessão e token CSRF, ou 401/403 |
+| `POST /auth/telegram/start` | Cria fluxo e retorna `{ botUsername, csrfToken }` |
+| `POST /auth/telegram/callback` | Valida `{ telegram: payload }`, cria sessão e retorna `{ ok: true }` |
+| `GET /api/session` | Retorna perfil mínimo da sessão e token CSRF, ou 401 se não houver sessão válida |
 | `POST /api/session/logout` | Invalida a sessão atual com proteção CSRF |
 | `POST /telegram/webhook` | Mantém o bot existente |
 | `GET /health` | Mantém a verificação atual; não divulga configuração sensível |
 
-`GET /api/session` retorna apenas dados necessários ao Perfil, como nome e username opcionais, além do token CSRF. Nunca retorna ID token, Client Secret, token do bot ou identificador bruto de sessão.
+`GET /api/session` retorna `{ user: { firstName, lastName, username }, csrfToken }`, com campos opcionais nulos. Não inclui registros financeiros, ID bruto de sessão ou token do bot. Todas essas respostas usam `no-store`. Falta de sessão é 401; origem/CSRF inválidos, 403; payload inválido, 400; tentativas excedidas, 429 com `Retry-After`; indisponibilidade de configuração ou D1, 503 sem detalhes internos.
 
-Estados do frontend: carregando sessão, autenticado, não autenticado, acesso não liberado e falha temporária. Um 401 retorna à entrada; um 403 informa acesso não liberado sem mostrar registros. Recusar autorização no Telegram permite tentar novamente. Erros técnicos não são apresentados como se a pessoa tivesse digitado uma senha errada.
+Estados do frontend: carregando sessão, autenticado, não autenticado e falha temporária. Um 401 retorna à entrada. Não existe tela de espera por liberação ou rejeição por falta de convite. Um 403 em uma operação inválida ou sem proteção CSRF não deve ser apresentado como falta de aprovação de cadastro. Recusar autorização no Telegram permite tentar novamente. Erros técnicos não são apresentados como se a pessoa tivesse digitado uma senha errada.
 
 As páginas protegidas são estruturas estáticas públicas, mas só exibem dados reais após a API validar a sessão. Isso é intencional; esconder páginas no frontend não substitui autorização.
 
 ## 9. Migrações e preservação do bot
 
-Adicionar tabelas de usuários, sessões, fluxos OIDC e controle de tentativas em uma migração nova e aditiva. Não editar a migração inicial já aplicada, apagar tabelas ou reexecutar a importação local.
+Adicionar tabelas de usuários, sessões, fluxos de login, recibos de uso único de login e controle de tentativas em uma migração nova e aditiva. Não editar a migração inicial já aplicada, apagar tabelas ou reexecutar a importação local.
 
-O novo roteamento deve separar os módulos de sessão e webhook. Falta de credenciais OIDC deve bloquear o login, mas não derrubar o bot ou a saúde de sua configuração atual.
+O novo roteamento deve separar os módulos de sessão e webhook. Falta de `APP_ORIGIN`, username ou tabelas de autenticação deve bloquear o login, mas não derrubar o bot ou a saúde de sua configuração atual. A limpeza de autenticação e o reenvio de mensagens no cron devem ter tratamento de falhas independente.
 
 Os futuros endpoints de alteração de lançamentos devem compartilhar o controle de concorrência com o bot; não escrever diretamente em `cloud_records` ignorando `cloud_state.version`. O desenho dessas operações é parte da fase financeira seguinte, não deste contrato mínimo de autenticação.
 
@@ -147,10 +144,10 @@ Os futuros endpoints de alteração de lançamentos devem compartilhar o control
 
 - Build exporta as páginas e os assets sem precisar de banco ou segredos durante o build.
 - Rotas de auth/API/webhook alcançam o Worker; assets e navegação direta das páginas funcionam, incluindo 404 correto.
-- Testes rejeitam assinatura/audiência/emissor/nonce/state inválidos, fluxo expirado ou reutilizado, ID ausente e usuário fora da lista.
-- Um ID Telegram existente aponta para o mesmo owner e mantém seus registros. Testar explicitamente ID numérico diferente do `sub` OIDC.
+- Testes rejeitam assinatura alterada, auth_date antigo/futuro, origem/CSRF/cookie inválidos, fluxo expirado ou reutilizado, replay entre fluxos e ID ausente. Testar que um usuário novo entra sem qualquer lista de IDs.
+- Um ID Telegram existente aponta para o mesmo owner e mantém seus registros. Testar nomes iguais com IDs diferentes e ID existente com username alterado.
 - Duas pessoas não conseguem ler ou alterar os dados uma da outra. Não confiar em owner recebido do cliente.
-- Sessão expirada, cookie ausente, logout e remoção da allowlist bloqueiam o acesso; logout repetido é seguro.
+- Sessão expirada, cookie ausente e logout bloqueiam o acesso aos dados protegidos; logout repetido é seguro. Novos usuários não precisam de liberação manual no site ou no bot.
 - Verificar flags de cookies, ausência de tokens em URLs finais/arquivos públicos/logs e proteção CSRF das operações mutáveis.
 - Bot continua registrando, editando e desfazendo gastos após a mudança de roteamento, com deduplicação e fila preservadas.
 - Verificar as telas aprovadas nos temas claro/escuro e no celular.
@@ -159,14 +156,15 @@ Os futuros endpoints de alteração de lançamentos devem compartilhar o control
 
 ## 12. Pendências para iniciar e escolhas do plano
 
-O usuário precisa cadastrar os URLs e obter as credenciais de login no BotFather. Elas ainda não existem na configuração do projeto. Não solicitar que sejam coladas no chat.
+O domínio já está configurado e o token necessário já está no Worker. Não há nova credencial a pedir ao usuário. O login real só poderá ser confirmado após publicação, pelo próprio usuário no domínio autorizado.
 
-Ficam para o plano de implementação: versões compatíveis das dependências, layout exato das novas tabelas, detalhe do rate limiter, estratégia de cache de chaves públicas, segurança de headers compatível com o frontend estático, comandos de build/deploy, testes e rollback. O prazo de sessão de 7 dias e o uso do mesmo endereço são propostas técnicas explícitas a revisar junto com este desenho.
+Ficam para o plano de implementação: dependências estáveis compatíveis com Node >=22.16.0, layout das novas tabelas, headers compatíveis com o widget oficial e o Next estático, comandos de build/deploy, testes e rollback. Sessão de 7 dias, limiares de tempo e rate limit são escolhas técnicas do implementador, ajustáveis conforme o piloto.
 
-Após aprovação deste documento, elaborar o plano de implementação. A API financeira e a distribuição mensal das parcelas precisam de seu próprio detalhamento antes de substituir os exemplos por registros reais no painel.
+O plano correspondente está em [site e login Telegram](../plans/2026-11-02-zelumi-site-login-telegram.md). A revisão independente desta mudança para widget clássico não identificou lacunas importantes para planejar a implementação. A API financeira e a distribuição mensal das parcelas precisam de seu próprio detalhamento antes de preencher o painel com registros reais.
 
 ## Referências verificadas
 
 - [Next.js — static exports](https://nextjs.org/docs/app/guides/static-exports)
 - [Cloudflare — Static Assets e run_worker_first](https://developers.cloudflare.com/workers/static-assets/binding/)
-- [Telegram — Login e OpenID Connect](https://core.telegram.org/bots/telegram-login)
+- [Telegram — Login Widget clássico](https://core.telegram.org/widgets/login-legacy)
+- [Telegram — Login e OpenID Connect, alternativa futura](https://core.telegram.org/bots/telegram-login)
