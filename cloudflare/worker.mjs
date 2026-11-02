@@ -5,6 +5,8 @@ import { D1Store } from './store.mjs';
 import { deliver } from './outbox.mjs';
 import {handleAuth} from './auth/routes.mjs';
 import {cleanupAuth} from './auth/store.mjs';
+import {handleFinance} from './finance/routes.mjs';
+import {cleanupFinance} from './finance/store.mjs';
 
 function settings(env) {
   if(!/^\d+:[A-Za-z0-9_-]+$/.test(env.TELEGRAM_BOT_TOKEN||''))throw new Error('Token ausente.');
@@ -36,6 +38,7 @@ export function createWorker({apiFactory=createTelegram,clock=()=>new Date()}={}
       const path=new URL(request.url).pathname;
       const auth=await handleAuth(request,env,{nowMs:clock().getTime()});
       if(auth)return auth;
+      const finance=await handleFinance(request,env,{nowMs:clock().getTime()});if(finance)return finance;
       if(path==='/health'&&request.method==='GET') {
         try {settings(env);return Response.json({service:'financeiro-testes-bot',status:'configured'});}
         catch {return Response.json({service:'financeiro-testes-bot',status:'not_configured'},{status:503});}
@@ -72,6 +75,7 @@ export function createWorker({apiFactory=createTelegram,clock=()=>new Date()}={}
       }catch{console.error('Falha ao reenviar respostas pendentes.');}
       try{if(env.DB)await cleanupAuth(env.DB,clock().getTime());}
       catch{console.error('Falha na limpeza de sessões.');}
+      try{if(env.DB)await cleanupFinance(env.DB,clock().getTime());}catch{console.error('Falha na limpeza de operações.');}
     }
   };
 }
