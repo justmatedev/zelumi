@@ -60,7 +60,8 @@ export async function handleAuth(request,env,{nowMs}) {
    const response=json({ok:true});response.headers.append('Set-Cookie',setCookie(SESSION,session,WEEK/1000));response.headers.append('Set-Cookie',setCookie(LOGIN,'',0));return response;
   }
   const session=cookie(request,SESSION),hash=session?await hashToken(session):null,profile=hash?await store.getSession(hash,nowMs):null;
-  if(!profile)return json({error:'Sessão encerrada. Entre novamente.'},401,{'Set-Cookie':setCookie(SESSION,'',0)});
+  // Read-only requests must not overwrite a newer login cookie when delayed.
+  if(!profile)return json({error:'Sessão encerrada. Entre novamente.'},401,path==='/api/session/logout'?{'Set-Cookie':setCookie(SESSION,'',0)}:{});
   const csrf=await deriveCsrf(session,env.TELEGRAM_BOT_TOKEN,'session');
   if(path==='/api/session')return json({user:{firstName:profile.first_name,lastName:profile.last_name,username:profile.username},csrfToken:csrf});
   if(Object.keys(data).length)throw new HttpError(400,'Corpo inválido.');

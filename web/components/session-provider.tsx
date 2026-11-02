@@ -16,7 +16,10 @@ export function SessionProvider({children}:{children:ReactNode}) {
  const logout=useCallback(async()=>{
   ++sequence.current;
   try{await api('/api/session/logout',{body:{},csrf:state.csrfToken||''});}
-  catch(error){if(!(error instanceof ApiError&&error.status===401))throw error;}
+  catch(error){if(!(error instanceof ApiError&&error.status===401)){
+   // The server may have committed even when its response was lost.
+   ++sequence.current;setState({user:null,csrfToken:null,status:'error'});throw error;
+  }}
   ++sequence.current;
   setState({user:null,csrfToken:null,status:'anonymous'});
  },[state.csrfToken]);

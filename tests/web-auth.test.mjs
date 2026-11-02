@@ -113,4 +113,11 @@ test('sessões web com D1 local',async t=>{
   assert.equal((await worker.fetch(req('/telegram/webhook',{}),webEnv)).status,401);
   assert.equal((await worker.fetch(req('/health'),webEnv)).status,200);
  });
+ await t.test('401 antigo de consulta não apaga cookie emitido por login posterior',async()=>{
+  await reset();const delayed=await send('/api/session');assert.equal(delayed.status,401);
+  const accepted=await callback(await start());const session=cookie(accepted,'__Host-zelumi_session');
+  // Browser delivers this old response after the callback set its new cookie.
+  assert.equal(delayed.headers.get('set-cookie'),null);
+  assert.equal((await send('/api/session',undefined,{headers:{Cookie:session}})).status,200);
+ });
 });
