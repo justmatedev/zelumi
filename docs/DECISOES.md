@@ -240,3 +240,5 @@ A conferência por SHA-256 confirmou os 7 lançamentos, projeções e perfis id�
 ### Acesso ao painel pela ajuda do bot
 
 O usuário aprovou acrescentar `https://usezelumi.vercel.app` e um botão de URL **Abrir meu painel** à resposta de `/ajuda`. `/start` e `/help` reutilizam a mesma resposta. O botão abre o site pelo link comum, sem integração de Mini App. A ajuda preserva perguntas de compra pendentes e não cria lançamentos. Verificação: 79 testes de backend/D1 e build/export/dry-run passaram; o teste novo detectou a ausência do acesso ao painel na versão anterior.
+
+Publicado no Worker na versão `5fef82b1-b92e-42d5-8f23-93323aee09f3`. Webhook permaneceu ativo, sem updates pendentes ou último erro de entrega. Nenhuma compra real foi criada ou alterada para testar a ajuda.
