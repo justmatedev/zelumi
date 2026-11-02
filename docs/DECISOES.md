@@ -69,6 +69,7 @@ Zod foi sugerido para validação, mas nenhuma biblioteca de validação, autent
 - Não somar o valor integral da compra novamente ao total mensal quando suas parcelas já estão sendo contabilizadas.
 - O comportamento deve ser consistente entre o site e o resumo mensal do bot.
 - Preservar a soma exata dos centavos ao distribuir parcelas.
+- Edição no site atua na compra inteira e recalcula todas as parcelas; sem edição isolada de uma parcela nesta versão. Decisão confirmada pelo usuário após a conexão inicial do site.
 - Fechamento e vencimento de fatura ficam para depois. Esta fase não implementa um ciclo real de cartão de crédito.
 
 **Situação atual:** o bot calcula e armazena o cronograma, mas os resumos ainda somam o valor integral na data da compra. A mudança para parcelas mensais foi aprovada na conversa e ainda precisa ser implementada e testada. O detalhamento do comando diário também precisa ser alinhado a essa mudança.
@@ -194,3 +195,9 @@ Verificação: 50 testes de backend/D1 e 9 de interface passaram, junto com tipo
 Publicado em `https://financeiro-testes-bot.miudo.workers.dev`, versão `e40e45aa-a2b5-4d95-a19c-4788c9f66ba5`. Migração aditiva `0002_web_auth.sql` aplicada. Páginas200, sessão anônima401 sem apagar cookies, API desconhecidaJSON404, asset inexistente404, saúde200 e webhook sem segredo401 conferidos em produção. O widget oficial carregou no Firefox pelo domínio vinculado. Webhook ativo, sem updates pendentes ou último erro de entrega.
 
 Validação externa concluída: o usuário confirmou que entrou pelo Telegram, viu a conta correta no Perfil e recebeu a resposta de `/hoje` com o programa local desligado. CPU por requisição e folga nas cotas gratuitas não foram medidas; não houve ativação de plano pago. GitHub permanece para depois: branch `feat/zelumi-web-login` preservada, sem push ou merge.
+
+### Próxima entrega: dados financeiros
+
+O usuário pediu conectar os lançamentos ao site e confirmou **editar a compra inteira e recalcular todas as parcelas**, sem edição isolada. O desenho de [dados reais e parcelas mensais](./superpowers/specs/2026-11-02-zelumi-dados-financeiros-design.md) reúne regras, API, concorrência, busca/filtros, migração e telas. A revisão independente não apontou lacunas importantes para planejar. O documento aguarda aprovação; nenhuma API financeira, migração dessa fase ou alteração de valores reais foi executada.
+
+Propostas explícitas do implementador para revisão: cálculo mensal no servidor sobre cronogramas existentes; receitas já parceladas seguem seu cronograma; `/hoje` mantém valores integrais pela data da compra com explicação no texto, enquanto `/mes` e site usam parcelas mensais. Os formulários permitem editar a compra toda e excluir todas as suas parcelas, informando o efeito inclusive em meses anteriores.
