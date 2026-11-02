@@ -5,7 +5,7 @@ import {loginNetwork} from './network.mjs';
 import {assertBotBinding} from '../bot-binding.mjs';
 
 const LOGIN='__Host-zelumi_login',SESSION='__Host-zelumi_session',WEEK=7*86400000;
-const routes=new Map([['/auth/telegram/start','POST'],['/auth/telegram/callback','POST'],['/api/session','GET'],['/api/session/logout','POST']]);
+const routes=new Map([['/auth/telegram/config','GET'],['/auth/telegram/start','POST'],['/auth/telegram/callback','POST'],['/api/session','GET'],['/api/session/logout','POST']]);
 import {HttpError,json,cookie,setCookie,config,body} from './http.mjs';
 export async function handleAuth(request,env,{nowMs}) {
  const path=new URL(request.url).pathname;
@@ -18,6 +18,11 @@ export async function handleAuth(request,env,{nowMs}) {
   await assertBotBinding(env);
   if(method==='POST'&&request.headers.get('Origin')!==origin)throw new HttpError(403,'Origem não autorizada.');
   const data=method==='POST'?await body(request):null;
+  if(path==='/auth/telegram/config') {
+   const botId=env.TELEGRAM_BOT_TOKEN.split(':')[0];
+   if(!/^[1-9]\d{0,15}$/.test(botId)||!Number.isSafeInteger(Number(botId)))throw new HttpError(503,'Serviço temporariamente indisponível.');
+   return json({botId,botUsername:env.TELEGRAM_BOT_USERNAME});
+  }
   if(path==='/auth/telegram/start') {
    if(Object.keys(data).length)throw new HttpError(400,'Corpo inválido.');
    const flow=randomToken(),csrf=randomToken(),previous=cookie(request,LOGIN);

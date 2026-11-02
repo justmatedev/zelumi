@@ -27,6 +27,10 @@ test('sessões web com D1 local',async t=>{
  async function start(previous){const res=await send('/auth/telegram/start',{},previous?{headers:{Cookie:previous}}:undefined);assert.equal(res.status,200);return {cookie:cookie(res,'__Host-zelumi_login'),csrf:(await res.json()).csrfToken,res};}
  const callback=(flow,p=payload(),extra={})=>send('/auth/telegram/callback',{telegram:p},{headers:{Cookie:flow.cookie,'X-CSRF-Token':flow.csrf,...extra}});
  const reset=async()=>{for(const table of ['web_sessions','web_users','web_auth_accepts','web_auth_flows','web_auth_limits'])await db.prepare(`DELETE FROM ${table}`).run();now=initial;};
+ await t.test('configuração pública informa apenas identificação do bot sem criar tentativa',async()=>{
+  const res=await send('/auth/telegram/config');assert.equal(res.status,200);assert.deepEqual(await res.json(),{botId:'123',botUsername:'test_bot'});
+  assert.equal(res.headers.get('set-cookie'),null);assert.equal(await count('web_auth_flows'),0);assert.equal(await count('web_auth_limits'),0);assert.equal((await send('/auth/telegram/config',{})).status,405);
+ });
  await t.test('login real cria perfil, cookie protegido, sessão e logout revogável',async()=>{
   const flow=await start();assert.match(flow.res.headers.get('set-cookie'),/Secure/);assert.match(flow.res.headers.get('set-cookie'),/HttpOnly/);
   const accepted=await callback(flow);assert.equal(accepted.status,200);assert.deepEqual(await accepted.json(),{ok:true});

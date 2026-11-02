@@ -2,6 +2,14 @@
 
 Atualizado em 02/11/2026. Este documento reúne as decisões da conversa e diferencia o produto planejado do código que já está em funcionamento. Ao mudar uma decisão com o usuário, atualizar este registro.
 
+### Entrada com botão próprio do Zelumi — 02/11/2026
+
+O usuário pediu manter a identidade visual no login, sem substituir o botão do Zelumi pelo botão azul do widget. O botão próprio passa a chamar sincronamente `Telegram.Login.auth` no SDK legado oficial já utilizado. A confirmação abre em janela do Telegram e o retorno continua sujeito à validação HMAC, CSRF, sessão e replay existentes. Isso não migra para o SDK OIDC nem exige novas credenciais ou alteração no BotFather.
+
+`GET /auth/telegram/config` expõe somente ID público e username do bot, sem cookie ou criação de tentativa. A preparação do SDK não consome o limite de login; o fluxo é criado após o clique que abre a autorização. Cancelamento permite repetir reutilizando um fluxo ainda válido. O SDK permanece em documento auxiliar oculto, com verificação de origem/janela na comunicação e CSP própria; a permissão de `eval` foi removida, e apenas a conexão de retorno oficial `https://oauth.telegram.org` foi liberada nesse documento. A política da aplicação principal permanece restrita. Implementação local, sem publicação ou login real externo nesta etapa.
+
+Verificação: 60 testes de interface, 93 de backend/D1, tipos, build e exportação passaram. A revisão independente não encontrou problemas relevantes. Firefox executou a cópia do SDK oficial em prévia local com configuração, autorização e backend de demonstração: botão persistente, clique real abrindo popup, bloqueio, cancelamento/retry e retorno ao painel. Os temas claro/escuro foram conferidos em 320, 390 e 1280 px. Assinaturas reais, CSRF e replay são exercitados pela suíte local de backend; essa prévia não substitui a validação externa do login Telegram após publicação.
+
 ### Rolagem e fechamento dos modais — 02/11/2026
 
 O usuário solicitou bloquear a página ao fundo enquanto um modal estiver aberto e fechar o modal ao clicar fora. Lançamentos e navegação móvel compartilham bloqueio com preservação da posição e dos estilos anteriores; a rolagem interna permanece disponível. O clique externo só fecha quando o gesto começa e termina fora do diálogo, preservando cliques no conteúdo, no espaço interno e em seletores/calendários. O fechamento do lançamento continua bloqueado durante operações em andamento. Implementação local, sem publicação.

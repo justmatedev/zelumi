@@ -6,8 +6,8 @@
   X-Robots-Tag: noindex, nofollow
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'self'
 
-# The legacy widget needs eval only inside its dedicated iframe. The HTML
-# has its own restrictive meta CSP; SAMEORIGIN still protects embedding.
+# The isolated Telegram SDK bridge has its own restrictive meta CSP.
+# The application keeps its own script policy; SAMEORIGIN protects embedding.
 /telegram-widget*
   ! Content-Security-Policy
 

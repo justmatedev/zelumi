@@ -20,6 +20,8 @@ O domínio principal é `usezelumi.vercel.app`. Os endereços temporários de pr
 
 `framework: null` seleciona a entrega estática da Vercel: o build continua sendo Next.js. As rotas explícitas preservam `/telegram-widget.html` e os caminhos sem barra final da API, sem normalização automática do preset Next.js.
 
+Na implementação local do botão próprio, `/telegram-widget.html` é uma ponte oculta para o SDK legado, sem widget visual. Sua CSP permite script de `telegram.org` e conexão a `oauth.telegram.org`, sem `unsafe-eval`; a CSP principal não carrega esse SDK. Publicar frontend e Worker com `GET /auth/telegram/config` compatíveis antes de conferir o login real. A configuração de domínio do bot continua a mesma.
+
 Adicionar `VERCEL_PROXY_SECRET` nas variáveis de ambiente do projeto Vercel. O mesmo valor deve existir como secret no Worker. É um valor aleatório independente, usado somente para identificar o proxy ao separar os limites de login. Nunca usar prefixo `NEXT_PUBLIC_`. Token Telegram e segredo do webhook ficam exclusivamente na Cloudflare e no `.env` local ignorado.
 
 ## Troca do login

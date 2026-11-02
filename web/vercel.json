@@ -26,7 +26,7 @@
     {
       "src": "/telegram-widget(?:\\.html)?/?",
       "headers": {
-        "Content-Security-Policy": "default-src 'none'; script-src 'self' https://telegram.org 'unsafe-eval'; style-src 'unsafe-inline'; frame-src https://oauth.telegram.org; connect-src 'none'; frame-ancestors 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"
+        "Content-Security-Policy": "default-src 'none'; script-src 'self' https://telegram.org; connect-src https://oauth.telegram.org; frame-ancestors 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"
       },
       "continue": true
     },
