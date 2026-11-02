@@ -6,6 +6,7 @@ import {createWorker} from '../cloudflare/worker.mjs';
 import {hashToken,deriveCsrf} from '../cloudflare/auth/crypto.mjs';
 import {migrate} from './helpers/d1.mjs';
 import {FinanceStore} from '../cloudflare/finance/store.mjs';
+import {recordVersion} from '../finance/version.mjs';
 process.env.WRANGLER_LOG_PATH=resolve('.wrangler/logs');process.env.WRANGLER_SEND_METRICS='false';const {getPlatformProxy}=await import('wrangler');
 const now=1793617200000,origin='https://test.workers.dev';
 const record={description:'Pão %_',type:'despesa',category:'Alimentação',date:'2026-01-31',amount:100000,installments:12,installmentStartMonth:null};
@@ -51,5 +52,14 @@ test('API financeira com sessão real local, versões e idempotência',async t=>
   await new FinanceStore(db).overview('11','2026-01');let changed=false;
   const race={prepare:s=>db.prepare(s),async batch(statements){if(!changed){changed=true;await db.prepare("INSERT INTO cloud_records(id,owner,body) VALUES('late','11',?)").bind(JSON.stringify(record)).run();}return db.batch(statements);}};
   await assert.rejects(new FinanceStore(race).overview('11','2026-01'),e=>e.code==='HISTORY_PREPARING');
+ });
+ await t.test('replay que chega antes do commit e lê registro depois dele confirma PUT e DELETE',async()=>{
+  for(const [id,kind] of [['100','PUT'],['101','DELETE']]){
+   const old=JSON.stringify(record);await db.prepare('INSERT INTO cloud_records(id,owner,body) VALUES(?,?,?)').bind(id,'11',old).run();
+   const winner=new FinanceStore(db),late=new FinanceStore(db),read=late.receipt.bind(late);let first=true,expected;
+   const args={owner:'11',id,kind,expectedVersion:recordVersion(old),record:kind==='PUT'?{...record,amount:12000}:undefined,operationKey:randomUUID(),nowMs:now};
+   late.receipt=async(...values)=>{const value=await read(...values);if(first){first=false;expected=await winner.mutate(args);}return value;};
+   assert.deepEqual(await late.mutate(args),expected);
+  }
  });
 });

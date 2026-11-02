@@ -17,10 +17,14 @@ export function exportLocal(path,output,now=Date.now()) {
    // Uma coluna import_bot torna o lote inteiro inócuo se apontar para outro bot.
    const gate=`EXISTS(SELECT 1 FROM cloud_meta WHERE key='bot_id' AND value=${quote(bot)})`;
    const lines=[`INSERT OR IGNORE INTO cloud_meta(key,value) VALUES ('bot_id',${quote(bot)});`];
-   for(const row of rows)lines.push(`INSERT OR IGNORE INTO cloud_records(id,owner,body) SELECT ${quote(row.id)},${quote(row.owner)},${quote(row.body)} WHERE ${gate};`);
+   for(const row of rows){
+     lines.push(`INSERT OR IGNORE INTO cloud_records(id,owner,body) SELECT ${quote(row.id)},${quote(row.owner)},${quote(row.body)} WHERE ${gate};`);
+     // SQLite changes() refers to the preceding insert: duplicate imports stay inert.
+     lines.push(`INSERT INTO cloud_state(owner,version) SELECT ${quote(row.owner)},1 WHERE changes()>0 AND ${gate} ON CONFLICT(owner) DO UPDATE SET version=cloud_state.version+1;`);
+   }
    for(const row of db.prepare('SELECT id FROM processed').all()) lines.push(`INSERT OR IGNORE INTO cloud_processed(id,owner,attempt,created_at) SELECT ${Number(row.id)},'imported','import-local',${now} WHERE ${gate};`);
    for(const row of db.prepare('SELECT owner,body FROM pending').all()) {
-     if(JSON.parse(row.body).expires>now)lines.push(`INSERT OR IGNORE INTO cloud_state(owner,pending) SELECT ${quote(row.owner)},${quote(row.body)} WHERE ${gate};`);
+     if(JSON.parse(row.body).expires>now)lines.push(`INSERT INTO cloud_state(owner,pending) SELECT ${quote(row.owner)},${quote(row.body)} WHERE ${gate} ON CONFLICT(owner) DO UPDATE SET pending=excluded.pending WHERE cloud_state.pending IS NULL;`);
    }
    mkdirSync(dirname(output),{recursive:true,mode:0o700});
    writeFileSync(output,lines.join('\n')+'\n',{mode:0o600});

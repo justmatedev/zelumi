@@ -42,8 +42,13 @@ export class FinanceStore {
   const validated=kind==='PUT'?validateEdit(record):null;
   const hash=recordVersion(JSON.stringify({id,kind,expectedVersion,record:validated}));
   const replay=await this.receipt(owner,operationKey,hash,nowMs);if(replay)return replay;
-  const old=await this.stmt('SELECT body FROM cloud_records WHERE owner=? AND id=?',owner,id).first();if(!old)fail('NOT_FOUND','Lançamento não encontrado.',404);
-  if(recordVersion(old.body)!==expectedVersion)fail('RECORD_CHANGED','Este lançamento mudou. Recarregue os dados antes de salvar.');
+  const old=await this.stmt('SELECT body FROM cloud_records WHERE owner=? AND id=?',owner,id).first();
+  if(!old||recordVersion(old.body)!==expectedVersion){
+   // A matching operation may have committed between the first receipt read and this read.
+   const committed=await this.receipt(owner,operationKey,hash,nowMs);if(committed)return committed;
+   if(!old)fail('NOT_FOUND','Lançamento não encontrado.',404);
+   fail('RECORD_CHANGED','Este lançamento mudou. Recarregue os dados antes de salvar.');
+  }
   await this.stmt('INSERT OR IGNORE INTO cloud_state(owner) VALUES(?)',owner).run();const state=await this.state(owner).first();
   const edited=kind==='PUT'?{...JSON.parse(old.body),...validated,schedule:schedule(validated)}:null;
   if(edited&&!edited.installmentStartMonth)delete edited.installmentStartMonth;
