@@ -2,7 +2,7 @@
 
 ## Publicação atual
 
-Versão atual do Worker: `5994e736-d2c5-4158-b527-3a22bee0c81b`, publicada em 02/11/2026 com o bot definitivo **@zelumi_bot** e site em **https://usezelumi.vercel.app**. Bot, D1 e webhook continuam na Cloudflare. A migração aditiva `0004_bot_transition.sql` permitiu trocar o vínculo sem reimportar dados; a comparação antes/depois confirmou os 7 lançamentos, projeções e perfis idênticos. O usuário confirmou o domínio Telegram; falta o teste real de login e resposta do bot. Veja [docs/TROCA-BOT.md](./docs/TROCA-BOT.md) e [docs/VERCEL.md](./docs/VERCEL.md).
+Versão atual do Worker: `5994e736-d2c5-4158-b527-3a22bee0c81b`, publicada em 02/11/2026 com o bot definitivo **@zelumi_bot** e site em **https://usezelumi.vercel.app**. Bot, D1 e webhook continuam na Cloudflare. A migração aditiva `0004_bot_transition.sql` permitiu trocar o vínculo sem reimportar dados; a comparação antes/depois confirmou os 7 lançamentos, projeções e perfis idênticos. O usuário confirmou o domínio Telegram, resposta real de `/hoje` com o programa local desligado e novo login com conta e lançamentos corretos. Veja [docs/TROCA-BOT.md](./docs/TROCA-BOT.md) e [docs/VERCEL.md](./docs/VERCEL.md).
 
 Marco financeiro anterior: `d3edc342-66e2-43fa-b1b1-05d3578bab11`, publicado em 02/11/2026 com migração aditiva `0003_finance.sql`. Naquele endereço, o usuário confirmou os dados reais, totais iguais aos de `/mes` e edição/exclusão em um lançamento de teste. A versão de autenticação listada abaixo é outro marco anterior.
 

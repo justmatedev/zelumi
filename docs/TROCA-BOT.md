@@ -32,4 +32,4 @@ Parar a ativação do bot novo e preservar os backups. Uma troca de volta usa a 
 
 Verificação: 78 testes de backend/D1 e 15 de interface, tipos, build/export e dry-run passaram. A revisão identificou uma edição que poderia terminar após revogar a sessão; o caso foi reproduzido e corrigido com uma validação atômica da sessão e do bot na gravação financeira. A revisão final não encontrou problemas críticos ou importantes.
 
-Pendente: o usuário iniciar a conversa com `@zelumi_bot`, conferir uma resposta real de `/hoje` e entrar pelo site para validar Perfil e lançamentos. Não foram enviados lançamentos fictícios ao bot de produção para testar.
+Validação externa concluída: o usuário confirmou resposta real de `/hoje` no `@zelumi_bot` com o programa local desligado e novo login no site com conta e lançamentos anteriores corretos. Não foram enviados lançamentos fictícios ao bot de produção para testar.

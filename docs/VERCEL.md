@@ -10,7 +10,7 @@ Endereço escolhido: **https://usezelumi.vercel.app**. O projeto Vercel já est�
 - [x] Testar limites com visitantes distintos e cabeçalhos forjados; testar login/sessão/logout com origem Vercel e destino Worker. Rodar backend, interface, tipos, build/export e dry-run.
 - [x] Configurar o segredo do proxy na Vercel e na Cloudflare, publicar os arquivos e verificar o encaminhamento no endereço público.
 - [x] Atualizar a origem autorizada do Worker e vincular o domínio no BotFather ao bot definitivo `@zelumi_bot`.
-- [ ] Confirmar login, dados reais e resposta do bot com o usuário.
+- [x] Confirmar login, dados reais e resposta do bot com o usuário.
 
 ## Configuração da Vercel
 
@@ -43,7 +43,7 @@ Verificações: 69 testes de backend/D1, 15 de interface, tipos, build/export e 
 
 Atualização posterior: o usuário criou o bot definitivo `@zelumi_bot` e confirmou a vinculação de `usezelumi.vercel.app` a ele no BotFather. O Worker foi atualizado para esse bot, versão `5994e736-d2c5-4158-b527-3a22bee0c81b`, preservando os 7 lançamentos e perfis. A troca está registrada em [TROCA-BOT.md](./TROCA-BOT.md).
 
-Ainda pendente: validação pelo usuário de login real, Perfil, lançamentos e resposta do bot definitivo. As verificações anônimas não comprovam esses passos.
+Validação externa concluída: o usuário confirmou resposta do novo `@zelumi_bot` a `/hoje` com o programa local desligado, além de novo login pelo Telegram com Perfil e lançamentos anteriores corretos em `https://usezelumi.vercel.app`.
 
 ## Retorno ao endereço anterior
 
