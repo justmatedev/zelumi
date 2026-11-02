@@ -118,4 +118,4 @@ O usuário abre o endereço atual, entra pelo Telegram, vê sua conta real no Pe
 
 ## Revisão do plano
 
-Revisão própria: cobertura da spec conferida nas quatro tarefas; interfaces, prazos, nomes de rotas e cookies consistentes; cinco classes de falha acima atribuídas aos respectivos testes. Implementação ainda não iniciada. A aprovação do widget foi recebida; a execução deste plano aguarda a revisão solicitada pelo fluxo `writing-plans`.
+Revisão própria: cobertura da spec conferida nas quatro tarefas; interfaces, prazos, nomes de rotas e cookies consistentes; cinco classes de falha acima atribuídas aos respectivos testes. O usuário aprovou a execução direta. Tarefas 1–3 implementadas e verificadas; tarefa 4 com roteamento/build verificados, pendente de revisão final, publicação e confirmação humana do login. Ruling da execução: widget em iframe dedicado com CSP própria, porque o script oficial usa eval; validação de mensagens por origem e janela e testes correspondentes substituem o callback global na página principal.

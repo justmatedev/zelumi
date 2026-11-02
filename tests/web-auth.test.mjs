@@ -14,7 +14,7 @@ const payload=(id=11,extra={})=>sign({id,first_name:'João <>&',auth_date:initia
 const cookie=(res,name)=>res.headers.getSetCookie().find(v=>v.startsWith(`${name}=`))?.split(';')[0];
 
 test('sessões web com D1 local',async t=>{
- const platform=await getPlatformProxy({configPath:'wrangler.jsonc',persist:false,remoteBindings:false,envFiles:['.dev.vars.example']});t.after(()=>platform.dispose());
+ const platform=await getPlatformProxy({configPath:'tests/wrangler.jsonc',persist:false,remoteBindings:false,envFiles:[resolve('.dev.vars.example')]});t.after(()=>platform.dispose());
  const db=platform.env.DB;
  for(const name of ['0001_initial.sql','0002_web_auth.sql']){
   const file=new URL(`../cloudflare/migrations/${name}`,import.meta.url);
@@ -103,5 +103,14 @@ test('sessões web com D1 local',async t=>{
   const isolated=createWorker({clock:()=>new Date(now),apiFactory:()=>async()=>{sent++;return true;}});
   const unavailable={prepare(sql){if(sql.includes('web_'))throw new Error('Auth unavailable');return db.prepare(sql);},batch:q=>db.batch(q)};
   await isolated.scheduled({}, {...env,DB:unavailable});assert.equal(sent,1);
+ });
+ await t.test('assets são servidos sem esconder erros da API ou alterar o webhook',async()=>{
+  const assets={fetch:async r=>new Response(new URL(r.url).pathname==='/'?'Zelumi':'Not found',{status:new URL(r.url).pathname==='/'?200:404})};
+  const webEnv={...env,ASSETS:assets};
+  assert.equal((await worker.fetch(req('/'),webEnv)).status,200);
+  for(const path of ['/api','/auth','/api/desconhecida']){const r=await worker.fetch(req(path),webEnv);assert.equal(r.status,404);assert.match(r.headers.get('content-type'),/application\/json/);}
+  assert.equal((await worker.fetch(req('/pagina-inexistente'),webEnv)).status,404);
+  assert.equal((await worker.fetch(req('/telegram/webhook',{}),webEnv)).status,401);
+  assert.equal((await worker.fetch(req('/health'),webEnv)).status,200);
  });
 });

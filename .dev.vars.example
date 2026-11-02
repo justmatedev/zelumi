@@ -1,0 +1,5 @@
+# Para wrangler dev local. Não cole credenciais reais em arquivos rastreados.
+TELEGRAM_BOT_TOKEN=123:token_de_teste
+TELEGRAM_WEBHOOK_SECRET=segredo_local_de_teste_com_mais_de_32_caracteres
+APP_ORIGIN=https://localhost:8787
+TELEGRAM_BOT_USERNAME=financeiro_lab_482_bot

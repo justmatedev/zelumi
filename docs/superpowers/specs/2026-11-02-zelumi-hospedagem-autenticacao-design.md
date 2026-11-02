@@ -59,6 +59,8 @@ Usar **Login Widget clássico oficial**, no modo callback JavaScript (`data-onau
 
 Não solicitar telefone, e-mail ou permissão adicional de envio de mensagens (`data-request-access`) para realizar o login. O botão incorporado é o oficial do Telegram e tem opções de aparência limitadas; preservar o restante do desenho aprovado sem criar uma imitação do botão.
 
+Detalhe confirmado na implementação: o script oficial clássico usa `eval` para interpretar `data-onauth`. Carregá-lo em `telegram-widget.html`, um iframe dedicado com CSP própria, e permitir essa operação somente nesse documento. A página principal não permite `unsafe-eval`. O callback envia o payload assinado ao pai por `postMessage` com origem exata; o pai confere tanto origem quanto `event.source` do iframe antes de enviar ao Worker. O desafio CSRF continua somente na memória da página principal. Esse quadro é do mesmo site e não constitui fronteira contra comprometimento do script oficial, que continua sendo uma dependência confiada; limita a exceção de CSP à integração.
+
 ### Preparação externa
 
 Já concluída pelo usuário: domínio `financeiro-testes-bot.miudo.workers.dev` vinculado ao bot `@financeiro_lab_482_bot`, com resposta “Success! Domain updated.”. Não cadastrar a URL de callback como domínio. Não é necessário obter Client ID ou Client Secret para esse método.
@@ -68,7 +70,7 @@ Configuração pública no Worker: `APP_ORIGIN=https://financeiro-testes-bot.miu
 ### Fluxo
 
 1. A entrada faz `POST /auth/telegram/start`, JSON, com Origin exatamente igual a `APP_ORIGIN`. O Worker cria um fluxo de 10 minutos, cookie temporário `__Host-zelumi_login` HttpOnly e desafio CSRF independente retornado no JSON. Guardar hashes dos valores no D1; substituir o fluxo anterior desse navegador ao reiniciar.
-2. O frontend monta o widget oficial com o username retornado e mantém o desafio somente em memória. O callback do widget envia os dados para `POST /auth/telegram/callback`, em JSON, com o desafio em `X-CSRF-Token`. Não utilizar callback por query string nem aceitar identidade via GET.
+2. O frontend monta o widget oficial no iframe dedicado, com o username retornado, e mantém o desafio somente em memória. O callback encaminha o retorno ao pai com verificação de origem/janela, e o pai envia os dados para `POST /auth/telegram/callback`, em JSON, com o desafio em `X-CSRF-Token`. Não utilizar callback por query string nem aceitar identidade via GET.
 3. O Worker exige Origin exato, JSON, corpo de no máximo 16 KiB, cookie de fluxo válido e desafio correspondente. Não permitir CORS externo. Essa vinculação ao navegador é necessária porque a assinatura clássica do Telegram não contém state ou nonce da aplicação.
 4. Validar tipos e campos obrigatórios (`id`, `first_name`, `auth_date`, `hash`) e opcionais documentados (`last_name`, `username`, `photo_url`), rejeitando arrays, objetos, campos desconhecidos e coerções ambíguas. Canonicalizar números seguros para texto, preservar os valores textuais assinados, ordenar campos sem `hash`, unir com `\n`, calcular HMAC-SHA-256 com chave SHA-256 do token do bot e comparar em tempo constante.
 5. Aceitar `auth_date` com idade de até 5 minutos e tolerância futura de 30 segundos. A idade é verificada pelo relógio do servidor. Rejeitar ID inválido ou assinatura inválida antes de criar perfil ou sessão.

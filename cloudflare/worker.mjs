@@ -40,7 +40,7 @@ export function createWorker({apiFactory=createTelegram,clock=()=>new Date()}={}
         try {settings(env);return Response.json({service:'financeiro-testes-bot',status:'configured'});}
         catch {return Response.json({service:'financeiro-testes-bot',status:'not_configured'},{status:503});}
       }
-      if(path!=='/telegram/webhook')return new Response('Not found',{status:404});
+      if(path!=='/telegram/webhook')return env.ASSETS?env.ASSETS.fetch(request):new Response('Not found',{status:404});
       if(request.method!=='POST')return new Response('Method not allowed',{status:405,headers:{Allow:'POST'}});
       let config;
       try{config=settings(env);}catch{return new Response('Service not configured',{status:503});}

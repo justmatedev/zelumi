@@ -184,3 +184,11 @@ O desenho técnico anterior propunha OIDC. Após conferir a interface disponíve
 O plano está em [site e login Telegram](./superpowers/plans/2026-11-02-zelumi-site-login-telegram.md). A primeira entrega planejada inclui estrutura Next.js/TypeScript/Tailwind/shadcn, botão oficial Telegram, validação no servidor, sessão e Perfil reais. Visão geral e Lançamentos terão estado explícito de conexão pendente, sem misturar dados fictícios com a conta. API financeira e parcelas mensais continuam sendo a entrega seguinte. Nenhum novo login, frontend ou migração de autenticação foi implementado/publicado ainda.
 
 Escolhas técnicas do implementador no plano: assets no mesmo Worker/endereço, sessão de sete dias, cookie protegido, fluxo temporário de dez minutos e proteções CSRF/replay. A aparência do botão incorporado obedece às opções oficiais do Telegram, mantendo o restante da identidade visual aprovada. Não há nova configuração obrigatória a pedir no BotFather para começar essa implementação.
+
+### Implementação da base do site — 02/11/2026
+
+O usuário aprovou executar o plano diretamente nesta sessão, mantendo um repositório único para site, bot e API. A estrutura Next.js foi criada em `web/`, com pacote e lock próprios. O `.gitignore` exclui builds, dependências, estado do Wrangler, credenciais e bancos locais. O README explica como enviar o conteúdo da pasta atual como raiz de um futuro repositório `zelumi`; nenhum envio ao GitHub foi feito.
+
+Entrada, Perfil, temas e saída de sessão têm implementação real, junto da autenticação HMAC no Worker e tabelas aditivas de perfil/sessão no D1. Visão geral e Lançamentos exibem conexão pendente; sem exemplos financeiros na conta. O widget oficial é incorporado em um iframe com CSP própria porque seu parser de callback exige `eval`; o painel principal não recebe essa permissão. A mensagem desse iframe é validada por origem e janela antes do envio à API. O token do bot nunca entra no frontend.
+
+Verificação local até aqui: testes de backend/D1, componentes, tipos, build estático e dry-run do Worker passaram; as rotas/headers foram conferidos no Wrangler local. A publicação e o teste de login humano ainda devem ser registrados abaixo quando ocorrerem. A existência do código não comprova que uma conta real concluiu a autorização externa.
