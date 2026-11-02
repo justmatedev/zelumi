@@ -2,6 +2,52 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {parse,resolve,money,schedule} from '../shared/parser.mjs';
 const now=new Date(2026,10,1,12);
+test('categorias prontas reconhecem termos, marcas, plurais e acentos',()=>{
+ const cases={
+  'Alimentação':['pães','SUPERMERCADO','açaí','iFood','restaurantes'],
+  'Transporte':['ônibus','combustível','estacionamento','pedágio','táxis'],
+  'Casa':['aluguel','condomínio','energia elétrica','conta de água','internet'],
+  'Saúde':['farmácia','remédios','dentista','exames','fisioterapia'],
+  'Educação':['faculdade','escola','cursos','material escolar','livros'],
+  'Lazer':['cinema','show','teatro','jogos','parque'],
+  'Compras':['roupas','calçados','notebook','celular','eletrônicos'],
+  'Assinaturas':['Netflix','Spotify','assinatura de software','assinaturas'],
+  'Cuidados pessoais':['cabeleireiro','barbeiro','manicure','cosméticos'],
+  'Pets':['veterinário','pet shop','ração para cachorro','banho e tosa'],
+  'Viagens':['passagem aérea','hotel','hospedagem','pousada'],
+  'Impostos e taxas':['IPTU','IPVA','imposto de renda','tarifa bancária'],
+ };
+ for(const [category,descriptions] of Object.entries(cases))for(const description of descriptions){
+  const result=parse(`${description} 50`,now);
+  assert.equal(result.status,'ready',description);assert.equal(result.category,category,description);
+ }
+});
+test('expressões específicas resolvem termos internos sem esconder outras despesas',()=>{
+ for(const [description,category] of [
+  ['Uber Eats','Alimentação'],['plano de saúde','Saúde'],['seguro saúde','Saúde'],
+  ['seguro viagem','Viagens'],['material escolar','Educação'],['ração para cachorro','Pets'],
+  ['assinatura de jogos','Assinaturas'],['livro de receitas','Educação'],
+ ])assert.equal(parse(`${description} 50`,now).category,category,description);
+ for(const description of ['mercado e farmácia','hotel e restaurante','Uber Eats e táxi','material escolar e cinema','Netflix e Spotify e cinema']){
+  assert.equal(parse(`${description} 50`,now).category,'Outros',description);
+ }
+ assert.equal(parse('mercado e padaria 50',now).category,'Alimentação');
+});
+test('classificação não usa trechos de palavras nem adivinha marcas ambíguas',()=>{
+ for(const description of ['Uberlândia','cafeína','aguarela','escolaridade','Google','Amazon','compra desconhecida']){
+  assert.equal(parse(`${description} 50`,now).category,'Outros',description);
+ }
+ assert.equal(parse('CAFÉ, padaria! 50',now).category,'Alimentação');
+ assert.equal(parse('almoço das crianças 50',now).category,'Alimentação');
+ assert.equal(parse('recebi Netflix 50',now).category,'Receitas');
+ assert.equal(resolve(parse('veterinário',now),'50').category,'Pets');
+});
+test('limpeza da descrição preserva palavras acentuadas inteiras',()=>{
+ assert.equal(parse('paguei plano de saúde 50',now).description,'Plano saúde');
+ assert.equal(parse('plano de sau\u0301de 50',now).description.normalize('NFC'),'Plano saúde');
+ assert.equal(parse('plano de sau\u0301de 50',now).category,'Saúde');
+ assert.equal(parse('comprei sabonete líquido 20',now).description,'Sabonete líquido');
+});
 test('mensagens curtas e moeda brasileira',()=>{
  assert.equal(parse('pao 10',now).amount,1000);
  assert.equal(parse('uber 23,50',now).category,'Transporte');

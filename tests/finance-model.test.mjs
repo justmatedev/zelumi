@@ -24,3 +24,13 @@ test('legado válido preservado, ausente recuperado sem reescrever corpo',()=>{
  const p=buildProjection(body);assert.equal(p.searchName,'google');assert.equal(p.firstMonth,'2026-01');assert.match(recordVersion(body),/^[a-f0-9]{64}$/);
 });
 test('ano final do cronograma pode chegar a 9999',()=>{assert.equal(readStored(JSON.stringify({...input,date:'9990-01-31',installments:120})).schedule.at(-1).date,'9999-12-31');});
+test('novas categorias são editáveis sem recategorizar registros antigos',()=>{
+ for(const category of ['Educação','Lazer','Compras','Assinaturas','Cuidados pessoais','Pets','Viagens','Impostos e taxas']){
+  assert.equal(validateEdit({...input,category}).category,category);
+  assert.throws(()=>validateEdit({...input,type:'receita',category}));
+ }
+ assert.throws(()=>validateEdit({...input,category:'Categoria inventada'}));
+ for(const category of ['Alimentação','Transporte','Casa','Saúde','Outros']){
+  assert.equal(readStored(JSON.stringify({...input,description:'Netflix',category})).category,category);
+ }
+});

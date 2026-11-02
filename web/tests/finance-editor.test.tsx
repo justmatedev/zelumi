@@ -4,6 +4,25 @@ import {RecordEditor} from '@/components/finance/record-editor';
 import {RecordDialog} from '@/components/finance/record-dialog';
 import {SessionProvider} from '@/components/session-provider';
 const record={id:'1',version:'a'.repeat(64),description:'Google',type:'despesa' as const,category:'Outros',amount:100000,date:'2026-01-31',installments:12,installmentStartMonth:null,schedule:[]};
+it('oferece categorias completas, preserva categoria ao renomear e salva seleção explícita',async()=>{
+ const save=vi.fn().mockResolvedValue(undefined);
+ render(<RecordEditor record={{...record,description:'Netflix'}} onSave={save} onCancel={()=>{}} busy={false}/>);
+ expect(screen.getByLabelText('Categoria')).toHaveValue('Outros');
+ for(const category of ['Educação','Lazer','Compras','Assinaturas','Cuidados pessoais','Pets','Viagens','Impostos e taxas']){
+  expect(screen.getByRole('option',{name:category})).toBeInTheDocument();
+ }
+ fireEvent.change(screen.getByLabelText('Nome'),{target:{value:'Netflix mensal'}});
+ fireEvent.click(screen.getByRole('button',{name:'Salvar alterações'}));
+ await waitFor(()=>expect(save).toHaveBeenCalledOnce());
+ expect(save.mock.calls[0][0].category).toBe('Outros');
+ fireEvent.change(screen.getByLabelText('Categoria'),{target:{value:'Impostos e taxas'}});
+ fireEvent.click(screen.getByRole('button',{name:'Salvar alterações'}));
+ await waitFor(()=>expect(save).toHaveBeenCalledTimes(2));
+ expect(save.mock.calls[1][0].category).toBe('Impostos e taxas');
+ fireEvent.change(screen.getByLabelText('Tipo'),{target:{value:'receita'}});
+ expect(screen.getByLabelText('Categoria')).toHaveValue('Receitas');
+ expect(screen.queryByRole('option',{name:'Pets'})).not.toBeInTheDocument();
+});
 it('edição usa total, avisa sobre todos os meses e mantém texto em conflito',async()=>{
  const save=vi.fn().mockRejectedValue(new Error('Conflito'));render(<RecordEditor record={record} onSave={save} onCancel={()=>{}} busy={false}/>);
  expect(screen.getByText(/meses anteriores/)).toBeInTheDocument();fireEvent.change(screen.getByLabelText('Nome'),{target:{value:'Google editado'}});fireEvent.click(screen.getByRole('button',{name:'Salvar alterações'}));await waitFor(()=>expect(save).toHaveBeenCalledOnce());expect(screen.getByLabelText('Nome')).toHaveValue('Google editado');expect(save.mock.calls[0][0].amount).toBe(100000);

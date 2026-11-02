@@ -1,7 +1,7 @@
 import {schedule} from '../shared/parser.mjs';
 export {schedule};
-export const expenseCategories=['Alimentação','Transporte','Casa','Saúde','Outros'];
-export const categories=['Receitas',...expenseCategories];
+import {expenseCategories} from '../shared/categories.mjs';
+export {expenseCategories,categories} from '../shared/categories.mjs';
 export class FinanceError extends Error {
  constructor(code,message,status=400){super(message);this.code=code;this.status=status;}
 }

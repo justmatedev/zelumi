@@ -6,6 +6,8 @@ Gerenciamento financeiro com registros rápidos pelo Telegram. O bot funciona em
 
 O guia do [repositório no GitHub](./docs/GITHUB.md) descreve o repositório privado, arquivos incluídos/excluídos e a validação sem credenciais reais.
 
+Os lançamentos usam [13 categorias prontas de despesas e Receitas](./docs/CATEGORIAS.md). O bot reconhece palavras completas e expressões específicas; descrições sem correspondência ou com categorias conflitantes ficam em Outros. A categoria pode ser corrigida no editor do painel.
+
 A configuração do endereço `usezelumi.vercel.app`, com site na Vercel e backend na Cloudflare, está em [docs/VERCEL.md](./docs/VERCEL.md).
 
 ## Organização do repositório

@@ -31,6 +31,16 @@ test('pergunta, valida resposta e registra só quando há valor',t=>{
  handleUpdate(store,message(3,'10,50'),options);
  assert.equal(store.list('11')[0].amount,1050);assert.equal(store.pending('11'),null);
 });
+test('categoriza mensagens novas, mantém categoria ao pedir valor e recalcula na edição',t=>{
+ const store=fixture(t);
+ handleUpdate(store,message(1,'Netflix'),options);
+ handleUpdate(store,message(2,'50'),options);
+ assert.equal(store.list('11')[0].category,'Assinaturas');
+ assert.match(drain(store).at(-1).payload.text,/Assinaturas/);
+ handleUpdate(store,callback(3,'edit:1'),options);
+ handleUpdate(store,message(4,'veterinário 80'),options);
+ assert.equal(store.list('11').length,1);assert.equal(store.list('11')[0].category,'Pets');
+});
 test('aceita usuários novos, isola registros e ignora grupos',t=>{
  const store=fixture(t);
  handleUpdate(store,message(1,'pão 10',33),options);

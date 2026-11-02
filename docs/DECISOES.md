@@ -2,6 +2,14 @@
 
 Atualizado em 02/11/2026. Este documento reúne as decisões da conversa e diferencia o produto planejado do código que já está em funcionamento. Ao mudar uma decisão com o usuário, atualizar este registro.
 
+### Categorias prontas mais completas — 02/11/2026
+
+O usuário escolheu ampliar as categorias prontas compartilhadas e aprovou a implementação descrita em [Categorias](./CATEGORIAS.md). A lista passa a ter 13 categorias de despesas e Receitas, acrescentando Educação, Lazer, Compras, Assinaturas, Cuidados pessoais, Pets, Viagens e Impostos e taxas.
+
+Bot, validação da API, filtros e editor do painel compartilham o catálogo. A classificação usa palavras completas e expressões específicas, ignora acentos e maiúsculas e retorna Outros em conflitos entre categorias. Registros existentes não são recategorizados automaticamente. A limpeza da descrição foi corrigida para preservar palavras acentuadas, como saúde. Implementação local; publicação não faz parte desta entrega.
+
+Verificação: 92 testes de backend/D1 e 34 de interface passaram, junto com build estático, TypeScript e conferência da exportação. A revisão independente não encontrou problemas relevantes pendentes. Nenhum dado real foi alterado.
+
 ## Produto e nome
 
 - Nome escolhido: **Zelumi**.

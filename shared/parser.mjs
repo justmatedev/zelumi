@@ -1,3 +1,4 @@
+import {classifyExpense} from './categories.mjs';
 const clean = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 export function money(s) {
   if (!/^\d+(?:\.\d{3})*(?:,\d{1,2})?$/.test(s) && !/^\d+\.\d{1,2}$/.test(s)) return null;
@@ -24,10 +25,10 @@ export function parse(text, now = new Date()) {
   else if (per) { installments=Number(per[1]); const unit=money(per[2]); total=unit ? unit*installments : null; }
   else if (split) { installments=Number(split[1]); const remaining = normalized.replace(split[0], '').match(/\d+(?:\.\d{3})*(?:[,.]\d{1,2})?/g) || []; if(remaining.length===1) total=money(remaining[0]); }
   if (installments < 1 || installments > 120) return {status:'invalid',question:'Use entre 1 e 120 parcelas.'};
-  let description = text.replace(/\bx\d+\b/gi,'').replace(/(?:em\s+)?\d+\s*(?:x|vezes|parcelas)\b/gi,'').replace(/\d+(?:\.\d{3})*(?:[,.]\d{1,2})?/g,'').replace(/r\$/gi,'').replace(/\b(hoje|ontem|gastei|paguei|comprei|recebi|ganhei|reais|real|por|em|no|na|com|de|da|do|venda|uns)\b/gi,' ').replace(/\s+/g,' ').trim();
+  let description = text.replace(/\bx\d+\b/gi,'').replace(/(?:em\s+)?\d+\s*(?:x|vezes|parcelas)\b/gi,'').replace(/\d+(?:\.\d{3})*(?:[,.]\d{1,2})?/g,'').replace(/r\$/gi,'').replace(/(?<![\p{L}\p{M}\p{N}_])(hoje|ontem|gastei|paguei|comprei|recebi|ganhei|reais|real|por|em|no|na|com|de|da|do|venda|uns)(?![\p{L}\p{M}\p{N}_])/giu,' ').replace(/\s+/g,' ').trim();
   if (!description) return {status:'missing_description',question:'Com o que foi esse lançamento? Ex.: “pão 10”.'};
   const type = /\b(recebi|ganhei|salario|reembolso)\b/.test(normalized) ? 'receita' : 'despesa';
-  const category = type==='receita' ? 'Receitas' : /pao|padaria|almoco|jantar|cafe|lanche|mercado|pizza|restaurante/.test(clean(description)) ? 'Alimentação' : /uber|onibus|gasolina|combustivel|metro|taxi/.test(clean(description)) ? 'Transporte' : /aluguel|luz|agua|internet|condominio/.test(clean(description)) ? 'Casa' : /farmacia|remedio|medico|consulta/.test(clean(description)) ? 'Saúde' : 'Outros';
+  const category = type==='receita' ? 'Receitas' : classifyExpense(description);
   const base = {description:description[0].toUpperCase()+description.slice(1),type,category,date:day,installments,original:text};
   const installmentOnly = (suffix || split) && tokens.length===1;
   if (!tokens.length || installmentOnly) return {...base,status:'missing_amount',question:`Qual foi o valor de ${description}?`};

@@ -62,4 +62,17 @@ test('API financeira com sessão real local, versões e idempotência',async t=>
    assert.deepEqual(await late.mutate(args),expected);
   }
  });
+ await t.test('novas categorias podem ser salvas, filtradas e agregadas no resumo',async()=>{
+  await db.prepare("INSERT INTO cloud_records(id,owner,body) VALUES('202','11',?)").bind(JSON.stringify({...record,description:'Veterinário',installments:1})).run();
+  const detail=await (await send('/api/finance/records/202')).json();
+  const response=await send('/api/finance/records/202','PUT',{expectedVersion:detail.version,record:{...record,description:'Veterinário',category:'Pets',installments:1}},{'Idempotency-Key':randomUUID()});
+  assert.equal(response.status,200);
+  const filtered=await (await send('/api/finance/entries?category=Pets')).json();
+  assert.equal(filtered.total,1);assert.equal(filtered.items[0].category,'Pets');
+  const overview=await (await send('/api/finance/overview?month=2026-01')).json();
+  assert.equal(overview.categories.find(c=>c.category==='Pets').amount,record.amount);
+  assert.equal((await send('/api/finance/entries?category='+encodeURIComponent('Impostos e taxas'))).status,200);
+  assert.equal((await send('/api/finance/entries?category=Inventada')).status,400);
+  await db.prepare("DELETE FROM cloud_records WHERE id='202'").run();
+ });
 });
