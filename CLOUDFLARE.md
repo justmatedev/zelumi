@@ -2,7 +2,7 @@
 
 ## Publicação atual
 
-Versão atual do Worker: `6a9b984d-a3c0-45f3-a645-41f983c9654e`, publicada em 02/11/2026 para integrar o site em **https://usezelumi.vercel.app**. Bot, D1 e webhook continuam na Cloudflare; não houve migração ou reimportação de dados nesta troca. A confirmação de domínio Telegram e o teste real pelo usuário ainda estão pendentes; veja [docs/VERCEL.md](./docs/VERCEL.md).
+Versão atual do Worker: `5994e736-d2c5-4158-b527-3a22bee0c81b`, publicada em 02/11/2026 com o bot definitivo **@zelumi_bot** e site em **https://usezelumi.vercel.app**. Bot, D1 e webhook continuam na Cloudflare. A migração aditiva `0004_bot_transition.sql` permitiu trocar o vínculo sem reimportar dados; a comparação antes/depois confirmou os 7 lançamentos, projeções e perfis idênticos. O usuário confirmou o domínio Telegram; falta o teste real de login e resposta do bot. Veja [docs/TROCA-BOT.md](./docs/TROCA-BOT.md) e [docs/VERCEL.md](./docs/VERCEL.md).
 
 Marco financeiro anterior: `d3edc342-66e2-43fa-b1b1-05d3578bab11`, publicado em 02/11/2026 com migração aditiva `0003_finance.sql`. Naquele endereço, o usuário confirmou os dados reais, totais iguais aos de `/mes` e edição/exclusão em um lançamento de teste. A versão de autenticação listada abaixo é outro marco anterior.
 
@@ -20,7 +20,7 @@ O bot local deve permanecer parado enquanto o webhook estiver ativo. As etapas a
 
 O site principal fica na Vercel, que encaminha `/auth/*` e `/api/*` ao Worker. `web/out` contém a exportação Next.js; o Worker ainda mantém seus assets para facilitar retorno ao endereço anterior, mas o login atual autoriza somente `https://usezelumi.vercel.app`. `/auth/*`, `/api/*`, `/health` e `/telegram/webhook` passam pelo Worker antes dos assets. Rotas inexistentes da API retornam JSON 404.
 
-Entrada usa o Login Widget clássico oficial. O novo domínio precisa ser vinculado por `/setdomain` no BotFather, conforme o guia da Vercel. A configuração pública está em `APP_ORIGIN` e `TELEGRAM_BOT_USERNAME`, no `wrangler.jsonc`. O token do bot continua sendo segredo no Worker; não há Client ID/Client Secret nessa integração. O deploy confere que o username corresponde ao token por `getMe`.
+Entrada usa o Login Widget clássico oficial. O usuário confirmou `/setdomain` de `usezelumi.vercel.app` no novo `@zelumi_bot`. A configuração pública está em `APP_ORIGIN` e `TELEGRAM_BOT_USERNAME`, no `wrangler.jsonc`. O token do bot continua sendo segredo no Worker; não há Client ID/Client Secret nessa integração. O deploy confere que o username corresponde ao token por `getMe`.
 
 Uma migração **aditiva** (`0002_web_auth.sql`) cria perfis, fluxos de login, recibos de uso único, sessões e rate limit. Não altera os lançamentos ou o owner existente. Sessões duram sete dias e usam cookie HttpOnly/Secure; o D1 guarda somente hashes dos tokens. CSRF, origem, validade da assinatura e uso único são verificados no servidor. O widget clássico precisa de `eval` e é carregado em um iframe com CSP própria; essa permissão não é habilitada no painel principal.
 
@@ -52,6 +52,8 @@ Depois de migrar e publicar, comparar um mês entre site e `/mes`, abrir uma com
 Em rollback, manter todas as tabelas e dados. A versão anterior ignora os novos índices; os triggers continuam invalidando caches alterados e a preparação os reconstrói ao voltar para a versão nova. Não reimportar registros, trocar webhook ou apagar tabelas para reverter código.
 
 ### Rollback
+
+Após trocar de bot, um rollback de versão precisa manter token, username e vínculo D1 compatíveis. Não voltar isoladamente a uma versão que usa o bot antigo; conferir o procedimento coordenado em [docs/TROCA-BOT.md](./docs/TROCA-BOT.md).
 
 Antes de publicar, registrar o ID de versão atual retornado por `npm run cf:versions`. Se for necessário voltar, usar Wrangler `rollback ID_DA_VERSAO` com a mesma autenticação local dos scripts. As tabelas novas permanecem no D1; não apagar tabelas nem tentar desfazer a migração de banco. A versão anterior do bot ignora essas tabelas. O rollback de código também restaura os assets da versão selecionada; uma versão anterior ao site continuará atendendo somente o bot. Não trocar o webhook.
 

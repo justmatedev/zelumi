@@ -11,7 +11,7 @@
 	"vars": {
 		"BOT_TIMEZONE": "America/Sao_Paulo",
 		"APP_ORIGIN": "https://usezelumi.vercel.app",
-		"TELEGRAM_BOT_USERNAME": "financeiro_lab_482_bot"
+		"TELEGRAM_BOT_USERNAME": "zelumi_bot"
 	},
 	"assets": {
 		"directory": "./web/out",

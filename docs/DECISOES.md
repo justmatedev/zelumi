@@ -9,7 +9,7 @@ Atualizado em 02/11/2026. Este documento reúne as decisões da conversa e difer
 - Telegram: entrada cotidiana de lançamentos, perguntas sobre informações faltantes, correção, desfazer e consultas.
 - Site: visão mensal, consulta e gerenciamento dos lançamentos reais do mesmo usuário.
 - “Miúdo” e “Financeiro — Testes” são nomes anteriores/provisórios. A pasta local e os textos ativos foram atualizados para Zelumi. Os identificadores da infraestrutura e o caminho do SQLite local continuam com nomes legados; a troca desses recursos é uma etapa separada.
-- Disponibilidade de marca, domínio e usernames de Zelumi ainda não foi verificada. Não apresentar exclusividade como confirmada.
+- Username `@zelumi_bot` criado e validado, e endereço `usezelumi.vercel.app` publicado. Disponibilidade jurídica da marca e de domínio próprio não foi verificada; não apresentar exclusividade como confirmada.
 - A assinatura “suas finanças em poucas palavras” foi sugerida, mas não foi escolhida explicitamente como slogan definitivo.
 
 ## Stack definida
@@ -110,7 +110,7 @@ O site acompanha o tema do dispositivo e oferece Claro/Escuro/Sistema no Perfil.
 - Laranja queimado no tema claro; laranja suave no escuro.
 - Símbolo isolado para foto do bot, favicon e espaços pequenos.
 - A escolha define a direção visual; ajustes ópticos e exportações finais podem ser feitos ao aplicá-lo.
-- A marca foi aplicada no novo site e no favicon. A foto e o nome do bot ainda são provisórios.
+- A marca foi aplicada no novo site e no favicon. O bot definitivo foi criado com nome Zelumi e username `@zelumi_bot`; a foto ainda pode ser ajustada.
 
 Arquivos:
 
@@ -230,3 +230,9 @@ As rotas em `web/vercel.json` preservam caminhos, cookies, métodos e corpos par
 69 testes de backend/D1 e 15 de interface passaram, junto com tipos, build/export e dry-run. O limite compartilhado pelo IP do proxy foi reproduzido antes da correção. A revisão independente não encontrou problemas críticos ou importantes; o encaminhamento público ainda deve ser conferido antes da troca de `APP_ORIGIN`. O domínio precisa ser vinculado pelo usuário no BotFather após essa preparação.
 
 Publicação realizada: o usuário confirmou a variável do proxy na Vercel e a mesma chave foi cadastrada no Worker, preservando os segredos anteriores. `1955e8d` foi enviado à `main` e a publicação Vercel concluiu com sucesso. O encaminhamento público foi validado antes de atualizar `APP_ORIGIN` para `https://usezelumi.vercel.app`; o Worker foi publicado na versão `6a9b984d-a3c0-45f3-a645-41f983c9654e`. Início de login e cookie protegido, cabeçalhos das páginas/widget, API anônima e bloqueio de origens incorretas foram conferidos em produção. Confirmação de domínio no BotFather e uso autenticado real permanecem pendentes do usuário. O bot mantém o mesmo username, webhook e banco.
+
+### Bot definitivo — Zelumi / @zelumi_bot
+
+O usuário criou o bot definitivo, ID numérico `9056845961`, e informou o token somente no `.env` local. A integração foi trocada do bot de testes `9133953215`, preservando o mesmo D1 e os dados pelo ID do usuário Telegram. A migração `0004_bot_transition.sql` troca apenas estado operacional e vínculo; as sessões anteriores foram revogadas e é necessário entrar novamente pelo bot novo.
+
+A conferência por SHA-256 confirmou os 7 lançamentos, projeções e perfis idênticos antes/depois. Webhook antigo desativado, token anterior preservado em arquivo local ignorado e novo webhook ativo no mesmo Worker, versão `5994e736-d2c5-4158-b527-3a22bee0c81b`. O usuário confirmou `/setdomain` no novo bot. 78 testes backend/D1 e 15 de interface, tipos, build/export e dry-run passaram; uma corrida de sessão encontrada na revisão foi reproduzida e corrigida. Uso autenticado real e resposta de `/hoje` ainda aguardam confirmação do usuário. Procedimento e recuperação em [TROCA-BOT.md](./TROCA-BOT.md).

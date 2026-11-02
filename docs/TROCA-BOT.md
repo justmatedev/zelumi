@@ -20,3 +20,16 @@ O bot antigo não será apagado nem terá seu token revogado. Seu webhook será 
 ## Se houver falha na troca
 
 Parar a ativação do bot novo e preservar os backups. Uma troca de volta usa a mesma comparação de IDs e requer fila vazia; não restaura automaticamente sessões ou perguntas antigas. Não restaurar um dump inteiro sobre lançamentos novos nem reimportar registros para trocar apenas o token. Credenciais, webhooks e configuração devem corresponder ao mesmo bot antes de reabrir o uso.
+
+## Execução em 02/11/2026
+
+- Bot anterior: `@financeiro_lab_482_bot`, ID `9133953215`; webhook desativado sem descartar updates. Bot e token anteriores não foram apagados ou revogados.
+- Bot definitivo: **Zelumi**, `@zelumi_bot`, ID `9056845961`. Token validado por `getMe`, novo segredo de webhook gerado e credenciais locais/Cloudflare atualizadas. A chave independente do proxy Vercel foi preservada.
+- Migração aditiva `0004_bot_transition.sql` aplicada. As proteções foram publicadas primeiro, na versão `6cdbd97e-2c04-4e0a-bcda-145b0b600883`, antes da troca do vínculo. A versão final do Worker é `5994e736-d2c5-4158-b527-3a22bee0c81b`.
+- Backup inicial e backup imediatamente antes da troca validados em SQLite isolado. A conferência SHA-256 antes/depois confirmou os **7 lançamentos**, suas projeções e os perfis idênticos, incluindo IDs, owners e corpos originais. Arquivos em `data/bot-transition-2026-11-02/`, ignorados pelo Git e com acesso restrito.
+- Credenciais anteriores guardadas em `.env.previous-bot`, ignorado pelo Git. O campo temporário `TELEGRAM_NEXT_BOT_TOKEN` ficou vazio após a troca. O SQLite local antigo continua preservado e vinculado ao bot anterior; para testar outro bot localmente, usar outro caminho `BOT_DB_PATH`.
+- Webhook novo ativo no endereço Cloudflare existente, sem updates pendentes ou último erro no momento da conferência. Menu de comandos configurado no novo bot. O usuário confirmou `/setdomain` com `usezelumi.vercel.app` no bot novo.
+
+Verificação: 78 testes de backend/D1 e 15 de interface, tipos, build/export e dry-run passaram. A revisão identificou uma edição que poderia terminar após revogar a sessão; o caso foi reproduzido e corrigido com uma validação atômica da sessão e do bot na gravação financeira. A revisão final não encontrou problemas críticos ou importantes.
+
+Pendente: o usuário iniciar a conversa com `@zelumi_bot`, conferir uma resposta real de `/hoje` e entrar pelo site para validar Perfil e lançamentos. Não foram enviados lançamentos fictícios ao bot de produção para testar.
