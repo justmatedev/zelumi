@@ -1,4 +1,4 @@
 import {AppShell} from '@/components/app-shell';
-import {PendingFinance} from '@/components/pending-finance';
+import {History} from '@/components/finance/history';
 export const metadata={title:'Lançamentos'};
-export default function Page(){return <AppShell><PendingFinance page="records"/></AppShell>;}
+export default function Page(){return <AppShell><History/></AppShell>;}

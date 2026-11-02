@@ -23,9 +23,9 @@ export async function handleFinance(request,env,{nowMs}){
    const allowed=request.method==='PUT'?['expectedVersion','record']:['expectedVersion'];if(Object.keys(input).some(k=>!allowed.includes(k))||! /^[a-f0-9]{64}$/.test(input.expectedVersion||''))invalid();
    return json(await store.mutate({owner,id,kind:request.method,expectedVersion:input.expectedVersion,record:input.record,operationKey:key,nowMs}));
   }
-  if(overview){const q=params(url,['month']);if(!validMonth(q.get('month')))invalid();return json(await store.overview(owner,q.get('month')));}
+  if(overview){const q=params(url,['month']);if(!validMonth(q.get('month'),9999))invalid();return json(await store.overview(owner,q.get('month')));}
   const q=params(url,['month','q','type','category','parts','page','pageSize','snapshot']);
-  if(q.has('month')&&!validMonth(q.get('month'))||q.has('q')&&q.get('q').length>100||q.has('type')&&!['receita','despesa'].includes(q.get('type'))||q.has('category')&&!categories.includes(q.get('category'))||q.has('parts')&&!['all','yes','no'].includes(q.get('parts')))invalid();
+  if(q.has('month')&&!validMonth(q.get('month'),9999)||q.has('q')&&q.get('q').length>100||q.has('type')&&!['receita','despesa'].includes(q.get('type'))||q.has('category')&&!categories.includes(q.get('category'))||q.has('parts')&&!['all','yes','no'].includes(q.get('parts')))invalid();
   return json(await store.entries(owner,{month:q.get('month'),q:q.get('q'),type:q.get('type'),category:q.get('category'),parts:q.get('parts')||'all',page:integer(q.get('page'),1,1000000,1),pageSize:integer(q.get('pageSize'),1,50,20),snapshot:integer(q.get('snapshot'),0,Number.MAX_SAFE_INTEGER,undefined)}));
  }catch(error){
   if(error instanceof FinanceError||error instanceof HttpError)return json({error:error.message,code:error.code||'INVALID_REQUEST'},error.status,error.code==='HISTORY_PREPARING'?{'Retry-After':'1'}:{});

@@ -5,6 +5,7 @@ import {randomUUID} from 'node:crypto';
 import {createWorker} from '../cloudflare/worker.mjs';
 import {hashToken,deriveCsrf} from '../cloudflare/auth/crypto.mjs';
 import {migrate} from './helpers/d1.mjs';
+import {FinanceStore} from '../cloudflare/finance/store.mjs';
 process.env.WRANGLER_LOG_PATH=resolve('.wrangler/logs');process.env.WRANGLER_SEND_METRICS='false';const {getPlatformProxy}=await import('wrangler');
 const now=1793617200000,origin='https://test.workers.dev';
 const record={description:'Pão %_',type:'despesa',category:'Alimentação',date:'2026-01-31',amount:100000,installments:12,installmentStartMonth:null};
@@ -34,5 +35,21 @@ test('API financeira com sessão real local, versões e idempotência',async t=>
   assert.equal((await send('/api/finance/records/1','DELETE',{expectedVersion:latest.version},{'Idempotency-Key':delkey})).status,200);
   assert.equal((await send('/api/finance/records/1','DELETE',{expectedVersion:latest.version},{'Idempotency-Key':delkey})).status,200);
   assert.equal((await send('/api/finance/records/1')).status,404);assert.equal((await db.prepare('SELECT COUNT(*) n FROM finance_projection').first()).n,0);
+ });
+ await t.test('falha na escrita reverte recibo, índice e versão e não cruza owner',async()=>{
+  await db.prepare("INSERT INTO cloud_records(id,owner,body) VALUES('2','11',?)").bind(JSON.stringify(record)).run();
+  const detail=await (await send('/api/finance/records/2')).json(),before=(await db.prepare("SELECT version FROM cloud_state WHERE owner='11'").first()).version,key=randomUUID();
+  const body={expectedVersion:detail.version,record:{...record,amount:50000}};
+  const bcsrf=await deriveCsrf('b'.repeat(64),env.TELEGRAM_BOT_TOKEN,'session');
+  assert.equal((await send('/api/finance/records/2','PUT',body,{'Idempotency-Key':randomUUID(),Cookie:`__Host-zelumi_session=${'b'.repeat(64)}`,'X-CSRF-Token':bcsrf})).status,404);
+  await db.prepare("CREATE TRIGGER fail_finance BEFORE UPDATE ON cloud_records BEGIN SELECT RAISE(ABORT,'test'); END").run();
+  try{assert.equal((await send('/api/finance/records/2','PUT',body,{'Idempotency-Key':key})).status,503);assert.equal((await db.prepare('SELECT COUNT(*) n FROM finance_operations WHERE operation_key=?').bind(key).first()).n,0);assert.equal((await db.prepare("SELECT version FROM cloud_state WHERE owner='11'").first()).version,before);assert.equal(JSON.parse((await db.prepare("SELECT body FROM cloud_records WHERE id='2'").first()).body).amount,record.amount);}
+  finally{await db.prepare('DROP TRIGGER fail_finance').run();}
+  assert.equal((await send('/api/finance/records/2','PUT',body,{'Idempotency-Key':key})).status,200);
+ });
+ await t.test('escritor antigo entre preparo e consulta não gera total parcial',async()=>{
+  await new FinanceStore(db).overview('11','2026-01');let changed=false;
+  const race={prepare:s=>db.prepare(s),async batch(statements){if(!changed){changed=true;await db.prepare("INSERT INTO cloud_records(id,owner,body) VALUES('late','11',?)").bind(JSON.stringify(record)).run();}return db.batch(statements);}};
+  await assert.rejects(new FinanceStore(race).overview('11','2026-01'),e=>e.code==='HISTORY_PREPARING');
  });
 });

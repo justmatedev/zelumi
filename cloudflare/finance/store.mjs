@@ -1,7 +1,7 @@
 import {randomUUID} from 'node:crypto';
 import {FinanceError,safeTotals,readStored,normalizeSearch,validateEdit,schedule} from '../../finance/model.mjs';
 import {recordVersion} from '../../finance/version.mjs';
-import {projectionInsert,projectionArgs} from '../../finance/sql.mjs';
+import {projectionInsert,projectionArgs,missingAnySQL} from '../../finance/sql.mjs';
 import {prepareOwner} from './projection.mjs';
 const from=`FROM finance_projection p JOIN cloud_records r ON r.owner=p.owner AND r.id=p.record_id JOIN json_each(p.schedule_json) j`;
 const date="json_extract(j.value,'$.date')",amount="json_extract(j.value,'$.amount')",type="json_extract(r.body,'$.type')",category="json_extract(r.body,'$.category')",parts="json_extract(r.body,'$.installments')";
@@ -25,14 +25,16 @@ export class FinanceStore {
  async detail(owner,id){const row=await this.stmt('SELECT body FROM cloud_records WHERE owner=? AND id=?',owner,id).first();if(!row)fail('NOT_FOUND','Lançamento não encontrado.',404);return {id,version:recordVersion(row.body),...readStored(row.body)};}
  async entries(owner,f){
   await this.ready(owner);const {where,args}=filter(owner,f),cats=filter(owner,f,true);
-  const batch=await this.db.batch([this.state(owner),this.stmt(`${select} ${from} ${where} ${order} LIMIT ? OFFSET ?`,...args,f.pageSize,(f.page-1)*f.pageSize),this.stmt(`SELECT COUNT(*) total ${from} ${where}`,...args),this.stmt(`SELECT DISTINCT ${category} category ${from} ${cats.where} ORDER BY category`,...cats.args)]);
+  const batch=await this.db.batch([this.state(owner),this.stmt(`${select} ${from} ${where} ${order} LIMIT ? OFFSET ?`,...args,f.pageSize,(f.page-1)*f.pageSize),this.stmt(`SELECT COUNT(*) total ${from} ${where}`,...args),this.stmt(`SELECT DISTINCT ${category} category ${from} ${cats.where} ORDER BY category`,...cats.args),this.stmt(missingAnySQL('cloud_records'),owner,1)]);
+  if(batch[4].results.length)fail('HISTORY_PREPARING','O histórico está sendo preparado. Tente novamente.',503);
   const snapshot=batch[0].results[0].snapshot;if(f.snapshot!==undefined&&f.snapshot!==snapshot)fail('HISTORY_CHANGED','O histórico mudou. Voltamos à primeira página.');
   const total=batch[2].results[0].total;safeTotals({total});return {items:batch[1].results.map(safeTotals),total,page:f.page,pageSize:f.pageSize,snapshot,categories:batch[3].results.map(r=>r.category)};
  }
  async overview(owner,month){
   await this.ready(owner);const {where,args}=filter(owner,{month});
   const sum=condition=>`COALESCE(SUM(CASE WHEN ${condition} THEN ${amount} ELSE 0 END),0)`;
-  const batch=await this.db.batch([this.state(owner),this.stmt(`SELECT COUNT(*) count,${sum(`${type}='receita'`)} income,${sum(`${type}='despesa'`)} expense,${sum(`${type}='despesa' AND ${parts}>1`)} installmentExpense,${sum(`${type}='despesa' AND ${parts}=1`)} cashExpense ${from} ${where}`,...args),this.stmt(`SELECT ${category} category,SUM(${amount}) amount ${from} ${where} AND ${type}='despesa' GROUP BY ${category} ORDER BY amount DESC,category`,...args),this.stmt(`${select} ${from} ${where} ${order} LIMIT 10`,...args)]);
+  const batch=await this.db.batch([this.state(owner),this.stmt(`SELECT COUNT(*) count,${sum(`${type}='receita'`)} income,${sum(`${type}='despesa'`)} expense,${sum(`${type}='despesa' AND ${parts}>1`)} installmentExpense,${sum(`${type}='despesa' AND ${parts}=1`)} cashExpense ${from} ${where}`,...args),this.stmt(`SELECT ${category} category,SUM(${amount}) amount ${from} ${where} AND ${type}='despesa' GROUP BY ${category} ORDER BY amount DESC,category`,...args),this.stmt(`${select} ${from} ${where} ${order} LIMIT 10`,...args),this.stmt(missingAnySQL('cloud_records'),owner,1)]);
+  if(batch[4].results.length)fail('HISTORY_PREPARING','O histórico está sendo preparado. Tente novamente.',503);
   const totals=safeTotals(batch[1].results[0]);return safeTotals({month,snapshot:batch[0].results[0].snapshot,...totals,result:totals.income-totals.expense,categories:batch[2].results.map(safeTotals),recent:batch[3].results.map(safeTotals)});
  }
  async receipt(owner,key,hash,nowMs){const row=await this.stmt('SELECT request_hash,response_json FROM finance_operations WHERE owner=? AND operation_key=? AND expires_at>?',owner,key,nowMs).first();if(!row)return null;if(row.request_hash!==hash)fail('OPERATION_KEY_REUSED','Esta ação já foi usada com outros dados.');return JSON.parse(row.response_json);}

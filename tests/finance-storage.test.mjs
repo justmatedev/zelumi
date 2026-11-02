@@ -21,4 +21,12 @@ test('D1 prepara legado sem resultados parciais e invalida cache concorrente',as
  let changed=false;const raced={prepare:q=>db.prepare(q),async batch(statements){if(!changed){changed=true;await db.prepare("UPDATE cloud_records SET body=? WHERE id='1'").bind(JSON.stringify({...record,description:'Médico'})).run();}return db.batch(statements);}};
  assert.equal((await prepareOwner(raced,'11')).status,'preparing');assert.equal((await prepareOwner(db,'11')).status,'ready');assert.equal((await db.prepare("SELECT search_name FROM finance_projection WHERE record_id='1'").first()).search_name,'medico');
  const invalid=JSON.stringify({...record,amount:-1});await db.prepare("INSERT INTO cloud_records(id,owner,body) VALUES('bad','22',?)").bind(invalid).run();assert.equal((await prepareOwner(db,'22')).status,'invalid');assert.equal((await db.prepare("SELECT body FROM cloud_records WHERE id='bad'").first()).body,invalid);
+ await t.test('histórico grande mantém preparo em lote e usa índice do owner',async()=>{
+  await db.batch(Array.from({length:1000},(_,i)=>db.prepare('INSERT INTO cloud_records(id,owner,body) VALUES(?,?,?)').bind('large'+i,'33',body)));
+  let prepared=0,calls=0;
+  const tracked={prepare(sql){calls++;return db.prepare(sql);},batch(s){prepared=s.length;calls++;return db.batch(s);}};
+  assert.equal((await prepareOwner(tracked,'33')).status,'preparing');assert.equal(prepared,20);assert.ok(calls<50);
+  assert.equal((await db.prepare("SELECT COUNT(*) n FROM finance_projection WHERE owner='33'").first()).n,20);
+  const plan=await db.prepare('EXPLAIN QUERY PLAN '+monthlySQL('cloud_records')).bind('33','2026-01','2026-01','2026-01').all();assert.match(JSON.stringify(plan),/finance_projection_month/);
+ });
 });

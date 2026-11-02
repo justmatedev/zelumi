@@ -7,9 +7,9 @@ export class FinanceError extends Error {
 }
 const invalid=message=>{throw new FinanceError('INVALID_RECORD',message);};
 export const normalizeSearch=s=>s.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase().trim();
-export function validMonth(value){return typeof value==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(value)&&Number(value.slice(0,4))>=1900&&Number(value.slice(0,4))<=9990;}
-export function validDate(value){
- if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value)||!validMonth(value.slice(0,7)))return false;
+export function validMonth(value,maximum=9990){return typeof value==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(value)&&Number(value.slice(0,4))>=1900&&Number(value.slice(0,4))<=maximum;}
+export function validDate(value,maximum=9990){
+ if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value)||!validMonth(value.slice(0,7),maximum))return false;
  const [y,m,d]=value.split('-').map(Number);return d>=1&&d<=new Date(Date.UTC(y,m,0)).getUTCDate();
 }
 const fields=['description','type','category','amount','date','installments','installmentStartMonth'];
@@ -34,7 +34,7 @@ export function readStored(body){
   if(!Array.isArray(rows)||rows.length!==r.installments)invalid('Cronograma inválido.');
   let total=0,previous='';
   for(const row of rows){
-   if(!row||!validDate(row.date)||!Number.isSafeInteger(row.amount)||row.amount<0||row.date.slice(0,7)<=previous)invalid('Cronograma inválido.');
+   if(!row||!validDate(row.date,9999)||!Number.isSafeInteger(row.amount)||row.amount<0||row.date.slice(0,7)<=previous)invalid('Cronograma inválido.');
    total+=row.amount;previous=row.date.slice(0,7);
   }
   if(total!==r.amount||!Number.isSafeInteger(total))invalid('Total das parcelas inválido.');

@@ -4,8 +4,8 @@ export class FinanceError extends Error {code:string;status:number;constructor(c
 export const expenseCategories:string[];
 export const categories:string[];
 export function normalizeSearch(s:string):string;
-export function validMonth(s:unknown):boolean;
-export function validDate(s:unknown):boolean;
+export function validMonth(s:unknown,maximum?:number):boolean;
+export function validDate(s:unknown,maximum?:number):boolean;
 export function validateEdit(value:unknown):EditFields;
 export function schedule(value:EditFields):Occurrence[];
 export function readStored(body:string):EditFields&{schedule:Occurrence[]};

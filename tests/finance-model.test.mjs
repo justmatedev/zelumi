@@ -23,3 +23,4 @@ test('legado válido preservado, ausente recuperado sem reescrever corpo',()=>{
  assert.throws(()=>readStored(JSON.stringify({...old,schedule:[{date:'2026-01-31',amount:1}]})));
  const p=buildProjection(body);assert.equal(p.searchName,'google');assert.equal(p.firstMonth,'2026-01');assert.match(recordVersion(body),/^[a-f0-9]{64}$/);
 });
+test('ano final do cronograma pode chegar a 9999',()=>{assert.equal(readStored(JSON.stringify({...input,date:'9990-01-31',installments:120})).schedule.at(-1).date,'9999-12-31');});
