@@ -5,4 +5,6 @@ import {cleanup} from '@testing-library/react';
 if(!HTMLElement.prototype.scrollIntoView)HTMLElement.prototype.scrollIntoView=()=>{};
 if(!HTMLElement.prototype.hasPointerCapture)HTMLElement.prototype.hasPointerCapture=()=>false;
 if(!HTMLElement.prototype.releasePointerCapture)HTMLElement.prototype.releasePointerCapture=()=>{};
+// Page scroll restoration is checked in the real browser; JSDOM has no viewport.
+window.scrollTo=()=>{};
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals();});

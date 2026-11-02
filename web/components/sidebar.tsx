@@ -1,5 +1,6 @@
 'use client';
 import {IconButton} from '@/components/ui/icon-button';
+import {useModalScrollLock,useDialogBackdrop} from '@/hooks/use-modal';
 import Link from 'next/link';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {LayoutDashboard,ArrowLeftRight,UserRound,Send,PanelLeftClose,PanelLeftOpen,Menu,X} from 'lucide-react';
@@ -34,7 +35,8 @@ export function MobileMenu({path}:{path:string}){
   const resize=()=>{if(!media.matches&&dialog.current?.open)close();};
   media.addEventListener('change',resize);return()=>media.removeEventListener('change',resize);
  },[close]);
- useEffect(()=>{if(!open)return;const previous=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.body.style.overflow=previous;};},[open]);
+ useModalScrollLock(open);
+ const backdrop=useDialogBackdrop(close);
  function show(){dialog.current?.showModal();setOpen(true);closeButton.current?.focus();}
- return <><IconButton type="button" ref={opener} className="mobile-menu-toggle" aria-label="Abrir menu" aria-expanded={open} aria-controls="mobile-navigation" aria-haspopup="dialog" onClick={show}><Menu size={21} aria-hidden="true"/></IconButton><dialog id="mobile-navigation" ref={dialog} className="mobile-drawer" aria-label="Menu de navegação" onClose={()=>{setOpen(false);opener.current?.focus();}} onClick={event=>{if(event.target===event.currentTarget)close();}}><div className="mobile-drawer-content"><div className="mobile-drawer-heading"><Brand/><IconButton type="button" ref={closeButton} className="mobile-menu-close" aria-label="Fechar menu" onClick={close}><X size={20} aria-hidden="true"/></IconButton></div><NavigationContents path={path} onNavigate={close}/></div></dialog></>;
+ return <><IconButton type="button" ref={opener} className="mobile-menu-toggle" aria-label="Abrir menu" aria-expanded={open} aria-controls="mobile-navigation" aria-haspopup="dialog" onClick={show}><Menu size={21} aria-hidden="true"/></IconButton><dialog id="mobile-navigation" ref={dialog} {...backdrop} className="mobile-drawer" aria-label="Menu de navegação" onClose={()=>{setOpen(false);opener.current?.focus();}}><div className="mobile-drawer-content"><div className="mobile-drawer-heading"><Brand/><IconButton type="button" ref={closeButton} className="mobile-menu-close" aria-label="Fechar menu" onClick={close}><X size={20} aria-hidden="true"/></IconButton></div><NavigationContents path={path} onNavigate={close}/></div></dialog></>;
 }

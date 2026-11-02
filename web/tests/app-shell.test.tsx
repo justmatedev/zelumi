@@ -52,7 +52,9 @@ it('fecha menu ao navegar ou tocar fora, sem mudar preferência do desktop',()=>
  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
  fireEvent.click(screen.getByRole('button',{name:'Abrir menu'}));
  path='/perfil/';view.rerender(<AppShell>Conteúdo</AppShell>);expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
- fireEvent.click(screen.getByRole('button',{name:'Abrir menu'}));fireEvent.click(screen.getByRole('dialog'));
+ fireEvent.click(screen.getByRole('button',{name:'Abrir menu'}));
+ const drawer=screen.getByRole('dialog');
+ fireEvent.pointerDown(drawer,{clientX:-1,clientY:-1});fireEvent.click(drawer,{clientX:-1,clientY:-1});
  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();expect(screen.getByRole('button',{name:'Expandir barra lateral'})).toBeInTheDocument();
 });
 

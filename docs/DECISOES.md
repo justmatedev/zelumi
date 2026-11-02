@@ -2,6 +2,12 @@
 
 Atualizado em 02/11/2026. Este documento reúne as decisões da conversa e diferencia o produto planejado do código que já está em funcionamento. Ao mudar uma decisão com o usuário, atualizar este registro.
 
+### Rolagem e fechamento dos modais — 02/11/2026
+
+O usuário solicitou bloquear a página ao fundo enquanto um modal estiver aberto e fechar o modal ao clicar fora. Lançamentos e navegação móvel compartilham bloqueio com preservação da posição e dos estilos anteriores; a rolagem interna permanece disponível. O clique externo só fecha quando o gesto começa e termina fora do diálogo, preservando cliques no conteúdo, no espaço interno e em seletores/calendários. O fechamento do lançamento continua bloqueado durante operações em andamento. Implementação local, sem publicação.
+
+Verificação: 50 testes de interface, tipos, build e exportação passaram. Firefox verificou roda do mouse no fundo, rolagem interna, posição restaurada, clique externo, padding, menu móvel e bloqueio durante salvamento simulado. Revisão independente sem problemas relevantes; nenhuma gravação real foi necessária.
+
 ### Controles próprios em todo o painel — 02/11/2026
 
 Ajuste posterior solicitado pelo usuário: a sombra compartilhada dos menus e calendários passou a usar preto translúcido, com menor deslocamento e dispersão. A derivação anterior de `--ink` produzia um halo claro no tema escuro. Guia e token foram corrigidos juntos.

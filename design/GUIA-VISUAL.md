@@ -188,6 +188,8 @@ Os controles próprios ficam em [components/ui](../web/components/ui/) e os esti
 - Formulário em duas colunas quando houver espaço; uma coluna até 600 px.
 - Erros explicam o problema e como continuar. Avisos de edição/exclusão informam que a compra inteira e suas parcelas são afetadas.
 - Diálogo permite rolagem interna em telas pequenas. Fechar, voltar, salvar e confirmar continuam acessíveis.
+- Modal aberto bloqueia a rolagem da página ao fundo, preservando sua posição ao fechar e evitando deslocamento pela retirada da barra de rolagem. A rolagem do conteúdo interno continua disponível. O menu móvel compartilha o mesmo bloqueio.
+- Clicar no fundo fecha o modal quando o gesto começa e termina fora de seus limites. Clicar no conteúdo, no espaço interno ou arrastar de dentro para fora não fecha. Menus e calendários internos são parte do modal. Durante salvamento, exclusão ou verificação em andamento, o fechamento do lançamento permanece bloqueado.
 - Mensagem vazia corresponde ao contexto: a Visão geral orienta sobre o mês; a busca pode sugerir outro nome ou filtros.
 - Telas de acesso e 404 usam os tokens de título de página.
 - Estados vazio, carregando, erro e sucesso devem ser previstos usando os componentes existentes; não inventar outra linguagem visual para cada tela.

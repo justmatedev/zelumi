@@ -136,6 +136,7 @@
 .zelumi-number:focus-within, .zelumi-money:focus-within { border-color: var(--accent); }
 .zelumi-number:has([aria-invalid=true]) { border-color: var(--accent); }
 .record-dialog, .zelumi-popover, .zelumi-menu-options { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.record-dialog, .mobile-drawer { overscroll-behavior: contain; }
 .zelumi-money > span { position: absolute; left: var(--space-3); font-size: var(--text-md); color: var(--muted); }
 .record-form .zelumi-money > .zelumi-input { padding-left: 42px; font-variant-numeric: tabular-nums; }
 .zelumi-date-field > .zelumi-popover-anchor { position: absolute; right: 2px; width: auto; }
