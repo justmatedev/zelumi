@@ -2,7 +2,9 @@
 
 ## Publicação atual
 
-Versão financeira atual: `d3edc342-66e2-43fa-b1b1-05d3578bab11`, publicada em02/11/2026 com migração aditiva `0003_finance.sql`. Rotas protegidas e webhook verificados; o usuário confirmou os dados reais, totais iguais aos de `/mes` e edição/exclusão em um lançamento de teste. A versão de autenticação listada abaixo é o marco anterior.
+Versão atual do Worker: `6a9b984d-a3c0-45f3-a645-41f983c9654e`, publicada em 02/11/2026 para integrar o site em **https://usezelumi.vercel.app**. Bot, D1 e webhook continuam na Cloudflare; não houve migração ou reimportação de dados nesta troca. A confirmação de domínio Telegram e o teste real pelo usuário ainda estão pendentes; veja [docs/VERCEL.md](./docs/VERCEL.md).
+
+Marco financeiro anterior: `d3edc342-66e2-43fa-b1b1-05d3578bab11`, publicado em 02/11/2026 com migração aditiva `0003_finance.sql`. Naquele endereço, o usuário confirmou os dados reais, totais iguais aos de `/mes` e edição/exclusão em um lançamento de teste. A versão de autenticação listada abaixo é outro marco anterior.
 
 - Worker: `https://financeiro-testes-bot.miudo.workers.dev`
 - Saúde/configuração: `https://financeiro-testes-bot.miudo.workers.dev/health`
@@ -16,9 +18,9 @@ O bot local deve permanecer parado enquanto o webhook estiver ativo. As etapas a
 
 ## Atualização com site e autenticação
 
-O novo site fica no mesmo endereço do bot. `web/out` contém a exportação Next.js e é servido por Workers Static Assets. `/auth/*`, `/api/*`, `/health` e `/telegram/webhook` passam pelo Worker antes dos assets. Rotas inexistentes da API retornam JSON 404.
+O site principal fica na Vercel, que encaminha `/auth/*` e `/api/*` ao Worker. `web/out` contém a exportação Next.js; o Worker ainda mantém seus assets para facilitar retorno ao endereço anterior, mas o login atual autoriza somente `https://usezelumi.vercel.app`. `/auth/*`, `/api/*`, `/health` e `/telegram/webhook` passam pelo Worker antes dos assets. Rotas inexistentes da API retornam JSON 404.
 
-Entrada usa o Login Widget clássico oficial, já autorizado pelo `/setdomain` no BotFather. A configuração pública está em `APP_ORIGIN` e `TELEGRAM_BOT_USERNAME`, no `wrangler.jsonc`. O token do bot continua sendo segredo no Worker; não há Client ID/Client Secret nessa integração. O deploy confere que o username corresponde ao token por `getMe`.
+Entrada usa o Login Widget clássico oficial. O novo domínio precisa ser vinculado por `/setdomain` no BotFather, conforme o guia da Vercel. A configuração pública está em `APP_ORIGIN` e `TELEGRAM_BOT_USERNAME`, no `wrangler.jsonc`. O token do bot continua sendo segredo no Worker; não há Client ID/Client Secret nessa integração. O deploy confere que o username corresponde ao token por `getMe`.
 
 Uma migração **aditiva** (`0002_web_auth.sql`) cria perfis, fluxos de login, recibos de uso único, sessões e rate limit. Não altera os lançamentos ou o owner existente. Sessões duram sete dias e usam cookie HttpOnly/Secure; o D1 guarda somente hashes dos tokens. CSRF, origem, validade da assinatura e uso único são verificados no servidor. O widget clássico precisa de `eval` e é carregado em um iframe com CSP própria; essa permissão não é habilitada no painel principal.
 

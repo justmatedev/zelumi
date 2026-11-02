@@ -10,7 +10,7 @@
 	"preview_urls": false,
 	"vars": {
 		"BOT_TIMEZONE": "America/Sao_Paulo",
-		"APP_ORIGIN": "https://financeiro-testes-bot.miudo.workers.dev",
+		"APP_ORIGIN": "https://usezelumi.vercel.app",
 		"TELEGRAM_BOT_USERNAME": "financeiro_lab_482_bot"
 	},
 	"assets": {

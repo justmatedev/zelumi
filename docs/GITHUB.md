@@ -55,7 +55,7 @@ npm run web:check
 
 ## Depois do primeiro envio
 
-O GitHub armazenará o código e seu histórico. O site continuará publicado no Worker existente: push no GitHub, sozinho, não executa deploy neste projeto. Não foi criado workflow de publicação automática ou armazenado segredo em GitHub Actions.
+O repositório privado [justmatedev/zelumi](https://github.com/justmatedev/zelumi) está conectado como `origin`, com branch principal `main`. A integração Git da Vercel publica o frontend a cada atualização da branch principal. O Worker da Cloudflare continua sendo publicado separadamente por `npm run cf:deploy`; push no GitHub não atualiza esse backend. Não foi criado workflow ou armazenado segredo em GitHub Actions. Veja [a configuração da Vercel](./VERCEL.md).
 
 Renomear o repositório ou arquivos não remove os nomes antigos dos commits. Antes de tornar o código público, revisar também documentação, configurações e histórico. Se decidir começar um histórico público novo, preservar uma cópia privada do desenvolvimento e planejar a troca separadamente, sem apagar o trabalho atual.
 
