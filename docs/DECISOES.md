@@ -205,3 +205,9 @@ Funcionamento aprovado e implementado: cálculo mensal no servidor sobre cronogr
 Publicado em 02/11/2026, versão `d3edc342-66e2-43fa-b1b1-05d3578bab11`, no Worker existente. 66 testes backend/D1 e15 testes da interface passaram, junto com tipos, build/export e dry-run. A revisão independente identificou três corridas (replay, troca de conta e snapshot na importação), reproduzidas e corrigidas. Firefox verificou overview/histórico/formulário nos temas claro/escuro e celular390px, foco do diálogo, edição e exclusão usando somente usuários e dados locais fictícios.
 
 Em produção, páginas200, endpoints financeiros anônimos401, rota inexistenteJSON404, saúde200 e webhook sem segredo401 conferidos. Webhook ativo, sem mensagens pendentes ou último erro. Validação externa concluída: o usuário confirmou lançamentos visíveis, totais iguais aos de `/mes` e edição/exclusão funcionando em um registro de teste. CPU por requisição não medida; startup não substitui essa métrica. Sem ativar plano pago ou enviar GitHub; branch `feat/zelumi-finance` preservada.
+
+### Preparação para GitHub — 02/11/2026
+
+O usuário escolheu preparar primeiro um repositório privado `zelumi`, com o produto inteiro, preservando o histórico de desenvolvimento. A atualização dos nomes oficiais fica para depois. O [guia de primeiro envio](./GITHUB.md) documenta o conteúdo, exclusões, instalação e conexão futura ao remoto. Não foi configurado remoto, feito push ou criado deploy automático.
+
+Foram ampliadas as exclusões de bancos, logs e credenciais locais e definida a normalização de texto para LF. A revisão de caminhos e conteúdo do histórico não encontrou as credenciais locais comparadas nem os padrões de segredo pesquisados. Uma cópia limpa passou instalação pelos lockfiles, 66 testes de backend/D1, 15 de interface, tipos e build/export sem credenciais reais. O código em produção não mudou nesta etapa.

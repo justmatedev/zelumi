@@ -4,6 +4,8 @@ As decisões de produto, stack, telas e identidade visual estão em [docs/DECISO
 
 Gerenciamento financeiro com registros rápidos pelo Telegram. O bot funciona em Cloudflare Workers + D1; o novo site usa Next.js, TypeScript, Tailwind e componentes shadcn/ui personalizados. O interpretador do bot usa regras, sem IA.
 
+O guia de [primeiro envio ao GitHub](./docs/GITHUB.md) descreve o repositório privado, arquivos incluídos/excluídos e a validação sem credenciais reais.
+
 ## Organização do repositório
 
 Este é um único repositório para o produto inteiro. Ao enviar ao GitHub, use esta pasta como raiz do repositório `zelumi`, incluindo `web`, `bot`, `cloudflare`, `scripts`, `tests` e `docs`.
@@ -20,7 +22,7 @@ Este é um único repositório para o produto inteiro. Ao enviar ao GitHub, use 
 | `design/` | Estudos visuais e identidade da marca |
 | `dist/` | Protótipo antigo e interpretador compartilhado pelo bot; não apagar |
 
-`.env`, `.dev.vars`, `.wrangler`, `data`, `node_modules`, `.next` e `web/out` são locais/gerados e ficam fora do Git. Envie os dois `package-lock.json`, `.env.example`, `.dev.vars.example` e as migrações SQL. Credenciais do Wrangler nunca devem ir para o GitHub. O projeto não foi enviado a um repositório remoto nesta etapa.
+`.env`, `.dev.vars`, `.wrangler`, `data`, `node_modules`, `.next` e `web/out` são locais/gerados e ficam fora do Git. Envie os dois `package-lock.json`, `.env.example`, `.dev.vars.example` e as migrações SQL. Credenciais do Wrangler nunca devem ir para o GitHub. Configurar o remoto e fazer o primeiro envio é uma etapa separada, descrita em [docs/GITHUB.md](./docs/GITHUB.md).
 
 ## Novo site: desenvolvimento
 
@@ -65,14 +67,13 @@ Requer **Node.js 22.16 ou superior** (recomendado: 24 ou superior) e acesso à i
 
 ### 2. Configurar e iniciar
 
-No terminal, entre nesta pasta e copie o exemplo:
+No terminal, entre na raiz do projeto (a pasta local `miudo`, ou `zelumi` após clonar o repositório) e copie o exemplo:
 
 ```sh
-cd miudo
 cp .env.example .env
 ```
 
-Se o terminal já estiver em `miudo`, execute apenas o segundo comando. Abra `.env` no editor e preencha `TELEGRAM_BOT_TOKEN` com o token do BotFather. O cadastro é aberto: não é necessário liberar IDs manualmente.
+Abra `.env` no editor e preencha `TELEGRAM_BOT_TOKEN` com o token do BotFather. O cadastro é aberto: não é necessário liberar IDs manualmente.
 
 ```dotenv
 TELEGRAM_BOT_TOKEN=TOKEN_FORNECIDO_PELO_BOTFATHER

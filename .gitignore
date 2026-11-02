@@ -6,6 +6,11 @@ node_modules/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+*.sqlite-journal
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
 
 .wrangler/
 .dev.vars
@@ -21,3 +26,18 @@ web/out/
 web/coverage/
 *.tsbuildinfo
 .DS_Store
+
+# Local credentials, editor scratch files and generated logs
+.envrc
+*.log
+*.pem
+*.key
+*.p12
+*.pfx
+*.swp
+*.swo
+
+# Hosting tooling and Python caches (the prototype includes Python utilities)
+.vercel/
+__pycache__/
+.venv/
