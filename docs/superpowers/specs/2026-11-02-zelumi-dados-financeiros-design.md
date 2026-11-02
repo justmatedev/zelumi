@@ -1,6 +1,6 @@
 # Zelumi — dados reais e parcelas mensais
 
-Data: 02/11/2026. Estado: desenho para revisão do usuário, antes do plano. A conexão dos dados e a edição da compra inteira foram aprovadas; as escolhas técnicas abaixo são propostas do implementador.
+Data: 02/11/2026. Estado: desenho aprovado explicitamente pelo usuário. Plano correspondente: [dados financeiros](../plans/2026-11-02-zelumi-dados-financeiros.md). As escolhas técnicas são do implementador dentro do funcionamento aprovado.
 
 ## Objetivo e alcance
 
