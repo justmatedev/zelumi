@@ -21,7 +21,7 @@
 - `APP_ORIGIN=https://financeiro-testes-bot.miudo.workers.dev`; `TELEGRAM_BOT_USERNAME=financeiro_lab_482_bot`. Token do bot somente no servidor.
 - Preservar webhook, segredo, D1, cron, `cloud_records.owner`, `dist/` e o Site antigo em `.openai/hosting.json`. Migração nova e aditiva; sem reimportar dados.
 - Não ativar plano pago. Não implementar lembretes, regras de fatura, endpoints financeiros ou parcelas mensais nesta entrega.
-- Usar a identidade aprovada: Manrope, Inter, logo Conversa, laranja queimado, temas Claro/Escuro/Sistema. Referência: `design/zelumi/dashboard-preview.html` e `account-preview.css`.
+- Usar a identidade aprovada: Manrope, Inter, logo Conversa, laranja queimado, temas Claro/Escuro/Sistema. As prévias usadas como referência foram removidas após a implementação e permanecem no histórico Git; a identidade atual está em `design/` e `docs/DECISOES.md`.
 - Não mostrar compras fictícias em uma conta real. Visão geral e Lançamentos devem informar que a conexão dos dados está em preparação.
 
 ## Review Focus

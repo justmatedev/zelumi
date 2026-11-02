@@ -118,7 +118,6 @@ Arquivos:
 - [Logo escuro](../design/zelumi/conceitos/02-conversa-dark.svg)
 - [Símbolo claro](../design/zelumi/conceitos/02-conversa-simbolo-light.svg)
 - [Símbolo escuro](../design/zelumi/conceitos/02-conversa-simbolo-dark.svg)
-- [Comparação dos estudos](../design/zelumi/comparacao.png)
 
 As opções 1 (Z contínuo) e 3 (Horizonte) foram exploradas; a opção escolhida foi a 2.
 
@@ -144,7 +143,7 @@ API financeira e telas conectadas publicadas. O usuário confirmou que os lança
 
 ## Prévia visual da Visão geral
 
-Foi criada uma prévia independente em [design/zelumi/dashboard-preview.html](../design/zelumi/dashboard-preview.html), com dados fictícios, temas claro/escuro, comparação lado a lado, seletor de mês e detalhes de parcelas. As capturas estão na mesma pasta. É um estudo visual descartável para revisão, não a implementação Next.js nem uma conexão com o D1. A organização visual e as cores adicionais de categorias ainda aguardam avaliação do usuário. Nenhuma alteração foi publicada no bot ou no site existente nesta etapa.
+Foi criada uma prévia independente com dados fictícios, temas claro/escuro, comparação lado a lado, seletor de mês e detalhes de parcelas. Era um estudo visual descartável para revisão, anterior à implementação Next.js e sem conexão com o D1. As aprovações estão registradas abaixo. A prévia e suas capturas foram removidas na preparação para o GitHub, após a implementação do site, e permanecem no histórico Git.
 
 ### Revisão da prévia de Lançamentos
 

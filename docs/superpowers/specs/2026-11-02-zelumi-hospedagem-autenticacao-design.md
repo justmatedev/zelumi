@@ -18,7 +18,7 @@ O objetivo desta fase não é publicar uma tela com valores fictícios como se f
 - O bot identifica o remetente da conversa privada e evita duplicações por `update_id`, com controle de versão por usuário. A restrição anterior por `TELEGRAM_ALLOWED_USER_IDS` foi retirada conforme a nova política de cadastro aberto.
 - Não existem API de sessão nem login de usuário no Worker.
 - `dist/` contém o simulador antigo, publicado separadamente pelo Sites. A identidade desse Site está em `.openai/hosting.json`.
-- `design/zelumi/` contém estudos HTML/JS, fontes e logos. As telas de login são simulações, sem credenciais.
+- `design/zelumi/` preserva fontes, licenças e logos escolhidos. Os estudos HTML/JS de login, sem credenciais reais, foram removidos após a implementação e continuam no histórico Git.
 - Os resumos atuais ainda usam o total da compra. A distribuição de parcelas por mês está aprovada, mas pendente de implementação.
 
 ## 3. Abordagens consideradas

@@ -19,7 +19,7 @@ Este é um único repositório para o produto inteiro. Ao enviar ao GitHub, use 
 | `tests/` | Testes de backend e do bot; interface em `web/tests/` |
 | `scripts/` | Build, verificações, migração local e publicação |
 | `docs/` | Decisões, desenho técnico e plano |
-| `design/` | Estudos visuais e identidade da marca |
+| `design/` | Logos escolhidos, fontes e licenças da identidade visual |
 | `dist/` | Protótipo antigo e interpretador compartilhado pelo bot; não apagar |
 
 `.env`, `.dev.vars`, `.wrangler`, `data`, `node_modules`, `.next` e `web/out` são locais/gerados e ficam fora do Git. Envie os dois `package-lock.json`, `.env.example`, `.dev.vars.example` e as migrações SQL. Credenciais do Wrangler nunca devem ir para o GitHub. Configurar o remoto e fazer o primeiro envio é uma etapa separada, descrita em [docs/GITHUB.md](./docs/GITHUB.md).
