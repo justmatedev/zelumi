@@ -10,7 +10,7 @@ export function useFinance<T>(path:string|null){
  useEffect(()=>{
   const id=++sequence.current,controller=new AbortController();let timer:ReturnType<typeof setTimeout>|undefined;
   if(!key||!path){setState({key,data:null,error:null,loading:false});return;}
-  setState({key,data:null,error:null,loading:true});
+  setState(previous=>({key,data:previous.key===key?previous.data:null,error:null,loading:true}));
   async function load(attempt=0){try{const data=await api<T>(path!,{signal:controller.signal});if(id===sequence.current)setState({key,data,error:null,loading:false});}
    catch(e){if(controller.signal.aborted||id!==sequence.current)return;const error=e instanceof ApiError?e:new ApiError(0,'Confira sua conexão e tente novamente.');
     if(error.status===401){setState({key,data:null,error,loading:false});expire();return;}

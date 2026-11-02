@@ -1,5 +1,7 @@
 # Referências visuais do Zelumi
 
+O [Guia visual do Zelumi](./GUIA-VISUAL.md) é a referência para novas telas e alterações visuais: marca, cores, tipografia, espaçamento, componentes e responsividade. Os valores compartilhados da implementação ficam em [tokens.css](../web/app/tokens.css). O [relatório de auditoria](./AUDITORIA-VISUAL.md) registra a cobertura, correções e limitações da revisão atual.
+
 `zelumi/` guarda a identidade escolhida para o produto. A implementação do site fica em [web/](../web/).
 
 - Logo escolhido: opção **02 — Conversa**, em `zelumi/conceitos/`.

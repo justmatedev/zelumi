@@ -1,0 +1,114 @@
+/* Zelumi visual tokens. Rules and component usage: design/GUIA-VISUAL.md. */
+:root {
+  --bg: #faf7f2;
+  --surface: #fff;
+  --accent: #b94b24;
+  --accent-ink: #ad431e;
+  --on-accent: #fffaf6;
+  --story-ink: #706257;
+  --accent-soft: #f9eade;
+  --ink: #302721;
+  --muted: #75685d;
+  --subtle: #75685d;
+  --border: #e7ddd3;
+  --story: #f0e2d3;
+  --story-border: #e8d6c3;
+  --green: #3e6b52;
+  --green-soft: #eaf3eb;
+  color-scheme:light;
+
+  /* Type scale: rem values preserve browser text preferences. */
+  --text-xs: .75rem;
+  --text-sm: .8125rem;
+  --text-md: .875rem;
+  --text-base: .9375rem;
+  --text-lg: 1rem;
+  --text-card-title: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-page-title: 29px;
+  --text-page-title-mobile: 27px;
+  --text-dialog-title: 24px;
+  --text-dialog-title-mobile: 22px;
+  --text-metric: clamp(22px, 2.4vw, 32px);
+  --leading-compact: 1.4;
+  --leading-comfortable: 1.5;
+  --leading-body: 1.6;
+  --leading-copy: 1.65;
+  --leading-metric: 1.25;
+
+  /* Preferred spacing scale; component-specific optical adjustments stay in CSS. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-9: 36px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --radius-xs: 7px;
+  --radius-sm: 8px;
+  --radius-control: 9px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 18px;
+  --control-height: 44px;
+  --field-height: 46px;
+  --compact-control-size: 38px;
+  --sidebar-expanded: 226px;
+  --sidebar-medium: 200px;
+  --sidebar-collapsed: 76px;
+  --content-max: 1320px;
+  --dialog-max: 580px;
+
+  /* Ordered chart series; these are not income/error/status colors. */
+  --chart-1: #b94b24;
+  --chart-2: #6c8067;
+  --chart-3: #d6a663;
+  --chart-4: #96735d;
+  --chart-5: #889b9e;
+}
+
+[data-theme=dark] {
+  --bg: #191715;
+  --surface: #25211e;
+  --accent: #f29b73;
+  --accent-ink: #f29b73;
+  --on-accent: #291a11;
+  --story-ink: #c6b7aa;
+  --accent-soft: #38281f;
+  --ink: #f5ede5;
+  --muted: #c6b7aa;
+  --subtle: #b8a99b;
+  --border: #403730;
+  --story: #2e241e;
+  --story-border: #4c372a;
+  --green: #a6c7ad;
+  --green-soft: #29362b;
+  color-scheme:dark;
+}
+
+/* Match the device before the saved theme is applied by the client. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #191715;
+    --surface: #25211e;
+    --accent: #f29b73;
+    --accent-ink: #f29b73;
+    --on-accent: #291a11;
+    --story-ink: #c6b7aa;
+    --accent-soft: #38281f;
+    --ink: #f5ede5;
+    --muted: #c6b7aa;
+    --subtle: #b8a99b;
+    --border: #403730;
+    --story: #2e241e;
+    --story-border: #4c372a;
+    --green: #a6c7ad;
+    --green-soft: #29362b;
+    color-scheme:dark;
+  }
+}
