@@ -1,6 +1,6 @@
 # Guia visual do Zelumi
 
-Versão 1.1 · consolidada e auditada em 02/11/2026 a partir da identidade aprovada e dos ajustes revisados no site.
+Versão 1.2 · atualizada em 02/11/2026 com os controles próprios do painel, mantendo a identidade consolidada na auditoria.
 
 O escopo, os achados e as limitações da revisão estão no [relatório de auditoria visual](AUDITORIA-VISUAL.md).
 
@@ -111,16 +111,16 @@ A escala preferida de espaçamento é **4, 8, 12, 16, 20, 24, 28, 32, 36, 40 e 4
 | Espaço interno do card | 28 px; 22 px até 760 px; 20 px até 420 px |
 | Card de indicador | 24 px de espaço interno |
 | Botão | Raio `--radius-control` 9 px |
-| Campos de filtro/formulário | Raio `--radius-xs` 7 px; busca usa `--radius-sm` 8 px |
+| Campos de filtro/formulário | Raio `--field-radius`, derivado de `--radius-control` 9 px; busca usa `--radius-sm` 8 px |
 | Ícones e linhas | Raio `--radius-sm` 8 px, com ajustes próprios da marca/ilustração |
 | Diálogo | Raio `--radius-lg` 16 px; largura máxima `--dialog-max` 580 px |
 | Painel da entrada | Raio `--radius-xl` 18 px |
 | Botão padrão | Altura mínima `--control-height` 44 px |
 | Campo de formulário | Altura mínima `--field-height` 46 px, texto de 16 px |
-| Ícones de mês/paginação | `--compact-control-size` 38 px |
+| Ícones de mês/paginação | `IconButton`, com `--control-height` 44 px |
 | Área principal | Largura máxima `--content-max` 1320 px |
 
-Controles compactos existentes têm exceções próprias: ghost e fechamento de diálogo 40 px, menu móvel 36 px e alça da barra lateral 30 px. Não reduzir controles novos para caber mais texto; reorganizar o layout e avaliar a área de toque. Sombras são reservadas principalmente para sobreposições e dicas.
+Botões de ícone compartilhados usam área de 44 px, inclusive fechamento de diálogo, navegação móvel e alça da barra lateral. Dentro de campos numéricos, os botões de incremento usam largura de 40 px e altura de pelo menos 44 px. As opções segmentadas têm 36 px internos e campo externo de pelo menos 46 px. Essas são exceções compactas do componente; não reduzir textos ou controles para acomodar um rótulo. Sombras são reservadas principalmente para sobreposições e dicas.
 
 ## 6. Componentes e composição
 
@@ -161,6 +161,27 @@ Usar [EntryList](../web/components/finance/entry-list.tsx) em Visão geral e Lan
 - Verificar nomes longos, valores altos, receitas e despesas. Nunca sobrepor valor, parcela ou descrição. O grupo financeiro tem espaço reservado e valores muito longos podem quebrar de linha, sem truncamento, para respeitar ampliação do texto.
 
 ### Formulários, mensagens e diálogos
+
+
+Os controles próprios ficam em [components/ui](../web/components/ui/) e os estilos em [controls.css](../web/app/controls.css), aplicados depois das regras gerais. Reutilizar os componentes em todo o painel; evitar campos ou menus com uma aparência diferente em cada página.
+
+| Componente | Uso |
+| --- | --- |
+| `Input` e `Field` | Texto, busca e valor, com rótulo persistente e texto de apoio |
+| `Select` | Categoria, tipo nos filtros e parcelamento; menu próprio com rolagem, foco e confirmação da seleção |
+| `SegmentedControl` | Tipo no editor, com opções Despesa e Receita e semântica de grupo de rádios |
+| `NumberField` | Parcelas e ano; entrada por teclado e botões de diminuir/aumentar com limites |
+| `DateField` | Data digitável em dd/mm/aaaa e calendário próprio em português |
+| `MonthField` | Escolha de mês e ano; limpeza de período nos filtros |
+| `IconButton` | Fechar, limpar busca, navegação de mês, paginação e ações compactas da navegação |
+
+- Menus e calendários usam superfície do tema, borda discreta, sombra de sobreposição e seleção com laranja suave e indicação explícita. Nenhum estilo visual padrão do Radix ou DayPicker é importado; essas bases fornecem o comportamento.
+- A sombra de sobreposição é preta e suave nos dois temas, definida em `--control-popup-shadow`. Não derivar essa sombra da cor do texto (`--ink`), pois ela fica clara no tema escuro e produz um halo luminoso.
+- Os tokens `--field-*`, `--control-selected-*` e `--control-popup-*` definem superfícies, raio, seleção e sobreposições. Derivar cores da paleta atual, inclusive no tema Sistema.
+- Seletores permitem setas, digitação para localizar opções, Enter, Escape e retorno de foco. Rádios segmentados mantêm navegação nativa por teclado; meses permitem setas e Home/End. Calendário mantém navegação por teclado da base acessível.
+- O popup deve caber na área visível, inclusive em 320 px, e permitir rolagem quando necessário. Dentro de um diálogo, ele permanece na mesma camada modal. Escape fecha primeiro o menu ou calendário, preservando a edição aberta.
+- Data impossível ou fora dos limites deve invalidar o campo e impedir o salvamento; nunca conservar silenciosamente a data anterior. Dias, meses e anos são exibidos em português, independentemente do idioma do navegador.
+- Os controles de tema do Perfil já usam cartões próprios e permanecem nessa apresentação. `Button`, `Card`, lançamentos e navegação compartilhada continuam sendo reutilizados.
 
 - Rótulos visíveis acima dos campos; placeholder não substitui rótulo.
 - Campos com 16 px, alinhados e com espaço entre grupos.

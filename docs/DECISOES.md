@@ -2,6 +2,16 @@
 
 Atualizado em 02/11/2026. Este documento reúne as decisões da conversa e diferencia o produto planejado do código que já está em funcionamento. Ao mudar uma decisão com o usuário, atualizar este registro.
 
+### Controles próprios em todo o painel — 02/11/2026
+
+Ajuste posterior solicitado pelo usuário: a sombra compartilhada dos menus e calendários passou a usar preto translúcido, com menor deslocamento e dispersão. A derivação anterior de `--ink` produzia um halo claro no tema escuro. Guia e token foram corrigidos juntos.
+
+O usuário aprovou padronizar os controles de todo o painel após apontar o menu nativo azul e o seletor de mês em inglês no editor. Foram criados campos, menus, tipo segmentado, controles numéricos, calendários, seletor de mês e botões de ícone compartilhados, com a identidade existente. Editor, filtros, busca, Visão geral e ações compactas da navegação usam esses componentes. Os cartões de tema do Perfil permanecem no padrão próprio existente.
+
+Radix Select/Popover e React DayPicker fornecem interação e acessibilidade, sem importar aparência pronta. Cores, fontes, raios, foco e seleção seguem tokens do Zelumi. Datas e meses são exibidos em português, com validação de limites. Guia, tokens e estilos foram atualizados juntos; layout compartilhado, operações financeiras e temas são preservados. Implementação local, sem publicação nesta entrega.
+
+Verificação: 46 testes de interface, 92 de backend/D1, TypeScript, build e exportação passaram. Firefox verificou os temas claro/escuro em 320, 390, 760, 1068 e 1280 px, textos longos, valor alto, menus no diálogo nativo, digitação e setas, Escape e retorno de foco. A revisão independente identificou entradas inválidas de ano, corrigidas com regressões antes/depois. Nenhuma compra real foi alterada nos testes.
+
 ### Categorias prontas mais completas — 02/11/2026
 
 O usuário escolheu ampliar as categorias prontas compartilhadas e aprovou a implementação descrita em [Categorias](./CATEGORIAS.md). A lista passa a ter 13 categorias de despesas e Receitas, acrescentando Educação, Lazer, Compras, Assinaturas, Cuidados pessoais, Pets, Viagens e Impostos e taxas.

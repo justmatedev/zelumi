@@ -7,21 +7,36 @@ const record={id:'1',version:'a'.repeat(64),description:'Google',type:'despesa' 
 it('oferece categorias completas, preserva categoria ao renomear e salva seleção explícita',async()=>{
  const save=vi.fn().mockResolvedValue(undefined);
  render(<RecordEditor record={{...record,description:'Netflix'}} onSave={save} onCancel={()=>{}} busy={false}/>);
- expect(screen.getByLabelText('Categoria')).toHaveValue('Outros');
+ const categoryTrigger=screen.getByRole('combobox',{name:'Categoria'});
+ expect(categoryTrigger).toHaveTextContent('Outros');
+ fireEvent.click(categoryTrigger);
  for(const category of ['Educação','Lazer','Compras','Assinaturas','Cuidados pessoais','Pets','Viagens','Impostos e taxas']){
   expect(screen.getByRole('option',{name:category})).toBeInTheDocument();
  }
+ fireEvent.keyDown(screen.getByRole('listbox'),{key:'Escape'});
  fireEvent.change(screen.getByLabelText('Nome'),{target:{value:'Netflix mensal'}});
  fireEvent.click(screen.getByRole('button',{name:'Salvar alterações'}));
  await waitFor(()=>expect(save).toHaveBeenCalledOnce());
  expect(save.mock.calls[0][0].category).toBe('Outros');
- fireEvent.change(screen.getByLabelText('Categoria'),{target:{value:'Impostos e taxas'}});
+ fireEvent.click(categoryTrigger);
+ fireEvent.click(await screen.findByRole('option',{name:'Impostos e taxas'}));
  fireEvent.click(screen.getByRole('button',{name:'Salvar alterações'}));
  await waitFor(()=>expect(save).toHaveBeenCalledTimes(2));
  expect(save.mock.calls[1][0].category).toBe('Impostos e taxas');
- fireEvent.change(screen.getByLabelText('Tipo'),{target:{value:'receita'}});
- expect(screen.getByLabelText('Categoria')).toHaveValue('Receitas');
+ fireEvent.click(screen.getByRole('radio',{name:'Receita'}));
+ expect(categoryTrigger).toHaveTextContent('Receitas');
+ fireEvent.click(categoryTrigger);
  expect(screen.queryByRole('option',{name:'Pets'})).not.toBeInTheDocument();
+});
+it('data impossível não salva a data anterior e controles ficam bloqueados ao salvar',async()=>{
+ const save=vi.fn();const view=render(<RecordEditor record={record} onSave={save} onCancel={()=>{}} busy={false}/>);
+ fireEvent.change(screen.getByRole('textbox',{name:'Data da compra'}),{target:{value:'31/02/2026'}});
+ fireEvent.click(screen.getByRole('button',{name:'Salvar alterações'}));
+ expect(save).not.toHaveBeenCalled();
+ view.rerender(<RecordEditor record={record} onSave={save} onCancel={()=>{}} busy/>);
+ expect(screen.getByRole('combobox',{name:'Categoria'})).toBeDisabled();
+ expect(screen.getByRole('radio',{name:'Receita'})).toBeDisabled();
+ expect(screen.getByRole('button',{name:'Mês da primeira parcela'})).toBeDisabled();
 });
 it('edição usa total, avisa sobre todos os meses e mantém texto em conflito',async()=>{
  const save=vi.fn().mockRejectedValue(new Error('Conflito'));render(<RecordEditor record={record} onSave={save} onCancel={()=>{}} busy={false}/>);

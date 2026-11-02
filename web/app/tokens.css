@@ -64,6 +64,17 @@
   --content-max: 1320px;
   --dialog-max: 580px;
 
+  /* Shared form controls and anchored menus. Colors follow the active theme. */
+  --field-radius: var(--radius-control);
+  --field-surface: var(--bg);
+  --field-hover-border: color-mix(in srgb, var(--accent) 55%, var(--border));
+  --control-selected-bg: var(--accent-soft);
+  --control-selected-ink: var(--accent-ink);
+  --control-popup-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  --control-popup-max: 352px;
+  --control-popup-layer: 60;
+  --control-transition: 150ms;
+
   /* Ordered chart series; these are not income/error/status colors. */
   --chart-1: #b94b24;
   --chart-2: #6c8067;

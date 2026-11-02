@@ -71,3 +71,18 @@ it('busca mantém rótulo visível acima do campo mesmo quando preenchido',async
  expect(input).toHaveValue('Mercado');
  expect(Array.from(input.labels||[]).some(label=>label.textContent?.includes('Buscar pelo nome'))).toBe(true);
 });
+it('filtros próprios enviam categoria e mês e permitem limpar o período',async()=>{
+ const fetch=vi.fn().mockImplementation((path:string)=>Promise.resolve(new Response(JSON.stringify(path==='/api/session'?session:{items:[],total:0,page:1,pageSize:20,snapshot:1,categories:[]}))));vi.stubGlobal('fetch',fetch);
+ render(<SessionProvider><History/></SessionProvider>);
+ fireEvent.click(screen.getByRole('button',{name:'Filtros'}));
+ fireEvent.click(screen.getByRole('combobox',{name:'Categoria'}));
+ fireEvent.click(await screen.findByRole('option',{name:'Pets'}));
+ await waitFor(()=>expect(fetch.mock.calls.some(([path])=>String(path).includes('category=Pets'))).toBe(true));
+ fireEvent.click(screen.getByRole('button',{name:'Filtrar mês'}));
+ fireEvent.change(screen.getByRole('spinbutton',{name:'Ano'}),{target:{value:'2027'}});
+ fireEvent.click(screen.getByRole('button',{name:'Fevereiro'}));
+ await waitFor(()=>expect(fetch.mock.calls.some(([path])=>String(path).includes('month=2027-02'))).toBe(true));
+ fireEvent.click(screen.getByRole('button',{name:'Filtrar mês'}));
+ fireEvent.click(screen.getByRole('button',{name:'Limpar período'}));
+ await waitFor(()=>expect(String(fetch.mock.calls.at(-1)?.[0])).not.toContain('month='));
+});

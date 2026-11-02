@@ -1,4 +1,5 @@
 'use client';
+import {IconButton} from '@/components/ui/icon-button';
 import Link from 'next/link';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {LayoutDashboard,ArrowLeftRight,UserRound,Send,PanelLeftClose,PanelLeftOpen,Menu,X} from 'lucide-react';
@@ -21,7 +22,7 @@ function NavigationContents({path,onNavigate,id}:{path:string;onNavigate?:()=>vo
 }
 export function Sidebar({path,collapsed,onToggle}:{path:string;collapsed:boolean;onToggle:()=>void}){
  const label=collapsed?'Expandir barra lateral':'Recolher barra lateral';
- return <aside className="sidebar" aria-label="Barra lateral"><div className="sidebar-brand"><Brand/></div><button type="button" className="sidebar-toggle" onClick={onToggle} aria-label={label} title={label} aria-expanded={!collapsed} aria-controls="sidebar-navigation">{collapsed?<PanelLeftOpen size={16} aria-hidden="true"/>:<PanelLeftClose size={16} aria-hidden="true"/>}</button><NavigationContents path={path} id="sidebar-navigation"/></aside>;
+ return <aside className="sidebar" aria-label="Barra lateral"><div className="sidebar-brand"><Brand/></div><IconButton type="button" className="sidebar-toggle" onClick={onToggle} aria-label={label} title={label} aria-expanded={!collapsed} aria-controls="sidebar-navigation">{collapsed?<PanelLeftOpen size={16} aria-hidden="true"/>:<PanelLeftClose size={16} aria-hidden="true"/>}</IconButton><NavigationContents path={path} id="sidebar-navigation"/></aside>;
 }
 export function MobileMenu({path}:{path:string}){
  const dialog=useRef<HTMLDialogElement>(null),opener=useRef<HTMLButtonElement>(null),closeButton=useRef<HTMLButtonElement>(null);
@@ -35,5 +36,5 @@ export function MobileMenu({path}:{path:string}){
  },[close]);
  useEffect(()=>{if(!open)return;const previous=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.body.style.overflow=previous;};},[open]);
  function show(){dialog.current?.showModal();setOpen(true);closeButton.current?.focus();}
- return <><button type="button" ref={opener} className="mobile-menu-toggle" aria-label="Abrir menu" aria-expanded={open} aria-controls="mobile-navigation" aria-haspopup="dialog" onClick={show}><Menu size={21} aria-hidden="true"/></button><dialog id="mobile-navigation" ref={dialog} className="mobile-drawer" aria-label="Menu de navegação" onClose={()=>{setOpen(false);opener.current?.focus();}} onClick={event=>{if(event.target===event.currentTarget)close();}}><div className="mobile-drawer-content"><div className="mobile-drawer-heading"><Brand/><button type="button" ref={closeButton} className="mobile-menu-close" aria-label="Fechar menu" onClick={close}><X size={20} aria-hidden="true"/></button></div><NavigationContents path={path} onNavigate={close}/></div></dialog></>;
+ return <><IconButton type="button" ref={opener} className="mobile-menu-toggle" aria-label="Abrir menu" aria-expanded={open} aria-controls="mobile-navigation" aria-haspopup="dialog" onClick={show}><Menu size={21} aria-hidden="true"/></IconButton><dialog id="mobile-navigation" ref={dialog} className="mobile-drawer" aria-label="Menu de navegação" onClose={()=>{setOpen(false);opener.current?.focus();}} onClick={event=>{if(event.target===event.currentTarget)close();}}><div className="mobile-drawer-content"><div className="mobile-drawer-heading"><Brand/><IconButton type="button" ref={closeButton} className="mobile-menu-close" aria-label="Fechar menu" onClick={close}><X size={20} aria-hidden="true"/></IconButton></div><NavigationContents path={path} onNavigate={close}/></div></dialog></>;
 }
