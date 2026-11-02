@@ -165,7 +165,7 @@ O usuário confirmou que gostou das duas telas. Manter como referência o desenh
 
 ## Desenho técnico de hospedagem e autenticação
 
-A arquitetura de Next.js estático na Cloudflare com autenticação/sessão/API no Worker foi aceita e implementada após aprovação do usuário. O desenho está registrado em [hospedagem e autenticação](./superpowers/specs/2026-11-02-zelumi-hospedagem-autenticacao-design.md), com revisão independente do desenho e do código.
+A arquitetura de Next.js estático na Cloudflare com autenticação/sessão/API no Worker foi aceita e implementada após aprovação do usuário. O desenho e o código passaram por revisão independente; as decisões principais estão registradas nesta seção.
 
 Como escolhas técnicas propostas, o desenho coloca os assets e a API no mesmo endereço do Worker atual e define sessão de sete dias com cookie protegido. A proposta original de OIDC com PKCE foi substituída pelo Login Widget clássico na revisão abaixo, preservando o vínculo pelo ID numérico do Telegram; a exigência inicial de lista de usuários também foi substituída por cadastro aberto. Os endpoints financeiros e a migração para parcelas mensais continuam pendentes de detalhamento.
 
@@ -179,7 +179,7 @@ O usuário confirmou, pela resposta “Success! Domain updated.” do BotFather,
 
 O desenho técnico anterior propunha OIDC. Após conferir a interface disponível, o usuário aprovou seguir com o **Login Widget clássico**, verificando no Worker os dados assinados com o token do bot já existente. Não são necessários Client ID ou Client Secret nesse método. O desenho técnico foi atualizado; não misturar validação do widget clássico, OIDC e Telegram Web Apps.
 
-O plano está em [site e login Telegram](./superpowers/plans/2026-11-02-zelumi-site-login-telegram.md). A primeira entrega implementa estrutura Next.js/TypeScript/Tailwind/shadcn, botão oficial Telegram, validação no servidor, sessão e Perfil reais. Visão geral e Lançamentos mostram conexão pendente, sem misturar dados fictícios com a conta. API financeira e parcelas mensais continuam sendo a entrega seguinte.
+A primeira entrega implementou estrutura Next.js/TypeScript/Tailwind/shadcn, botão oficial Telegram, validação no servidor, sessão e Perfil reais. Visão geral e Lançamentos mostram conexão pendente, sem misturar dados fictícios com a conta. API financeira e parcelas mensais continuam sendo a entrega seguinte.
 
 Escolhas técnicas do implementador no plano: assets no mesmo Worker/endereço, sessão de sete dias, cookie protegido, fluxo temporário de dez minutos e proteções CSRF/replay. A aparência do botão incorporado obedece às opções oficiais do Telegram, mantendo o restante da identidade visual aprovada. Não há nova configuração obrigatória a pedir no BotFather para começar essa implementação.
 
@@ -197,7 +197,7 @@ Validação externa concluída: o usuário confirmou que entrou pelo Telegram, v
 
 ### Entrega de dados financeiros
 
-O usuário pediu conectar os lançamentos ao site e confirmou **editar a compra inteira e recalcular todas as parcelas**, sem edição isolada. O desenho de [dados reais e parcelas mensais](./superpowers/specs/2026-11-02-zelumi-dados-financeiros-design.md) reúne regras, API, concorrência, busca/filtros, migração e telas. A revisão independente não apontou lacunas importantes para planejar, e o usuário aprovou o desenho explicitamente. O usuário aprovou o [plano de implementação](./superpowers/plans/2026-11-02-zelumi-dados-financeiros.md), executado diretamente na sessão. API e telas foram implementadas e a migração aditiva0003 foi aplicada; o agente não alterou valores financeiros reais para testar.
+O usuário pediu conectar os lançamentos ao site e confirmou **editar a compra inteira e recalcular todas as parcelas**, sem edição isolada. O desenho reuniu regras, API, concorrência, busca/filtros, migração e telas. Após revisão independente, o usuário aprovou o desenho e o plano de implementação, executado diretamente na sessão. API e telas foram implementadas e a migração aditiva0003 foi aplicada; o agente não alterou valores financeiros reais para testar.
 
 Funcionamento aprovado e implementado: cálculo mensal no servidor sobre cronogramas existentes; receitas já parceladas seguem seu cronograma; `/hoje` mantém valores integrais pela data da compra com explicação no texto, enquanto `/mes` e site usam parcelas mensais. Os formulários permitem editar a compra toda e excluir todas as suas parcelas, informando o efeito inclusive em meses anteriores.
 
@@ -210,3 +210,5 @@ Em produção, páginas200, endpoints financeiros anônimos401, rota inexistente
 O usuário escolheu preparar primeiro um repositório privado `zelumi`, com o produto inteiro, preservando o histórico de desenvolvimento. A atualização dos nomes oficiais fica para depois. O [guia de primeiro envio](./GITHUB.md) documenta o conteúdo, exclusões, instalação e conexão futura ao remoto. Não foi configurado remoto, feito push ou criado deploy automático.
 
 Foram ampliadas as exclusões de bancos, logs e credenciais locais e definida a normalização de texto para LF. A revisão de caminhos e conteúdo do histórico não encontrou as credenciais locais comparadas nem os padrões de segredo pesquisados. Uma cópia limpa passou instalação pelos lockfiles, 66 testes de backend/D1, 15 de interface, tipos e build/export sem credenciais reais. O código em produção não mudou nesta etapa.
+
+Os planos, especificações e notas auxiliares foram removidos de `docs/superpowers/` a pedido do usuário. Este arquivo preserva as decisões aprovadas; os documentos completos continuam recuperáveis pelo histórico Git.

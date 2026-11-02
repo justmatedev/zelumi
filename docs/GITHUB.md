@@ -8,7 +8,7 @@ A pasta `dist/` contém o protótipo antigo e o interpretador que o bot ainda re
 
 Os nomes antigos em arquivos/configurações/documentação permanecem por enquanto, conforme combinado. A renomeação oficial do bot e dos endereços será uma etapa separada. Não reescrever o histórico para este primeiro envio privado.
 
-Os estudos visuais descartáveis foram retirados da versão atual: capturas PNG, prévias HTML/CSS/JS, comparações, gerador dos conceitos e logos não escolhidos. `design/` mantém os quatro SVGs da opção 02 e as fontes com suas licenças. A documentação técnica e o protótipo em `dist/` foram preservados. Os arquivos removidos continuam nos commits anteriores e, mantendo o histórico, também serão enviados ao repositório privado.
+Os estudos visuais descartáveis foram retirados da versão atual: capturas PNG, prévias HTML/CSS/JS, comparações, gerador dos conceitos e logos não escolhidos. `design/` mantém os quatro SVGs da opção 02 e as fontes com suas licenças. O registro de decisões em `docs/DECISOES.md`, as instruções operacionais e o protótipo em `dist/` foram preservados. Os planos e notas auxiliares de `docs/superpowers/` também foram removidos a pedido do usuário. Os arquivos removidos continuam nos commits anteriores e, mantendo o histórico, também serão enviados ao repositório privado.
 
 ## O que fica somente na máquina
 
