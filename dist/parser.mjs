@@ -43,7 +43,9 @@ export function resolve(pending, answer) {
   return {...pending,status:'ready',amount:value};
 }
 export function schedule(record) {
-  const [y,m,d]=record.date.split('-').map(Number); const base=Math.floor(record.amount/record.installments), remainder=record.amount%record.installments;
+  const d=Number(record.date.slice(8,10));
+  const [y,m]=(record.installments>1&&record.installmentStartMonth?record.installmentStartMonth:record.date.slice(0,7)).split('-').map(Number);
+  const base=Math.floor(record.amount/record.installments), remainder=record.amount%record.installments;
   return Array.from({length:record.installments},(_,i)=>{
     const last=new Date(y,m+i,0).getDate();
     return {amount:base+(i<remainder?1:0),date:`${y+Math.floor((m-1+i)/12)}-${String((m-1+i)%12+1).padStart(2,'0')}-${String(Math.min(d,last)).padStart(2,'0')}`};
