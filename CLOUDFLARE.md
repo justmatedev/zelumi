@@ -8,7 +8,7 @@
 - Webhook registrado em 02/11/2026. Dois lançamentos locais foram importados.
 - Segredos configurados no Worker; valores permanecem fora deste documento.
 - Site e autenticação publicados em 02/11/2026, versão `e40e45aa-a2b5-4d95-a19c-4788c9f66ba5`; migração aditiva `0002_web_auth.sql` aplicada.
-- Rotas públicas/protegidas e widget oficial conferidos em produção. Teste com a conta Telegram real e `/hoje` após esse deploy aguardam confirmação do usuário. CPU por requisição não foi medida.
+- Rotas públicas/protegidas e widget oficial conferidos em produção. O usuário confirmou login real, conta correta no Perfil e resposta a `/hoje` com o programa local desligado após esse deploy. CPU por requisição não foi medida.
 
 O bot local deve permanecer parado enquanto o webhook estiver ativo. As etapas abaixo documentam a configuração e servem para manutenção; não é necessário recriar o banco ou o bot.
 

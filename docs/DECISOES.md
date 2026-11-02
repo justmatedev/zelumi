@@ -21,7 +21,7 @@ Atualizado em 02/11/2026. Este documento reúne as decisões da conversa e difer
 | Componentes | shadcn/ui, personalizados | Button e Card implementados |
 | Backend e bot | Cloudflare Workers | Bot implementado e publicado |
 | Banco de dados | Cloudflare D1 | Em uso pelo bot; site ainda não conectado |
-| Autenticação do site | Apenas Telegram nesta fase | Widget clássico + sessão implementados; confirmação humana pendente |
+| Autenticação do site | Apenas Telegram nesta fase | Widget clássico + sessão publicados e confirmados pelo usuário |
 | Operação inicial | Priorizar franquias gratuitas e acompanhar consumo | Sem compromisso de gratuidade ilimitada |
 
 Next.js exporta arquivos estáticos em `web/out`, servidos junto da API no Worker existente. Site e bot ficam no mesmo repositório e no mesmo domínio Cloudflare. Não utiliza adaptador de SSR, vinext ou OpenNext.
@@ -33,7 +33,7 @@ Zod foi sugerido para validação, mas nenhuma biblioteca de validação, autent
 - Única forma de login escolhida: Telegram. E-mail/senha e outros provedores ficam fora desta fase.
 - Cada usuário deve acessar apenas seus próprios registros, com validação no backend.
 - Cadastro aberto no site e no bot, sem lista de IDs ou aprovação manual. O usuário pode divulgar o link individualmente, mas qualquer pessoa que chegar ao serviço pode entrar pelo Telegram. Cada pessoa vê somente seus próprios dados.
-- O site usa o Login Widget clássico oficial do Telegram, perfil interno e sessão protegida. Validação, cookies e vínculo pelo ID numérico estão implementados; o teste humano da autorização externa ainda deve ser confirmado.
+- O site usa o Login Widget clássico oficial do Telegram, perfil interno e sessão protegida. Validação, cookies e vínculo pelo ID numérico estão implementados; o usuário confirmou o login real e a identificação correta no Perfil.
 - Token do bot, segredo do webhook e futuras credenciais de login permanecem no servidor; nunca em arquivos públicos.
 
 ## Telas aprovadas para a primeira versão
@@ -139,7 +139,7 @@ As opções 1 (Z contínuo) e 3 (Horizonte) foram exploradas; a opção escolhid
 
 ## Próxima etapa combinada
 
-Confirmar o login Telegram com a conta real no domínio publicado e a continuidade do bot. Depois, detalhar a API financeira e a distribuição de parcelas por mês para conectar Visão geral e Lançamentos. A base do site está publicada, mas essas páginas ainda apresentam conexão pendente. Não iniciar funcionalidades apenas porque foram citadas como possibilidades.
+Login real e continuidade do bot confirmados pelo usuário. A próxima etapa é detalhar a API financeira e a distribuição de parcelas por mês para conectar Visão geral e Lançamentos. A base do site está publicada, mas essas páginas ainda apresentam conexão pendente. Não iniciar funcionalidades apenas porque foram citadas como possibilidades.
 
 ## Prévia visual da Visão geral
 
@@ -193,4 +193,4 @@ Verificação: 50 testes de backend/D1 e 9 de interface passaram, junto com tipo
 
 Publicado em `https://financeiro-testes-bot.miudo.workers.dev`, versão `e40e45aa-a2b5-4d95-a19c-4788c9f66ba5`. Migração aditiva `0002_web_auth.sql` aplicada. Páginas200, sessão anônima401 sem apagar cookies, API desconhecidaJSON404, asset inexistente404, saúde200 e webhook sem segredo401 conferidos em produção. O widget oficial carregou no Firefox pelo domínio vinculado. Webhook ativo, sem updates pendentes ou último erro de entrega.
 
-Pendências externas: confirmação humana de login/Perfil com a conta real e `/hoje` no bot após essa publicação, solicitadas ao usuário. CPU por requisição e folga nas cotas gratuitas não foram medidas; não houve ativação de plano pago. GitHub permanece para depois: branch `feat/zelumi-web-login` preservada, sem push ou merge.
+Validação externa concluída: o usuário confirmou que entrou pelo Telegram, viu a conta correta no Perfil e recebeu a resposta de `/hoje` com o programa local desligado. CPU por requisição e folga nas cotas gratuitas não foram medidas; não houve ativação de plano pago. GitHub permanece para depois: branch `feat/zelumi-web-login` preservada, sem push ou merge.
