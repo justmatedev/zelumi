@@ -2,7 +2,7 @@
 
 ## Publicação atual
 
-Versão financeira atual: `d3edc342-66e2-43fa-b1b1-05d3578bab11`, publicada em02/11/2026 com migração aditiva `0003_finance.sql`. Rotas protegidas e webhook verificados; comparação com dados reais e `/mes` aguarda retorno do usuário. A versão de autenticação listada abaixo é o marco anterior.
+Versão financeira atual: `d3edc342-66e2-43fa-b1b1-05d3578bab11`, publicada em02/11/2026 com migração aditiva `0003_finance.sql`. Rotas protegidas e webhook verificados; o usuário confirmou os dados reais, totais iguais aos de `/mes` e edição/exclusão em um lançamento de teste. A versão de autenticação listada abaixo é o marco anterior.
 
 - Worker: `https://financeiro-testes-bot.miudo.workers.dev`
 - Saúde/configuração: `https://financeiro-testes-bot.miudo.workers.dev/health`
