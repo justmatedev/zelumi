@@ -13,10 +13,11 @@ export function validDate(value,maximum=9990){
  const [y,m,d]=value.split('-').map(Number);return d>=1&&d<=new Date(Date.UTC(y,m,0)).getUTCDate();
 }
 const fields=['description','type','category','amount','date','installments','installmentStartMonth'];
-function validate(value,legacy=false){
+// Stored bot records include metadata and allow longer descriptions than edits.
+function validate(value,{storedRecord=false}={}){
  if(!value||typeof value!=='object'||Array.isArray(value))invalid('Lançamento inválido.');
- if(!legacy&&Object.keys(value).some(k=>!fields.includes(k)))invalid('Campo não permitido.');
- if(typeof value.description!=='string'||!value.description.trim()||value.description.length>(legacy?500:200))invalid('Use um nome de até 200 caracteres.');
+ if(!storedRecord&&Object.keys(value).some(k=>!fields.includes(k)))invalid('Campo não permitido.');
+ if(typeof value.description!=='string'||!value.description.trim()||value.description.length>(storedRecord?500:200))invalid('Use um nome de até 200 caracteres.');
  if(!['receita','despesa'].includes(value.type)||!(value.type==='receita'?['Receitas']:expenseCategories).includes(value.category))invalid('Tipo ou categoria inválidos.');
  if(!Number.isSafeInteger(value.amount)||value.amount<=0||value.amount>100000000000)invalid('Informe um valor total positivo válido.');
  if(!validDate(value.date)||!Number.isInteger(value.installments)||value.installments<1||value.installments>120)invalid('Data ou quantidade de parcelas inválida.');
@@ -29,7 +30,7 @@ function validate(value,legacy=false){
 export const validateEdit=value=>validate(value);
 export function readStored(body){
  try{
-  const source=JSON.parse(body),r=validate(source,true);
+  const source=JSON.parse(body),r=validate(source,{storedRecord:true});
   const rows=source.schedule===undefined?schedule(r):source.schedule;
   if(!Array.isArray(rows)||rows.length!==r.installments)invalid('Cronograma inválido.');
   let total=0,previous='';

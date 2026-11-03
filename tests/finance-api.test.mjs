@@ -48,7 +48,7 @@ test('API financeira com sessão real local, versões e idempotência',async t=>
   finally{await db.prepare('DROP TRIGGER fail_finance').run();}
   assert.equal((await send('/api/finance/records/2','PUT',body,{'Idempotency-Key':key})).status,200);
  });
- await t.test('escritor antigo entre preparo e consulta não gera total parcial',async()=>{
+ await t.test('gravação concorrente entre preparo e consulta não gera total parcial',async()=>{
   await new FinanceStore(db).overview('11','2026-01');let changed=false;
   const race={prepare:s=>db.prepare(s),async batch(statements){if(!changed){changed=true;await db.prepare("INSERT INTO cloud_records(id,owner,body) VALUES('late','11',?)").bind(JSON.stringify(record)).run();}return db.batch(statements);}};
   await assert.rejects(new FinanceStore(race).overview('11','2026-01'),e=>e.code==='HISTORY_PREPARING');
@@ -62,7 +62,7 @@ test('API financeira com sessão real local, versões e idempotência',async t=>
    assert.deepEqual(await late.mutate(args),expected);
   }
  });
- await t.test('novas categorias podem ser salvas, filtradas e agregadas no resumo',async()=>{
+ await t.test('categorias do catálogo podem ser salvas, filtradas e agregadas no resumo',async()=>{
   await db.prepare("INSERT INTO cloud_records(id,owner,body) VALUES('202','11',?)").bind(JSON.stringify({...record,description:'Veterinário',installments:1})).run();
   const detail=await (await send('/api/finance/records/202')).json();
   const response=await send('/api/finance/records/202','PUT',{expectedVersion:detail.version,record:{...record,description:'Veterinário',category:'Pets',installments:1}},{'Idempotency-Key':randomUUID()});

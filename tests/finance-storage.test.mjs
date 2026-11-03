@@ -11,7 +11,7 @@ const record={description:'Pão',type:'despesa',category:'Alimentação',date:'2
 test('SQLite mensal preserva centavos e separa dia de mês',()=>{
  const store=new Store(':memory:');try{store.insert('11',record);assert.equal(store.summary('11','2026-01').expense,8334);assert.equal(store.summary('11','2026-02').expense,8334);assert.equal(store.summary('11','2026-01-31').expense,100000);assert.equal(store.summary('22','2026-01').expense,0);}finally{store.close();}
 });
-test('D1 prepara legado sem resultados parciais e invalida cache concorrente',async t=>{
+test('D1 prepara projeções ausentes sem resultados parciais e invalida cache concorrente',async t=>{
  const p=await getPlatformProxy({configPath:'tests/wrangler.jsonc',persist:false,remoteBindings:false,envFiles:[resolve('.dev.vars.example')]});t.after(()=>p.dispose());const db=p.env.DB;await migrate(db);
  const body=JSON.stringify(record);await db.batch(Array.from({length:45},(_,i)=>db.prepare('INSERT INTO cloud_records(id,owner,body) VALUES(?,?,?)').bind(String(i+1),'11',body)));
  assert.equal((await prepareOwner(db,'11')).status,'preparing');assert.equal((await prepareOwner(db,'11')).status,'preparing');assert.equal((await prepareOwner(db,'11')).status,'ready');
