@@ -25,7 +25,7 @@ São 13 categorias de despesas e a categoria Receitas, que continua reunindo as 
 
 ## Comportamento
 
-- Categorias e regras ficam em [shared/categories.mjs](../shared/categories.mjs), compartilhadas por interpretador, validação da API e painel.
+- Categorias e regras ficam em [categories.mjs](../../packages/finance/src/categories.mjs), compartilhadas por interpretador, validação da API e painel.
 - O reconhecimento ignora acentos e maiúsculas, respeitando palavras completas e variações explicitamente cadastradas. Uberlândia não é identificado como Uber.
 - Expressões específicas são reconhecidas antes dos termos gerais: Uber Eats → Alimentação; ração para cachorro → Pets; material escolar → Educação; plano de saúde → Saúde; seguro viagem → Viagens; assinatura de jogos → Assinaturas.
 - Os termos internos dessas expressões não geram outra classificação, mas outras despesas na mesma descrição continuam sendo consideradas. Uber Eats e táxi → Outros; mercado e farmácia → Outros; mercado e padaria → Alimentação.

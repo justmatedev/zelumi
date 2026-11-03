@@ -1,33 +1,32 @@
 # Zelumi
 
-O padrão atual de marca e interface está no [Guia visual do Zelumi](./design/GUIA-VISUAL.md), com valores compartilhados em [tokens.css](./web/app/tokens.css). As decisões de produto, stack e telas ficam em [docs/DECISOES.md](./docs/DECISOES.md), que preserva o histórico das aprovações.
+O padrão atual de marca e interface está no [Guia visual do Zelumi](design/GUIA-VISUAL.md), com valores compartilhados em [tokens.css](apps/web/app/tokens.css). As decisões de produto, stack e telas ficam em [docs/DECISOES.md](docs/DECISOES.md), que preserva o histórico das aprovações.
 
 Gerenciamento financeiro com registros rápidos pelo Telegram. O bot funciona em Cloudflare Workers + D1; o site usa Next.js, TypeScript, Tailwind e componentes shadcn/ui personalizados. O interpretador do bot usa regras, sem IA.
 
-O guia do [repositório no GitHub](./docs/GITHUB.md) descreve o repositório privado, arquivos incluídos/excluídos e a validação sem credenciais reais.
+O guia do [repositório no GitHub](docs/desenvolvimento/GITHUB.md) descreve o repositório privado, arquivos incluídos/excluídos e a validação sem credenciais reais.
 
-Os lançamentos usam [13 categorias prontas de despesas e Receitas](./docs/CATEGORIAS.md). O bot reconhece palavras completas e expressões específicas; descrições sem correspondência ou com categorias conflitantes ficam em Outros. A categoria pode ser corrigida no editor do painel.
+Os lançamentos usam [13 categorias prontas de despesas e Receitas](docs/produto/CATEGORIAS.md). O bot reconhece palavras completas e expressões específicas; descrições sem correspondência ou com categorias conflitantes ficam em Outros. A categoria pode ser corrigida no editor do painel.
 
-A configuração do endereço `usezelumi.vercel.app`, com site na Vercel e backend na Cloudflare, está em [docs/VERCEL.md](./docs/VERCEL.md).
+A configuração do endereço `usezelumi.vercel.app`, com site na Vercel e backend na Cloudflare, está em [docs/VERCEL.md](docs/infraestrutura/VERCEL.md).
 
 ## Organização do repositório
 
-Este é um único repositório para o produto inteiro. Ao enviar ao GitHub, use esta pasta como raiz do repositório `zelumi`, incluindo `web`, `bot`, `cloudflare`, `scripts`, `tests` e `docs`.
+Este é um único repositório para o produto inteiro, organizado com npm workspaces. A [arquitetura](docs/desenvolvimento/ARQUITETURA.md) descreve as responsabilidades, dependências e comandos.
 
 | Pasta | Conteúdo |
 | --- | --- |
-| `web/` | Site Next.js: Entrada, Visão geral, Lançamentos, Perfil e componentes |
-| `dev/` | Conta fictícia e configuração isolada do desenvolvimento local |
-| `bot/` | Conversas, comandos, Telegram API e armazenamento SQLite local |
-| `cloudflare/` | Worker, autenticação, API financeira, D1, migrações e fila de respostas |
-| `finance/` | Modelo compartilhado, validação, projeções e consultas mensais |
-| `tests/` | Testes de backend e do bot; interface em `web/tests/` |
+| `apps/web/` | Site Next.js: Entrada, Visão geral, Lançamentos, Perfil e componentes |
+| `apps/api/` | Worker, autenticação, API financeira, D1 e migrações; ambiente fictício em `dev/` |
+| `apps/bot/` | Execução local do bot e armazenamento SQLite |
+| `packages/finance/` | Modelo, validação, categorias, interpretador e parcelas; SQL e versões em entradas de servidor |
+| `packages/bot-core/` | Conversas, comandos e cliente Telegram reutilizados pelo Worker e bot local |
+| `tests/` | Integração entre aplicações; testes específicos ficam em cada aplicação/pacote |
 | `scripts/` | Build, verificações, migração local e publicação |
-| `docs/` | Decisões e instruções para GitHub; configuração histórica em `archive/` |
+| `docs/` | Produto, desenvolvimento, infraestrutura, decisões e histórico |
 | `design/` | Logos escolhidos, fontes e licenças da identidade visual |
-| `shared/` | Interpretador de mensagens e cálculo de parcelas usados pelo bot e site |
 
-`.env`, `.dev.vars`, `.wrangler`, `data`, `node_modules`, `.next`, `.next-local` e `web/out` são locais/gerados e ficam fora do Git. Envie os dois `package-lock.json`, `.env.example`, `.dev.vars.example` e as migrações SQL. Credenciais do Wrangler nunca devem ir para o GitHub. Para conferir o conteúdo e preparar novos envios, seguir [docs/GITHUB.md](./docs/GITHUB.md).
+`.env`, `.dev.vars`, `.wrangler`, `data`, `node_modules`, `.next`, `.next-local` e `apps/web/out` são locais/gerados e ficam fora do Git. Envie o único `package-lock.json` da raiz, os manifests de todos os workspaces, `.env.example`, `.dev.vars.example` e as migrações SQL. Credenciais do Wrangler nunca devem ir para o GitHub. Para conferir o conteúdo e preparar novos envios, seguir o [guia do GitHub](docs/desenvolvimento/GITHUB.md).
 
 ## Desenvolver o site localmente
 
@@ -37,7 +36,6 @@ Na pasta principal `zelumi`, na primeira vez:
 
 ```sh
 npm ci
-npm --prefix web ci
 npm run dev
 ```
 
@@ -45,21 +43,20 @@ Nas próximas vezes, execute somente `npm run dev`. O comando aplica as migraç�
 
 Alterações nas telas aparecem ao salvar; alterações da API são recarregadas pelo Wrangler. `Ctrl+C` encerra os dois servidores. Se uma porta estiver ocupada, encerre o servidor anterior; são usadas 3000 (site) e 8788 (API interna).
 
-Esse ambiente usa a configuração `dev/wrangler.jsonc`, um token fictício e o D1 `zelumi-local-demo`, persistido em `.wrangler/local-dev/`. Não requer Telegram, conta Cloudflare nem arquivo `.env`. Os lançamentos podem ser editados/apagados e essas mudanças permanecem após reiniciar. O seed não recria dados apagados; as datas ficam no mês em que ele foi criado. O SQLite do bot, o D1 publicado e o banco usado pelo comando antigo `cf:dev` são separados.
+Esse ambiente usa a configuração `apps/api/dev/wrangler.jsonc`, um token fictício e o D1 `zelumi-local-demo`, persistido em `.wrangler/local-dev/`. Não requer Telegram, conta Cloudflare nem arquivo `.env`. Os lançamentos podem ser editados/apagados e essas mudanças permanecem após reiniciar. O seed não recria dados apagados; as datas ficam no mês em que ele foi criado. O SQLite do bot, o D1 publicado e o banco usado pelo comando antigo `cf:dev` são separados.
 
 O login de teste pertence a uma entrada Worker exclusiva de desenvolvimento. O build publicado continua estático e usa o login Telegram.
 
 ### Verificações
 
-Para conferir uma instalação nova ou regenerar os tipos após limpar os caches:
+Para conferir uma instalação nova, incluindo regeneração dos tipos do Next:
 
 ```sh
-npm run web:build
-npm --prefix web test
-npm test
+npm run check
+npm run cf:check
 ```
 
-O build inclui a checagem TypeScript e a conferência da exportação. Depois de gerar os tipos, `npm run web:check` reúne tipos, testes de interface e build novamente. Os testes usam bancos locais e Telegram simulado; o emulador D1 precisa poder abrir portas locais.
+`check` reúne os testes do backend e `web:check`; este executa build/export, tipos e testes da interface. `cf:check` também confere o pacote Worker por dry-run, sem publicar. Os testes usam bancos locais e Telegram simulado; o emulador D1 precisa poder abrir portas locais.
 
 ### Fluxos alternativos
 
@@ -79,7 +76,7 @@ Na publicação, o site consulta os registros reais da mesma conta Telegram. Vis
 | `.env.example` | Modelo sem credenciais para criar o `.env` |
 | `.dev.vars` | Sobrescritas do Worker local; ignorado pelo Git |
 | `.dev.vars.example` | Credenciais fictícias para `cf:dev` quando `.dev.vars` não existe |
-| `dev/local.env` | Arquivo sem credenciais, usado explicitamente pelo launcher para não carregar o ambiente real |
+| `apps/api/dev/local.env` | Arquivo sem credenciais, usado explicitamente pelo launcher para não carregar o ambiente real |
 | Cloudflare Secrets | Token Telegram, segredo do webhook e chave independente do proxy em produção |
 | Vercel Environment Variables | Somente `VERCEL_PROXY_SECRET` para o proxy; sem token Telegram ou segredo do webhook |
 
@@ -87,9 +84,9 @@ Na publicação, o site consulta os registros reais da mesma conta Telegram. Vis
 
 ## Cloudflare Workers + D1 (opção escolhida)
 
-A versão para nuvem está implementada em `cloudflare/`. Ela usa webhook autenticado, D1 com deduplicação transacional, isolamento por usuário e fila persistente de respostas. O bot local permanece disponível para desenvolvimento.
+A versão para nuvem está implementada em `apps/api/src/`. Ela usa webhook autenticado, D1 com deduplicação transacional, isolamento por usuário e fila persistente de respostas. O bot local permanece disponível para desenvolvimento.
 
-Siga [CLOUDFLARE.md](./CLOUDFLARE.md) para configuração e manutenção. O banco e o webhook do piloto já existem; atualizações não exigem recriá-los ou reimportar registros. O bot local deve permanecer parado enquanto o webhook estiver ativo.
+Siga [CLOUDFLARE.md](docs/infraestrutura/CLOUDFLARE.md) para configuração e manutenção. O banco e o webhook do piloto já existem; atualizações não exigem recriá-los ou reimportar registros. O bot local deve permanecer parado enquanto o webhook estiver ativo.
 
 ## Executar localmente no Telegram
 
@@ -125,7 +122,7 @@ npm run bot
 
 No Telegram, abra o bot que você criou e toque em **Iniciar**. Qualquer pessoa pode começar pela conversa privada, sem aprovação ou cadastro de ID. A identificação é feita pelo Telegram, e cada usuário acessa apenas seus próprios lançamentos. O comando `/id` apenas informa seu identificador, se você quiser consultá-lo.
 
-O token e o banco estão excluídos do Git por `.gitignore`. Não os coloque em `web/public/` nem em `web/out/`.
+O token e o banco estão excluídos do Git por `.gitignore`. Não os coloque em `apps/web/public/` nem em `apps/web/out/`.
 
 ### 3. Testar na conversa real
 
@@ -164,7 +161,7 @@ Use **Editar** abaixo do registro e envie a mensagem completa, por exemplo `pão
 | `/desfazer` | Apaga o último registro criado por você |
 | `/cancelar` | Cancela a pergunta ou edição pendente |
 
-Também aceita a consulta `quanto gastei hoje?`. **Comportamento atual:** `/mes` e o site somam as parcelas dos respectivos meses. `/hoje` e `/resumo` usam os valores integrais das compras/receitas cuja data é hoje. A primeira parcela começa no mês da compra por padrão; no site, é possível ajustar o mês inicial. Edição no site atua na compra inteira, incluindo meses anteriores; consulte [as decisões do projeto](./docs/DECISOES.md). Não representam saldo bancário nem fechamento de fatura. O cronograma de parcelas é calculado e salvo, com centavos distribuídos para preservar o total.
+Também aceita a consulta `quanto gastei hoje?`. **Comportamento atual:** `/mes` e o site somam as parcelas dos respectivos meses. `/hoje` e `/resumo` usam os valores integrais das compras/receitas cuja data é hoje. A primeira parcela começa no mês da compra por padrão; no site, é possível ajustar o mês inicial. Edição no site atua na compra inteira, incluindo meses anteriores; consulte [as decisões do projeto](docs/DECISOES.md). Não representam saldo bancário nem fechamento de fatura. O cronograma de parcelas é calculado e salvo, com centavos distribuídos para preservar o total.
 
 ### Dados e funcionamento
 
@@ -195,11 +192,11 @@ Os testes cobrem interpretação de valores e parcelas, persistência após rein
 
 ## Arquivos principais
 
-- `shared/parser.mjs`: interpretador compartilhado pelo site e pelo bot.
-- `bot/engine.mjs`: conversa, comandos, autorização e fluxo de edição.
-- `bot/store.mjs`: SQLite, deduplicação e fila de respostas.
-- `bot/telegram.mjs`: cliente HTTP da API, com erros sem token.
-- `bot/index.mjs`: configuração e processo de long polling.
+- `packages/finance/src/parser.mjs`: interpretador compartilhado pelo site e pelo bot.
+- `packages/bot-core/src/engine.mjs`: conversa, comandos, autorização e fluxo de edição.
+- `apps/bot/src/store.mjs`: SQLite, deduplicação e fila de respostas.
+- `packages/bot-core/src/telegram.mjs`: cliente HTTP da API, com erros sem token.
+- `apps/bot/src/index.mjs`: configuração e processo de long polling.
 
 ## Consistência dos lançamentos
 

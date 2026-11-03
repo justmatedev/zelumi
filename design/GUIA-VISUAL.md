@@ -11,11 +11,11 @@ Este é o guia de referência para criar e alterar interfaces do Zelumi. Ele re�
 | Referência | Responsabilidade |
 | --- | --- |
 | Este guia | Regras de aplicação e composição das telas |
-| [tokens.css](../web/app/tokens.css) | Valores compartilhados de cor, tipografia, espaço e dimensões |
-| [globals.css](../web/app/globals.css) | Estilos e adaptações de cada componente |
-| [Componentes da interface](../web/components/ui/) | Implementação reutilizável de botões e cards |
+| [tokens.css](../apps/web/app/tokens.css) | Valores compartilhados de cor, tipografia, espaço e dimensões |
+| [globals.css](../apps/web/app/globals.css) | Estilos e adaptações de cada componente |
+| [Componentes da interface](../apps/web/components/ui) | Implementação reutilizável de botões e cards |
 | [Decisões do projeto](../docs/DECISOES.md) | Histórico das aprovações e decisões de produto |
-| [Arquivos da marca](zelumi/conceitos/) | Logos e símbolos escolhidos |
+| [Arquivos da marca](zelumi/conceitos) | Logos e símbolos escolhidos |
 
 Os tokens contêm os valores executados pelo site; o guia explica seu uso. Ao mudar um padrão, atualizar os dois na mesma alteração. Se houver divergência, conferir a última decisão aprovada e reconciliar os arquivos antes de criar outra variação. O histórico não substitui este guia para construir telas novas.
 
@@ -34,8 +34,8 @@ A marca escolhida é **Conversa**: balão com a letra Z, acompanhado de **zelumi
 | Exportação original clara | [Logo claro](zelumi/conceitos/02-conversa-light.svg) |
 | Exportação original escura | [Logo escuro](zelumi/conceitos/02-conversa-dark.svg) |
 | Símbolo isolado | [Claro](zelumi/conceitos/02-conversa-simbolo-light.svg) / [Escuro](zelumi/conceitos/02-conversa-simbolo-dark.svg) |
-| Marca horizontal e símbolo no site | [Brand e Symbol](../web/components/brand.tsx) |
-| Favicon | [Símbolo SVG](../web/public/brand/simbolo.svg) |
+| Marca horizontal e símbolo no site | [Brand e Symbol](../apps/web/components/brand.tsx) |
+| Favicon | [Símbolo SVG](../apps/web/public/brand/simbolo.svg) |
 | Telegram | [Avatar claro](zelumi/telegram/avatar-1024.png) / [Avatar escuro](zelumi/telegram/avatar-dark-1024.png) |
 
 No site, a marca horizontal segue a variante monocromática de `Brand`: símbolo original em SVG e nome em Manrope, ambos na cor `--accent`. Os arquivos de conceito preservam a exportação original, que também contém lettering bicolor. A variante em uso no produto é a referência para as telas; não substituir uma pela outra sem atualizar esta regra. O símbolo não foi redesenhado nesta revisão.
@@ -77,7 +77,7 @@ A sequência atual é `--chart-1` a `--chart-5`: `#B94B24`, `#6C8067`, `#D6A663`
 
 ## 4. Tipografia e hierarquia
 
-**Manrope:** marca e títulos. **Inter:** textos, controles, informações de apoio e valores financeiros. Usar as [fontes locais e licenças](zelumi/fonts/), carregadas no [layout do site](../web/app/layout.tsx).
+**Manrope:** marca e títulos. **Inter:** textos, controles, informações de apoio e valores financeiros. Usar as [fontes locais e licenças](zelumi/fonts), carregadas no [layout do site](../apps/web/app/layout.tsx).
 
 | Uso | Token | Tamanho de referência |
 | --- | --- | --- |
@@ -126,7 +126,7 @@ Botões de ícone compartilhados usam área de 44 px, inclusive fechamento de di
 
 ### Botões e cards
 
-Reutilizar [Button](../web/components/ui/button.tsx) e [Card](../web/components/ui/card.tsx).
+Reutilizar [Button](../apps/web/components/ui/button.tsx) e [Card](../apps/web/components/ui/card.tsx).
 
 - `Button` padrão: ação principal com fundo de destaque.
 - `outline`: ação secundária, borda e superfície neutras.
@@ -145,7 +145,7 @@ Reutilizar [Button](../web/components/ui/button.tsx) e [Card](../web/components/
 
 ### Lançamentos
 
-Usar [EntryList](../web/components/finance/entry-list.tsx) em Visão geral e Lançamentos.
+Usar [EntryList](../apps/web/features/finance/components/entry-list.tsx) em Visão geral e Lançamentos.
 
 ```text
 [ícone] Notebook de exemplo               − R$ 200,00
@@ -164,7 +164,7 @@ Usar [EntryList](../web/components/finance/entry-list.tsx) em Visão geral e Lan
 
 Na entrada, o botão **Entrar com Telegram** usa o mesmo `Button` primário do Zelumi durante preparação, espera, confirmação e erro. A autorização abre na janela oficial do Telegram; o botão azul do widget não é exibido dentro da página. Exibir texto de estado em português, impedir cliques duplicados e permitir repetir após cancelar ou liberar a janela bloqueada pelo navegador. A interface externa de autorização pertence ao Telegram.
 
-Os controles próprios ficam em [components/ui](../web/components/ui/) e os estilos em [controls.css](../web/app/controls.css), aplicados depois das regras gerais. Reutilizar os componentes em todo o painel; evitar campos ou menus com uma aparência diferente em cada página.
+Os controles próprios ficam em [components/ui](../apps/web/components/ui) e os estilos em [controls.css](../apps/web/app/controls.css), aplicados depois das regras gerais. Reutilizar os componentes em todo o painel; evitar campos ou menus com uma aparência diferente em cada página.
 
 | Componente | Uso |
 | --- | --- |
@@ -197,7 +197,7 @@ Os controles próprios ficam em [components/ui](../web/components/ui/) e os esti
 
 ## 7. Navegação e responsividade
 
-A navegação é compartilhada no [layout do painel](../web/app/(dashboard)/layout.tsx), com [AppShell](../web/components/app-shell.tsx) e [Sidebar](../web/components/sidebar.tsx). Não colocar outro AppShell dentro de cada página: isso recria a barra e perde seu estado intermediário ao navegar.
+A navegação é compartilhada no [layout do painel](../apps/web/app/(dashboard)/layout.tsx), com [AppShell](../apps/web/components/layout/app-shell.tsx) e [Sidebar](../apps/web/components/layout/sidebar.tsx). Não colocar outro AppShell dentro de cada página: isso recria a barra e perde seu estado intermediário ao navegar.
 
 - Barra expandida: `--sidebar-expanded` 226 px; em telas intermediárias, `--sidebar-medium` 200 px.
 - Barra recolhida: `--sidebar-collapsed` 76 px; símbolo, ícones e dicas por hover/foco. A preferência fica no navegador.
@@ -229,7 +229,7 @@ Breakpoints em media/container queries permanecem literais no CSS: custom proper
 
 Usar português brasileiro, frases curtas e rótulos consistentes: **Visão geral**, **Lançamentos**, **Perfil**, **Receitas do mês**, **Despesas do mês**, **Resultado do mês**, **Atualizar**, **À vista** e **Parcela X de Y**.
 
-- Formatar moeda com os helpers de [finance.ts](../web/lib/finance.ts); dados financeiros continuam em centavos.
+- Formatar moeda com os helpers de [finance.ts](../apps/web/features/finance/lib/finance.ts); dados financeiros continuam em centavos.
 - Data visível em `dd/mm/aaaa`; mês escrito por extenso no seletor.
 - O resultado do mês é receitas menos despesas do período. Não apresentá-lo como saldo bancário disponível.
 - Explicar quando uma edição afeta parcelas de outros meses; evitar termos vagos como “valor” quando é necessário distinguir total e parcela.
@@ -245,6 +245,6 @@ Antes de criar uma variação:
 4. Se uma nova regra for necessária, registrar o motivo e atualizar guia, tokens e componente juntos. Não alterar a identidade por conta de uma única tela.
 5. Validar tema claro/escuro, barra aberta/recolhida, celular, textos longos e valores altos.
 
-Para alterações de implementação, executar os testes apropriados e o build. A suíte da interface é `npm --prefix web test`; a validação de tipos, testes e exportação pode ser feita com `npm run web:check`. Para revisão manual, usar `npm run dev` e conferir ao menos 320, 390, 760, 1068 e 1280 px.
+Para alterações de implementação, executar os testes apropriados e o build. A suíte da interface é `npm run web:test`; a validação de tipos, testes e exportação pode ser feita com `npm run web:check`. Para revisão manual, usar `npm run dev` e conferir ao menos 320, 390, 760, 1068 e 1280 px.
 
 A auditoria removeu regras obsoletas e declarações superadas e organizou o CSS para leitura. Regras em contextos responsivos distintos continuam necessárias. Mudanças futuras devem preservar o resultado visual; não eliminar regras em massa sem comparar as telas.

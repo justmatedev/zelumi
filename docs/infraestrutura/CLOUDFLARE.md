@@ -2,15 +2,15 @@
 
 ## Publicação atual
 
-Worker, subdomínio e D1 foram migrados para Zelumi em 02/11/2026. A publicação Vercel precisa usar o destino atualizado de `web/vercel.json`. Detalhes em [NOMES-INFRAESTRUTURA.md](./docs/NOMES-INFRAESTRUTURA.md).
+Worker, subdomínio e D1 foram migrados para Zelumi em 02/11/2026. A publicação Vercel precisa usar o destino atualizado de `apps/web/vercel.json`. Detalhes em [NOMES-INFRAESTRUTURA.md](NOMES-INFRAESTRUTURA.md).
 
-Versão atual do Worker: `48a86744-734d-412a-97e7-deafee1f817a`, publicada em 02/11/2026 com o bot definitivo **@zelumi_bot** e site em **https://usezelumi.vercel.app**. A ajuda (`/ajuda`, `/start`, `/help`) inclui o link do site e o botão **Abrir meu painel**. Bot, D1 e webhook continuam na Cloudflare. A migração aditiva `0004_bot_transition.sql` permitiu trocar o vínculo sem reimportar dados; a comparação antes/depois confirmou os 7 lançamentos, projeções e perfis idênticos. O usuário confirmou o domínio Telegram, resposta real de `/hoje` com o programa local desligado e novo login com conta e lançamentos corretos. Veja [docs/BOT.md](./docs/BOT.md) e [docs/VERCEL.md](./docs/VERCEL.md).
+Versão atual do Worker: `48a86744-734d-412a-97e7-deafee1f817a`, publicada em 02/11/2026 com o bot definitivo **@zelumi_bot** e site em **https://usezelumi.vercel.app**. A ajuda (`/ajuda`, `/start`, `/help`) inclui o link do site e o botão **Abrir meu painel**. Bot, D1 e webhook continuam na Cloudflare. A migração aditiva `0004_bot_transition.sql` permitiu trocar o vínculo sem reimportar dados; a comparação antes/depois confirmou os 7 lançamentos, projeções e perfis idênticos. O usuário confirmou o domínio Telegram, resposta real de `/hoje` com o programa local desligado e novo login com conta e lançamentos corretos. Veja [docs/BOT.md](../produto/BOT.md) e [docs/VERCEL.md](VERCEL.md).
 
 Marco financeiro anterior: `d3edc342-66e2-43fa-b1b1-05d3578bab11`, publicado em 02/11/2026 com migração aditiva `0003_finance.sql`. Naquele endereço, o usuário confirmou os dados reais, totais iguais aos de `/mes` e edição/exclusão em um lançamento de teste. A versão de autenticação listada abaixo é outro marco anterior.
 
 - Worker: `https://zelumi-bot.zelumi.workers.dev`
 - Saúde/configuração: `https://zelumi-bot.zelumi.workers.dev/health`
-- D1: `zelumi`, já vinculado em `wrangler.jsonc`.
+- D1: `zelumi`, já vinculado em `apps/api/wrangler.jsonc`.
 - Webhook registrado em 02/11/2026. Dois lançamentos locais foram importados.
 - Segredos configurados no Worker; valores permanecem fora deste documento.
 - Site e autenticação publicados em 02/11/2026, versão `e40e45aa-a2b5-4d95-a19c-4788c9f66ba5`; migração aditiva `0002_web_auth.sql` aplicada.
@@ -20,9 +20,9 @@ O bot local deve permanecer parado enquanto o webhook estiver ativo. As etapas a
 
 ## Atualização com site e autenticação
 
-O site principal fica na Vercel, que encaminha `/auth/*` e `/api/*` ao Worker. `web/out` contém a exportação Next.js; o Worker ainda mantém seus assets para facilitar retorno ao endereço anterior, mas o login atual autoriza somente `https://usezelumi.vercel.app`. `/auth/*`, `/api/*`, `/health` e `/telegram/webhook` passam pelo Worker antes dos assets. Rotas inexistentes da API retornam JSON 404.
+O site principal fica na Vercel, que encaminha `/auth/*` e `/api/*` ao Worker. `apps/web/out` contém a exportação Next.js; o Worker ainda mantém seus assets para facilitar retorno ao endereço anterior, mas o login atual autoriza somente `https://usezelumi.vercel.app`. `/auth/*`, `/api/*`, `/health` e `/telegram/webhook` passam pelo Worker antes dos assets. Rotas inexistentes da API retornam JSON 404.
 
-Entrada usa o Login Widget clássico oficial. O usuário confirmou `/setdomain` de `usezelumi.vercel.app` no novo `@zelumi_bot`. A configuração pública está em `APP_ORIGIN` e `TELEGRAM_BOT_USERNAME`, no `wrangler.jsonc`. O token do bot continua sendo segredo no Worker; não há Client ID/Client Secret nessa integração. O deploy confere que o username corresponde ao token por `getMe`.
+Entrada usa o Login Widget clássico oficial. O usuário confirmou `/setdomain` de `usezelumi.vercel.app` no novo `@zelumi_bot`. A configuração pública está em `APP_ORIGIN` e `TELEGRAM_BOT_USERNAME`, no `apps/api/wrangler.jsonc`. O token do bot continua sendo segredo no Worker; não há Client ID/Client Secret nessa integração. O deploy confere que o username corresponde ao token por `getMe`.
 
 Uma migração **aditiva** (`0002_web_auth.sql`) cria perfis, fluxos de login, recibos de uso único, sessões e rate limit. Não altera os lançamentos ou o owner existente. Sessões duram sete dias e usam cookie HttpOnly/Secure; o D1 guarda somente hashes dos tokens. CSRF, origem, validade da assinatura e uso único são verificados no servidor. O widget clássico precisa de `eval` e é carregado em um iframe com CSP própria; essa permissão não é habilitada no painel principal.
 
@@ -30,7 +30,6 @@ Para atualizar o piloto existente, após validar o código:
 
 ```sh
 npm ci
-npm --prefix web ci
 npm test
 npm run cf:check
 npm run cf:versions
@@ -55,7 +54,7 @@ Em rollback, manter todas as tabelas e dados. A versão anterior ignora os novos
 
 ### Rollback
 
-Após trocar de bot, um rollback de versão precisa manter token, username e vínculo D1 compatíveis. Não voltar isoladamente a uma versão que usa o bot antigo; conferir o procedimento coordenado em [docs/BOT.md](./docs/BOT.md).
+Após trocar de bot, um rollback de versão precisa manter token, username e vínculo D1 compatíveis. Não voltar isoladamente a uma versão que usa o bot antigo; conferir o procedimento coordenado em [docs/BOT.md](../produto/BOT.md).
 
 Antes de publicar, registrar o ID de versão atual retornado por `npm run cf:versions`. Se for necessário voltar, usar Wrangler `rollback ID_DA_VERSAO` com a mesma autenticação local dos scripts. As tabelas novas permanecem no D1; não apagar tabelas nem tentar desfazer a migração de banco. A versão anterior do bot ignora essas tabelas. O rollback de código também restaura os assets da versão selecionada; uma versão anterior ao site continuará atendendo somente o bot. Não trocar o webhook.
 
@@ -85,11 +84,11 @@ npm run cf:db:create
 npm run cf:db:migrate
 ```
 
-O primeiro comando cria `zelumi` e atualiza o binding `DB` em `wrangler.jsonc`. O identificador `00000000-0000-0000-0000-000000000000` é apenas um marcador local; não é um banco remoto real. Os scripts bloqueiam publicação enquanto ele não for substituído pelo ID retornado pelo serviço. Se o Wrangler solicitar seleção de conta, escolha a sua conta gratuita.
+O primeiro comando cria `zelumi` e atualiza o binding `DB` em `apps/api/wrangler.jsonc`. O identificador `00000000-0000-0000-0000-000000000000` é apenas um marcador local; não é um banco remoto real. Os scripts bloqueiam publicação enquanto ele não for substituído pelo ID retornado pelo serviço. Se o Wrangler solicitar seleção de conta, escolha a sua conta gratuita.
 
-Se a criação informar que já existe um banco com esse nome, encontre seu ID no painel D1 e atualize `database_id` em `wrangler.jsonc`, mantendo um único binding `DB`. Não crie bancos repetidos para contornar erros.
+Se a criação informar que já existe um banco com esse nome, encontre seu ID no painel D1 e atualize `database_id` em `apps/api/wrangler.jsonc`, mantendo um único binding `DB`. Não crie bancos repetidos para contornar erros.
 
-O segundo comando aplica `cloudflare/migrations/0001_initial.sql` ao D1 remoto. Confirme a operação solicitada pelo Wrangler.
+O segundo comando aplica `apps/api/migrations/0001_initial.sql` ao D1 remoto. Confirme a operação solicitada pelo Wrangler.
 
 ## 3. Preservar os registros locais
 
@@ -104,7 +103,7 @@ npm run cf:export-local
 npm run cf:db:import
 ```
 
-O exportador lê o SQLite configurado em `.env`, sem alterar o banco, e cria `data/cloudflare-import.sql`. O arquivo tem dados financeiros e é ignorado pelo Git; não deve ser enviado pelo chat nem incluído em `web/public/` ou `web/out/`.
+O exportador lê o SQLite configurado em `.env`, sem alterar o banco, e cria `data/cloudflare-import.sql`. O arquivo tem dados financeiros e é ignorado pelo Git; não deve ser enviado pelo chat nem incluído em `apps/web/public/` ou `apps/web/out/`.
 
 A importação preserva IDs antigos, lançamentos, perguntas ainda válidas e identificadores de updates já processados. Assim, mensagens que o Telegram reenviar durante a troca não duplicam registros. Ela usa inserções sem sobrescrever registros existentes e é restrita ao mesmo bot. Respostas pendentes impedem a exportação para evitar perda delas.
 
@@ -125,9 +124,9 @@ O deploy informa a URL `https://zelumi-bot.SEUSUBDOMINIO.workers.dev`. Se a Clou
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_WEBHOOK_SECRET`
 
-O segredo do webhook é gerado e acrescentado ao `.env` automaticamente se ainda não existir. Ele autentica a origem das chamadas do Telegram. Não o coloque em `wrangler.jsonc`.
+O segredo do webhook é gerado e acrescentado ao `.env` automaticamente se ainda não existir. Ele autentica a origem das chamadas do Telegram. Não o coloque em `apps/api/wrangler.jsonc`.
 
-O fuso fica em `BOT_TIMEZONE` na seção `vars` de `wrangler.jsonc`; o padrão é `America/Sao_Paulo`. Após mudanças nesse arquivo, publique novamente. Atualizações do `.env` não são sincronizadas automaticamente: para mudar o token ou o segredo do webhook, execute `cf:secrets` novamente. Não há lista de usuários a liberar.
+O fuso fica em `BOT_TIMEZONE` na seção `vars` de `apps/api/wrangler.jsonc`; o padrão é `America/Sao_Paulo`. Após mudanças nesse arquivo, publique novamente. Atualizações do `.env` não são sincronizadas automaticamente: para mudar o token ou o segredo do webhook, execute `cf:secrets` novamente. Não há lista de usuários a liberar.
 
 ## 5. Trocar o recebimento para webhook
 

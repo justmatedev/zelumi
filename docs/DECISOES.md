@@ -1,5 +1,7 @@
 # Zelumi — decisões do projeto
 
+> Registro histórico anterior à reestruturação em workspaces. Os caminhos e resultados abaixo descrevem suas respectivas etapas; para a organização atual, consulte a [arquitetura](desenvolvimento/ARQUITETURA.md).
+
 Atualizado em 02/11/2026. Este documento reúne as decisões da conversa e diferencia o produto planejado do código que já está em funcionamento. Ao mudar uma decisão com o usuário, atualizar este registro.
 
 ### Modelos numéricos e datas explícitas no bot — 02/11/2026
@@ -36,7 +38,7 @@ Verificação: 46 testes de interface, 92 de backend/D1, TypeScript, build e exp
 
 ### Categorias prontas mais completas — 02/11/2026
 
-O usuário escolheu ampliar as categorias prontas compartilhadas e aprovou a implementação descrita em [Categorias](./CATEGORIAS.md). A lista passa a ter 13 categorias de despesas e Receitas, acrescentando Educação, Lazer, Compras, Assinaturas, Cuidados pessoais, Pets, Viagens e Impostos e taxas.
+O usuário escolheu ampliar as categorias prontas compartilhadas e aprovou a implementação descrita em [Categorias](produto/CATEGORIAS.md). A lista passa a ter 13 categorias de despesas e Receitas, acrescentando Educação, Lazer, Compras, Assinaturas, Cuidados pessoais, Pets, Viagens e Impostos e taxas.
 
 Bot, validação da API, filtros e editor do painel compartilham o catálogo. A classificação usa palavras completas e expressões específicas, ignora acentos e maiúsculas e retorna Outros em conflitos entre categorias. Registros existentes não são recategorizados automaticamente. A limpeza da descrição foi corrigida para preservar palavras acentuadas, como saúde. Implementação local; publicação não faz parte desta entrega.
 
@@ -48,7 +50,7 @@ Verificação: 92 testes de backend/D1 e 34 de interface passaram, junto com bui
 - Objetivo: gerenciamento financeiro pessoal com registro rápido de receitas e despesas pelo Telegram e acompanhamento visual pelo site.
 - Telegram: entrada cotidiana de lançamentos, perguntas sobre informações faltantes, correção, desfazer e consultas.
 - Site: visão mensal, consulta e gerenciamento dos lançamentos reais do mesmo usuário.
-- A identidade ativa é Zelumi, com bot `@zelumi_bot` e banco local padrão `data/zelumi.sqlite`. A migração dos identificadores remotos está descrita em [NOMES-INFRAESTRUTURA.md](./NOMES-INFRAESTRUTURA.md).
+- A identidade ativa é Zelumi, com bot `@zelumi_bot` e banco local padrão `data/zelumi.sqlite`. A migração dos identificadores remotos está descrita em [NOMES-INFRAESTRUTURA.md](infraestrutura/NOMES-INFRAESTRUTURA.md).
 - Username `@zelumi_bot` criado e validado, e endereço `usezelumi.vercel.app` publicado. Disponibilidade jurídica da marca e de domínio próprio não foi verificada; não apresentar exclusividade como confirmada.
 - A assinatura “suas finanças em poucas palavras” foi sugerida, mas não foi escolhida explicitamente como slogan definitivo.
 
@@ -124,7 +126,7 @@ Sintaxes já implementadas no interpretador:
 
 ## Identidade visual aprovada
 
-O padrão de aplicação atual foi consolidado no [Guia visual do Zelumi](../design/GUIA-VISUAL.md), com [tokens compartilhados](../web/app/tokens.css). Esta seção preserva a direção aprovada; consultar o guia para construir novas telas e manter os ajustes recentes de leitura, componentes e navegação.
+O padrão de aplicação atual foi consolidado no [Guia visual do Zelumi](../design/GUIA-VISUAL.md), com [tokens compartilhados](../apps/web/app/tokens.css). Esta seção preserva a direção aprovada; consultar o guia para construir novas telas e manter os ajustes recentes de leitura, componentes e navegação.
 
 - Estilo: acolhedor, organizado e com personalidade; evitar aparência financeira excessivamente tradicional.
 - Temas: **claro e escuro**, ambos desenhados desde o início.
@@ -176,7 +178,7 @@ As opções 1 (Z contínuo) e 3 (Horizonte) foram exploradas; a opção escolhid
 - Registro por texto com regras, sem IA; perguntas, edição, desfazer e resumos.
 - Data de envio da mensagem para interpretar compras enviadas antes do processamento.
 - Isolamento por usuário, deduplicação de updates e fila persistente de respostas.
-- Publicação registrada em [CLOUDFLARE.md](../CLOUDFLARE.md); o usuário confirmou resposta real com o programa local desligado.
+- Publicação registrada em [CLOUDFLARE.md](infraestrutura/CLOUDFLARE.md); o usuário confirmou resposta real com o programa local desligado.
 - O site anterior em HTML/JS simulava uma conversa e usava dados locais no navegador. Seu código foi retirado após a implementação do painel Next.js; permanece recuperável pelo histórico Git.
 
 ## Próxima etapa combinada
@@ -249,7 +251,7 @@ Em produção, páginas200, endpoints financeiros anônimos401, rota inexistente
 
 ### Preparação para GitHub — 02/11/2026
 
-O usuário escolheu preparar primeiro um repositório privado `zelumi`, com o produto inteiro, preservando o histórico de desenvolvimento. A atualização dos nomes oficiais fica para depois. O [guia de primeiro envio](./GITHUB.md) documenta o conteúdo, exclusões, instalação e conexão futura ao remoto. Não foi configurado remoto, feito push ou criado deploy automático.
+O usuário escolheu preparar primeiro um repositório privado `zelumi`, com o produto inteiro, preservando o histórico de desenvolvimento. A atualização dos nomes oficiais fica para depois. O [guia de primeiro envio](desenvolvimento/GITHUB.md) documenta o conteúdo, exclusões, instalação e conexão futura ao remoto. Não foi configurado remoto, feito push ou criado deploy automático.
 
 Foram ampliadas as exclusões de bancos, logs e credenciais locais e definida a normalização de texto para LF. A revisão de caminhos e conteúdo do histórico não encontrou as credenciais locais comparadas nem os padrões de segredo pesquisados. Uma cópia limpa passou instalação pelos lockfiles, 66 testes de backend/D1, 15 de interface, tipos e build/export sem credenciais reais. O código em produção não mudou nesta etapa.
 
@@ -257,7 +259,7 @@ Os planos, especificações e notas auxiliares foram removidos de `docs/superpow
 
 ### Padronização local de nomes e código compartilhado
 
-O usuário aprovou padronizar a pasta local como `zelumi`, atualizar os textos do bot e as instruções e separar o interpretador em `shared/parser.mjs`, com atualização dos imports. O protótipo antigo de `dist/` e seu comando `npm start` foram retirados. A configuração original do Sites foi arquivada em [archive/sites-hosting.json](./archive/sites-hosting.json), preservando a identidade anterior sem alterar o Site remoto.
+O usuário aprovou padronizar a pasta local como `zelumi`, atualizar os textos do bot e as instruções e separar o interpretador em `shared/parser.mjs`, com atualização dos imports. O protótipo antigo de `dist/` e seu comando `npm start` foram retirados. A configuração original do Sites foi arquivada em [archive/sites-hosting.json](archive/sites-hosting.json), preservando a identidade anterior sem alterar o Site remoto.
 
 O SQLite local usava o caminho disponível naquela etapa; a configuração atual é `BOT_DB_PATH=./data/zelumi.sqlite`. Os dados anteriores foram preservados em backup privado externo ao projeto. O Worker, D1, webhook, endereço publicado e username do bot continuam com os identificadores atuais. Esta preparação não publica as mudanças nem faz push ao GitHub.
 
@@ -265,7 +267,7 @@ Verificação após renomear a pasta: 66 testes de backend/D1 e 15 testes de int
 
 ### Endereço público e integração Vercel
 
-O usuário escolheu `usezelumi.vercel.app` e já publicou o frontend pelo projeto Vercel `zelumi`, conectado ao GitHub, com Root Directory `web`. Aprovou ajustar login e API mantendo bot, D1 e webhook na Cloudflare. O [guia da Vercel](./VERCEL.md) reúne configuração, ordem de troca, validação e retorno ao endereço anterior.
+O usuário escolheu `usezelumi.vercel.app` e já publicou o frontend pelo projeto Vercel `zelumi`, conectado ao GitHub, com Root Directory `web`. Aprovou ajustar login e API mantendo bot, D1 e webhook na Cloudflare. O [guia da Vercel](infraestrutura/VERCEL.md) reúne configuração, ordem de troca, validação e retorno ao endereço anterior.
 
 As rotas em `web/vercel.json` preservam caminhos, cookies, métodos e corpos para `/auth` e `/api`, sem cache de dados autenticados. Os arquivos estáticos têm cabeçalhos próprios, com CSP isolada para o widget Telegram. Uma chave independente `VERCEL_PROXY_SECRET`, configurada somente nos servidores, permite confiar no IP de visitante encaminhado pela Vercel para separar os limites de login. Token Telegram e segredo do webhook não vão para a Vercel.
 
@@ -277,7 +279,7 @@ Publicação realizada: o usuário confirmou a variável do proxy na Vercel e a 
 
 O usuário criou o bot definitivo, ID numérico `9056845961`, e informou o token somente no `.env` local. A integração foi trocada de um bot de testes, preservando o mesmo D1 e os dados pelo ID do usuário Telegram. A migração `0004_bot_transition.sql` troca apenas estado operacional e vínculo; as sessões anteriores foram revogadas e é necessário entrar novamente pelo bot novo.
 
-A conferência por SHA-256 confirmou os 7 lançamentos, projeções e perfis idênticos antes/depois. Webhook antigo desativado, token anterior preservado em backup privado externo ao projeto e novo webhook ativo no mesmo Worker, versão `5994e736-d2c5-4158-b527-3a22bee0c81b`. O usuário confirmou `/setdomain` no novo bot. 78 testes backend/D1 e 15 de interface, tipos, build/export e dry-run passaram; uma corrida de sessão encontrada na revisão foi reproduzida e corrigida. Validação externa concluída: o usuário confirmou resposta de `/hoje` no novo bot com o programa local desligado e login real no site com conta e lançamentos anteriores corretos. Procedimento e recuperação em [BOT.md](./BOT.md).
+A conferência por SHA-256 confirmou os 7 lançamentos, projeções e perfis idênticos antes/depois. Webhook antigo desativado, token anterior preservado em backup privado externo ao projeto e novo webhook ativo no mesmo Worker, versão `5994e736-d2c5-4158-b527-3a22bee0c81b`. O usuário confirmou `/setdomain` no novo bot. 78 testes backend/D1 e 15 de interface, tipos, build/export e dry-run passaram; uma corrida de sessão encontrada na revisão foi reproduzida e corrigida. Validação externa concluída: o usuário confirmou resposta de `/hoje` no novo bot com o programa local desligado e login real no site com conta e lançamentos anteriores corretos. Procedimento e recuperação em [BOT.md](produto/BOT.md).
 
 ### Acesso ao painel pela ajuda do bot
 
@@ -292,7 +294,7 @@ O desenvolvimento principal do site usa `npm run dev`, com Next.js e Worker loca
 
 A identidade e os padrões atuais ficam no [guia visual](../design/GUIA-VISUAL.md); escopo, correções e capturas estão na [auditoria visual](../design/AUDITORIA-VISUAL.md). A navegação usa layout compartilhado, preferência de barra recolhida e menu modal no celular.
 
-Após a [varredura de arquivos](./INVENTARIO-ARQUIVOS.md), o usuário aprovou a limpeza. Foram retirados os quatro planos internos de `docs/superpowers/`, materiais antigos de `.superpowers/` e logs selecionados, com recuperação privada em `data/manutencao/`. Caches antigos de build/desenvolvimento foram limpos, preservando dependências, o servidor local ativo, o D1, SQLite, backups e autenticação. Os documentos permanentes preservam as decisões dos planos removidos. Nenhum envio ao GitHub ou deploy faz parte desta limpeza.
+Após a [varredura de arquivos](desenvolvimento/INVENTARIO-ARQUIVOS.md), o usuário aprovou a limpeza. Foram retirados os quatro planos internos de `docs/superpowers/`, materiais antigos de `.superpowers/` e logs selecionados, com recuperação privada em `data/manutencao/`. Caches antigos de build/desenvolvimento foram limpos, preservando dependências, o servidor local ativo, o D1, SQLite, backups e autenticação. Os documentos permanentes preservam as decisões dos planos removidos. Nenhum envio ao GitHub ou deploy faz parte desta limpeza.
 
 ### Consolidação dos nomes — 02/11/2026
 
@@ -301,3 +303,10 @@ Código e exemplos locais usam Zelumi. As credenciais e o SQLite do ambiente ant
 ### Migração da infraestrutura para Zelumi
 
 Após autorizar a janela de manutenção, o usuário confirmou acesso para publicar a Vercel. Worker `zelumi-bot`, subdomínio `zelumi.workers.dev` e D1 `zelumi` preparados e copiados com preservação integral das 13 tabelas e dos 7 lançamentos, conferida por SHA-256 antes de reabrir o processamento. Credenciais e bot permanecem os do Zelumi. Backup privado externo mantém a recuperação. O proxy local foi atualizado; a publicação Vercel e a validação real pelo usuário permanecem pendentes.
+
+
+## Reestruturação em workspaces — 02/11/2026
+
+O usuário aprovou a organização completa em `apps/web`, `apps/api` e `apps/bot`, com pacotes `@zelumi/finance` e `@zelumi/bot-core`. A instalação passa a usar npm workspaces e um lockfile raiz. O site agrupa autenticação, finanças e perfil em `features/`, mantendo componentes visuais comuns dentro da aplicação.
+
+Os comandos públicos foram preservados. Regras financeiras, contratos HTTP, migrações e identificadores remotos permanecem os mesmos. A organização e os limites dos módulos estão em [ARQUITETURA.md](desenvolvimento/ARQUITETURA.md); a execução segue o [plano aprovado](desenvolvimento/PLANO-REESTRUTURACAO.md). A publicação é separada: a Vercel precisa receber a nova Root Directory antes da próxima integração.

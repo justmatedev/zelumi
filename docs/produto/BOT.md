@@ -17,6 +17,6 @@ Não iniciar o processo local com o token de produção enquanto seu webhook est
 
 ## Manutenção
 
-Seguir [CLOUDFLARE.md](../CLOUDFLARE.md) para publicar e verificar a configuração. Um rollback deve preservar a compatibilidade entre token, username e identidade vinculada ao D1. Não restaurar um dump sobre lançamentos posteriores nem apagar tabelas para reverter código.
+Seguir [CLOUDFLARE.md](../infraestrutura/CLOUDFLARE.md) para publicar e verificar a configuração. Um rollback deve preservar a compatibilidade entre token, username e identidade vinculada ao D1. Não restaurar um dump sobre lançamentos posteriores nem apagar tabelas para reverter código.
 
-A atualização dos nomes dos recursos remotos segue [NOMES-INFRAESTRUTURA.md](./NOMES-INFRAESTRUTURA.md).
+A atualização dos nomes dos recursos remotos segue [NOMES-INFRAESTRUTURA.md](../infraestrutura/NOMES-INFRAESTRUTURA.md).

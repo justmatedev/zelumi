@@ -91,13 +91,13 @@ Todos os dados exibidos nas capturas são fictícios.
 
 ```sh
 npm run dev
-npm --prefix web test
+npm run web:test
 npm run web:build
 ```
 
 No ambiente local, usar a conta de teste e conferir as larguras da matriz, os dois temas, navegação por Tab/Escape, nomes longos e texto ampliado. Para comparar estados de falha, usar respostas locais simuladas; não provocar falhas ou alterações em dados de produção.
 
-Para novas alterações, seguir o [guia visual](GUIA-VISUAL.md) e os [tokens compartilhados](../web/app/tokens.css). Atualizar este relatório quando a cobertura ou os padrões mudarem.
+Para novas alterações, seguir o [guia visual](GUIA-VISUAL.md) e os [tokens compartilhados](../apps/web/app/tokens.css). Atualizar este relatório quando a cobertura ou os padrões mudarem.
 
 ## Referências dos critérios verificados
 

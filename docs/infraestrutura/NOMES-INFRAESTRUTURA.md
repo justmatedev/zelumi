@@ -12,7 +12,7 @@
 | Bot | `@zelumi_bot` |
 | Site | `https://usezelumi.vercel.app` |
 
-O binding D1 e seu UUID estão em `../wrangler.jsonc`. O destino do proxy está em `../web/vercel.json`.
+O binding D1 e seu UUID estão em `apps/api/wrangler.jsonc`. O destino do proxy está em `apps/web/vercel.json`.
 
 ## Migração de 02/11/2026
 
@@ -26,19 +26,19 @@ Backup privado de configuração, código, versão e SQL: `../zelumi-backups/inf
 
 HTTPS confirmado no endereço final e `/health` respondendo 200 com identidade `zelumi-bot`. Webhook ativado em `https://zelumi-bot.zelumi.workers.dev/telegram/webhook`, preservando updates. A confirmação retornou webhook ativo, zero updates pendentes e nenhum erro de entrega. Sessão e API financeira anônimas retornam 401; API inexistente retorna 404. Cron do Zelumi ativo a cada cinco minutos, e cron do serviço anterior suspenso. Versão publicada: `48a86744-734d-412a-97e7-deafee1f817a`.
 
-Validação antes da migração: 85 testes backend/D1 e 33 de interface, tipos, build e export passaram. A publicação Vercel e os testes reais do usuário ainda estão pendentes.
+Validação antes da migração: 85 testes backend/D1 e 33 de interface, tipos, build e export passaram. A publicação Vercel foi confirmada após o envio do usuário. Os testes reais autenticados pelo usuário ainda estão pendentes.
 
-## Publicação Vercel pendente
+## Publicação Vercel confirmada
 
-Publicar uma revisão que inclua o `web/vercel.json` atualizado. A rota de `/auth` e `/api` deve usar:
+Antes desta reestruturação, o usuário publicou a revisão com o então `web/vercel.json` atualizado (atual `apps/web/vercel.json`). As verificações externas confirmaram páginas e assets 200, sessão/API anônimas 401 sem cache, API inexistente 404, origem inválida 403 e início de login 200 com bot correto, CSRF e cookie seguro. A rota de `/auth` e `/api` usa:
 
 ```text
 https://zelumi-bot.zelumi.workers.dev/$1
 ```
 
-O projeto usa Root Directory `web`. Como está conectado ao GitHub, a configuração precisa chegar à revisão publicada. Apenas clicar em Redeploy sobre uma revisão antiga não inclui arquivos locais. Manter `VERCEL_PROXY_SECRET` exatamente como está; não cadastrar o token Telegram na Vercel.
+A configuração remota conhecida usa Root Directory `web`; após esta reestruturação, ajustar para `apps/web` antes da próxima publicação. Como está conectado ao GitHub, a configuração precisa chegar à revisão publicada. Apenas clicar em Redeploy sobre uma revisão antiga não inclui arquivos locais. Manter `VERCEL_PROXY_SECRET` exatamente como está; não cadastrar o token Telegram na Vercel.
 
-Após a publicação, conferir login, identidade da conta, lançamentos e uma consulta `/hoje` no Telegram. Somente depois retirar os recursos de recuperação anteriores.
+Validação externa concluída para publicação, proxy e webhook. Ainda cabe ao usuário entrar com sua conta e conferir identidade, lançamentos e uma consulta `/hoje` no Telegram. Somente depois retirar os recursos de recuperação anteriores.
 
 ## Referências
 

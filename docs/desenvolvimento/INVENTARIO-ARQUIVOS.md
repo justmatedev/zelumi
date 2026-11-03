@@ -1,5 +1,7 @@
 # Varredura dos arquivos do Zelumi
 
+> Inventário histórico anterior à reestruturação em workspaces. Caminhos e tamanhos abaixo correspondem à varredura original; consulte a [arquitetura atual](ARQUITETURA.md) para os novos diretórios e a instalação única.
+
 Data: 02/11/2026. Esta revisão classifica o que manter, o que é regenerável e o que pode ser arquivado. Nenhum arquivo foi excluído durante a varredura inicial. A limpeza posterior aprovada está registrada na seção 8.
 
 ## Resultado
