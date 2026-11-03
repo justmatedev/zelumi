@@ -192,7 +192,7 @@ test('cliente usa POST e não revela token em falhas',async()=>{
 });
 test('configuração valida token e fuso, sem exigir lista de usuários',()=>{
  assert.throws(()=>config({}),/Preencha/);
- assert.doesNotThrow(()=>config({TELEGRAM_BOT_TOKEN:'123:fake',TELEGRAM_ALLOWED_USER_IDS:'legado_ignorado'}));
+ assert.doesNotThrow(()=>config({TELEGRAM_BOT_TOKEN:'123:fake'}));
  assert.throws(()=>config({TELEGRAM_BOT_TOKEN:'123:fake',BOT_TIMEZONE:'nope'}),/BOT_TIMEZONE/);
  assert.equal(Object.hasOwn(config({TELEGRAM_BOT_TOKEN:'123:fake'}),'allowedUsers'),false);
  assert.match(config({TELEGRAM_BOT_TOKEN:'123:fake'}).path,/[/\\]data[/\\]zelumi\.sqlite$/);

@@ -14,7 +14,7 @@ export function exportLocal(path,output,now=Date.now()) {
    if(pending)throw new Error('Há respostas pendentes no bot local. Deixe-o entregá-las e pare-o com Ctrl+C antes de exportar.');
    if(!bot)throw new Error('Banco ainda não vinculado a um bot.');
    const rows=db.prepare('SELECT id,owner,body FROM records ORDER BY id').all();
-   // Uma coluna import_bot torna o lote inteiro inócuo se apontar para outro bot.
+   // Cada gravação só é aplicada se o bot de destino corresponder ao da exportação.
    const gate=`EXISTS(SELECT 1 FROM cloud_meta WHERE key='bot_id' AND value=${quote(bot)})`;
    const lines=[`INSERT OR IGNORE INTO cloud_meta(key,value) VALUES ('bot_id',${quote(bot)});`];
    for(const row of rows){
