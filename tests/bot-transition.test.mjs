@@ -2,12 +2,12 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {resolve} from 'node:path';
 import {migrate} from './helpers/d1.mjs';
-import {createWorker} from '../cloudflare/worker.mjs';
-import {D1Store} from '../cloudflare/store.mjs';
-import {deliver} from '../cloudflare/outbox.mjs';
-import {hashToken} from '../cloudflare/auth/crypto.mjs';
-import {deriveCsrf} from '../cloudflare/auth/crypto.mjs';
-import {recordVersion} from '../finance/version.mjs';
+import {createWorker} from '../apps/api/src/worker.mjs';
+import {D1Store} from '../apps/api/src/telegram/store.mjs';
+import {deliver} from '../apps/api/src/telegram/outbox.mjs';
+import {hashToken} from '../apps/api/src/auth/crypto.mjs';
+import {deriveCsrf} from '../apps/api/src/auth/crypto.mjs';
+import {recordVersion} from '@zelumi/finance/server/version';
 import {randomUUID} from 'node:crypto';
 
 process.env.WRANGLER_LOG_PATH=resolve('.wrangler/logs');

@@ -4,10 +4,12 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {randomBytes} from 'node:crypto';
 import {setTimeout as delay} from 'node:timers/promises';
-import {createTelegram} from '../bot/telegram.mjs';
+import {createTelegram} from '@zelumi/bot-core/telegram';
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const action=process.argv[2];
+const configPath=resolve(root,'apps/api/wrangler.jsonc');
+const localPersist=resolve(root,'.wrangler/state');
 const wrangler=resolve(root,'node_modules/wrangler/bin/wrangler.js');
 const childEnv={...process.env,NEXT_TELEMETRY_DISABLED:'1',WRANGLER_SEND_METRICS:'false',WRANGLER_LOG_PATH:resolve(root,'.wrangler/logs'),XDG_CONFIG_HOME:resolve(root,'.wrangler/auth')};
 function command(executable,args,input) {
@@ -18,10 +20,10 @@ function command(executable,args,input) {
     child.on('exit',code=>code===0?yes():no(new Error('A etapa não foi concluída. Confira a mensagem acima.')));
   });
 }
-const run=(args,input)=>command(process.execPath,[wrangler,...args],input);
+const run=(args,input)=>command(process.execPath,[wrangler,...args,'--config',configPath],input);
 const buildWeb=()=>command('npm',['run','web:build']);
 function remoteReady() {
-  const source=readFileSync(resolve(root,'wrangler.jsonc'),'utf8');
+  const source=readFileSync(configPath,'utf8');
   if(source.includes('00000000-0000-0000-0000-000000000000'))throw new Error('Primeiro execute npm run cf:db:create para vincular um D1 real.');
 }
 function localSecrets() {
@@ -43,20 +45,20 @@ async function main() {
   if(action==='login')return run(['login','--browser=false']);
   if(action==='whoami')return run(['whoami']);
   if(action==='db:create') {
-    const source=readFileSync(resolve(root,'wrangler.jsonc'),'utf8');
+    const source=readFileSync(configPath,'utf8');
     if(!source.includes('00000000-0000-0000-0000-000000000000'))throw new Error('Já existe um D1 vinculado. Use cf:db:migrate.');
     return run(['d1','create','zelumi','--binding','DB','--update-config']);
   }
   if(action==='db:migrate'){remoteReady();return run(['d1','migrations','apply','DB','--remote']);}
-  if(action==='db:migrate:local')return run(['d1','migrations','apply','DB','--local']);
+  if(action==='db:migrate:local')return run(['d1','migrations','apply','DB','--local','--persist-to',localPersist,'--env-file',resolve(root,existsSync(resolve(root,'.dev.vars'))?'.dev.vars':'.dev.vars.example')]);
   if(action==='db:pending'){remoteReady();return run(['d1','migrations','list','DB','--remote']);}
   if(action==='versions')return run(['versions','list']);
   if(action==='check'){await buildWeb();return run(['deploy','--dry-run','--outdir','build/worker']);}
-  if(action==='dev'){await buildWeb();return run(['dev','--local','--env-file',existsSync(resolve(root,'.dev.vars'))?'.dev.vars':'.dev.vars.example']);}
+  if(action==='dev'){await buildWeb();return run(['dev','--local','--persist-to',localPersist,'--env-file',resolve(root,existsSync(resolve(root,'.dev.vars'))?'.dev.vars':'.dev.vars.example')]);}
   if(action==='deploy'){
     remoteReady();await buildWeb();
     const secrets=localSecrets(),me=await createTelegram(secrets.TELEGRAM_BOT_TOKEN)('getMe');
-    const config=JSON.parse(readFileSync(resolve(root,'wrangler.jsonc'),'utf8'));
+    const config=JSON.parse(readFileSync(configPath,'utf8'));
     if(me.username!==config.vars.TELEGRAM_BOT_USERNAME)throw new Error('O username de login não corresponde ao token do bot. Corrija a configuração antes de publicar.');
     return run(['deploy']);
   }

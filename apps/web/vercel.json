@@ -1,0 +1,85 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "cd ../.. && npm ci",
+  "buildCommand": "cd ../.. && npm run web:build",
+  "outputDirectory": "out",
+  "routes": [
+    {
+      "src": "/(.*)",
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "no-referrer",
+        "X-Frame-Options": "SAMEORIGIN",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "/(?!telegram-widget(?:\\.html)?/?$|auth(?:/|$)|api(?:/|$)).*",
+      "headers": {
+        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'self'"
+      },
+      "continue": true
+    },
+    {
+      "src": "/telegram-widget(?:\\.html)?/?",
+      "headers": {
+        "Content-Security-Policy": "default-src 'none'; script-src 'self' https://telegram.org; connect-src https://oauth.telegram.org; frame-ancestors 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"
+      },
+      "continue": true
+    },
+    {
+      "src": "/((?:auth|api)(?:/.*)?)",
+      "dest": "https://zelumi-bot.zelumi.workers.dev/$1",
+      "headers": {
+        "Cache-Control": "no-store",
+        "CDN-Cache-Control": "no-store",
+        "Vercel-CDN-Cache-Control": "no-store",
+        "x-vercel-enable-rewrite-caching": "0"
+      },
+      "transforms": [
+        {
+          "type": "request.headers",
+          "op": "set",
+          "target": {
+            "key": "X-Zelumi-Proxy-Secret"
+          },
+          "args": "$VERCEL_PROXY_SECRET",
+          "env": [
+            "VERCEL_PROXY_SECRET"
+          ]
+        }
+      ]
+    },
+    {
+      "src": "/_next/static/(.*)",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      },
+      "continue": true
+    },
+    {
+      "src": "/_headers",
+      "dest": "/404.html",
+      "status": 404
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(visao-geral|lancamentos|perfil)/?",
+      "dest": "/$1/index.html"
+    },
+    {
+      "src": "/telegram-widget/?",
+      "dest": "/telegram-widget.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/404.html",
+      "status": 404
+    }
+  ]
+}

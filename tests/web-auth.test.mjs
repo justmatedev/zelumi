@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {createHash,createHmac} from 'node:crypto';
-import {createWorker} from '../cloudflare/worker.mjs';
+import {createWorker} from '../apps/api/src/worker.mjs';
 
 process.env.WRANGLER_LOG_PATH=resolve('.wrangler/logs');
 process.env.WRANGLER_SEND_METRICS='false';

@@ -1,0 +1,22 @@
+{
+  "name": "@zelumi/finance",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.16.0"
+  },
+  "exports": {
+    "./model": {
+      "types": "./src/model.d.mts",
+      "default": "./src/model.mjs"
+    },
+    "./parser": "./src/parser.mjs",
+    "./categories": "./src/categories.mjs",
+    "./server/sql": "./src/server/sql.mjs",
+    "./server/version": "./src/server/version.mjs"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  }
+}

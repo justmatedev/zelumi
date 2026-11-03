@@ -1,7 +1,7 @@
 import {existsSync,readFileSync,readdirSync} from 'node:fs';
 import {resolve,relative,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
-const root=resolve(dirname(fileURLToPath(import.meta.url)),'../web/out');
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'../apps/web/out');
 const required=['index.html','visao-geral/index.html','lancamentos/index.html','perfil/index.html','404.html','brand/simbolo.svg','telegram-widget.html','telegram-widget.js','_headers'];
 for(const path of required)if(!existsSync(resolve(root,path)))throw new Error(`Export incompleto: ${path}`);
 function scan(dir){return readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?scan(resolve(dir,e.name)):[resolve(dir,e.name)]);}

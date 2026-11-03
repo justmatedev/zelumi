@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import {mkdtempSync,readFileSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
-import {Store} from '../bot/store.mjs';
+import {Store} from '../apps/bot/src/store.mjs';
 import {exportLocal} from '../scripts/export-local.mjs';
-import {FinanceStore} from '../cloudflare/finance/store.mjs';
+import {FinanceStore} from '../apps/api/src/finance/store.mjs';
 import {migrate} from './helpers/d1.mjs';
 process.env.WRANGLER_LOG_PATH=resolve('.wrangler/logs');process.env.WRANGLER_SEND_METRICS='false';const {getPlatformProxy}=await import('wrangler');
 test('importação invalida snapshot somente quando insere e preserva pending',async t=>{

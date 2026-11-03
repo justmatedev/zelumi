@@ -1,9 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {resolve} from 'node:path';
-import {Store} from '../bot/store.mjs';
-import {prepareOwner} from '../cloudflare/finance/projection.mjs';
-import {monthlySQL} from '../finance/sql.mjs';
+import {Store} from '../apps/bot/src/store.mjs';
+import {prepareOwner} from '../apps/api/src/finance/projection.mjs';
+import {monthlySQL} from '@zelumi/finance/server/sql';
 import {migrate} from './helpers/d1.mjs';
 process.env.WRANGLER_LOG_PATH=resolve('.wrangler/logs');process.env.WRANGLER_SEND_METRICS='false';
 const {getPlatformProxy}=await import('wrangler');

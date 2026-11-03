@@ -4,11 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "test": "node --test tests/*.test.mjs",
-    "bot": "node --env-file-if-exists=.env bot/index.mjs",
-    "web:dev": "npm --prefix web run dev",
-    "web:build": "npm --prefix web run build && node scripts/check-web-export.mjs",
-    "web:check": "npm --prefix web run typecheck && npm --prefix web test && npm run web:build",
+    "test": "node --test tests/*.test.mjs apps/api/tests/*.test.mjs apps/bot/tests/*.test.mjs packages/finance/tests/*.test.mjs",
+    "bot": "node --env-file-if-exists=.env apps/bot/src/index.mjs",
+    "web:dev": "npm run dev --workspace @zelumi/web",
+    "web:build": "npm run build --workspace @zelumi/web && node scripts/check-web-export.mjs",
+    "web:check": "npm run web:build && npm run typecheck --workspace @zelumi/web && npm run web:test",
     "cf:login": "node scripts/cloudflare.mjs login",
     "cf:whoami": "node scripts/cloudflare.mjs whoami",
     "cf:db:create": "node scripts/cloudflare.mjs db:create",
@@ -23,12 +23,23 @@
     "cf:activate": "node scripts/cloudflare.mjs activate",
     "cf:webhook:status": "node scripts/cloudflare.mjs webhook:status",
     "cf:db:import": "node scripts/cloudflare.mjs db:import",
-    "cf:export-local": "node scripts/export-local.mjs"
+    "cf:export-local": "node scripts/export-local.mjs",
+    "web:test": "npm test --workspace @zelumi/web",
+    "check": "npm test && npm run web:check"
   },
   "engines": {
     "node": ">=22.16.0"
   },
   "devDependencies": {
-    "wrangler": "^4.156.1"
+    "wrangler": "^4.156.1",
+    "esbuild": "0.28.2"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "dependencies": {
+    "@zelumi/finance": "0.1.0",
+    "@zelumi/bot-core": "0.1.0"
   }
 }

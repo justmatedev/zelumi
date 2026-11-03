@@ -21,9 +21,9 @@ build/
 .superpowers/
 
 # Frontend: generated files and local tooling
-web/.next/
-web/out/
-web/coverage/
+apps/web/.next/
+apps/web/out/
+apps/web/coverage/
 *.tsbuildinfo
 .DS_Store
 
@@ -42,4 +42,4 @@ web/coverage/
 __pycache__/
 .venv/
 
-web/.next-local/
+apps/web/.next-local/
