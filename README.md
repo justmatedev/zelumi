@@ -1,10 +1,8 @@
 # Zelumi
 
-O padrão atual de marca e interface está no [Guia visual do Zelumi](design/GUIA-VISUAL.md), com valores compartilhados em [tokens.css](apps/web/app/tokens.css). As decisões de produto, stack e telas ficam em [docs/DECISOES.md](docs/DECISOES.md), que preserva o histórico das aprovações.
+O padrão atual de marca e interface está no [Guia visual do Zelumi](docs/GUIA-VISUAL.md), com valores compartilhados em [tokens.css](apps/web/app/tokens.css). A [arquitetura](docs/desenvolvimento/ARQUITETURA.md) descreve as aplicações, os pacotes e seus limites.
 
 Gerenciamento financeiro com registros rápidos pelo Telegram. O bot funciona em Cloudflare Workers + D1; o site usa Next.js, TypeScript, Tailwind e componentes shadcn/ui personalizados. O interpretador do bot usa regras, sem IA.
-
-O guia do [repositório no GitHub](docs/desenvolvimento/GITHUB.md) descreve o repositório privado, arquivos incluídos/excluídos e a validação sem credenciais reais.
 
 Os lançamentos usam [13 categorias prontas de despesas e Receitas](docs/produto/CATEGORIAS.md). O bot reconhece palavras completas e expressões específicas; descrições sem correspondência ou com categorias conflitantes ficam em Outros. A categoria pode ser corrigida no editor do painel.
 
@@ -23,10 +21,26 @@ Este é um único repositório para o produto inteiro, organizado com npm worksp
 | `packages/bot-core/` | Conversas, comandos e cliente Telegram reutilizados pelo Worker e bot local |
 | `tests/` | Integração entre aplicações; testes específicos ficam em cada aplicação/pacote |
 | `scripts/` | Build, verificações, migração local e publicação |
-| `docs/` | Produto, desenvolvimento, infraestrutura, decisões e histórico |
-| `design/` | Logos escolhidos, fontes e licenças da identidade visual |
+| `docs/` | Produto, desenvolvimento, infraestrutura, guia visual e SVGs da marca |
 
-`.env`, `.dev.vars`, `.wrangler`, `data`, `node_modules`, `.next`, `.next-local` e `apps/web/out` são locais/gerados e ficam fora do Git. Envie o único `package-lock.json` da raiz, os manifests de todos os workspaces, `.env.example`, `.dev.vars.example` e as migrações SQL. Credenciais do Wrangler nunca devem ir para o GitHub. Para conferir o conteúdo e preparar novos envios, seguir o [guia do GitHub](docs/desenvolvimento/GITHUB.md).
+`.env`, `.dev.vars`, `.wrangler`, `data`, `node_modules`, `.next`, `.next-local` e `apps/web/out` são locais/gerados e ficam fora do Git. Envie o único `package-lock.json` da raiz, os manifests de todos os workspaces, `.env.example`, `.dev.vars.example` e as migrações SQL. Credenciais do Wrangler nunca devem ir para o GitHub. As orientações de envio estão abaixo.
+
+## Versionamento e publicação
+
+O código é mantido no repositório privado [justmatedev/zelumi](https://github.com/justmatedev/zelumi), com branch principal `main`. Usar o remoto existente e preservar o histórico; comparar divergências antes de qualquer envio forçado.
+
+Antes de criar um commit ou enviar alterações, conferir na raiz:
+
+```sh
+git status --short
+git remote -v
+git diff --cached --stat
+git diff --cached
+```
+
+`git diff --cached` mostra somente o conteúdo preparado para o próximo commit. Exportações financeiras e backups ficam em `data/`, ignorada pelo Git; migrações em `apps/api/migrations/` são código versionado e não devem conter dados exportados. IDs e URLs no Wrangler são configuração; o acesso ao D1 remoto depende de autorização na conta Cloudflare. Antes de tornar o repositório público, revisar também o histórico.
+
+A integração Git da Vercel publica o frontend ao atualizar a branch conectada. O Worker exige publicação separada por `npm run cf:deploy`; push no GitHub não o atualiza. Conferir a [configuração da Vercel](docs/infraestrutura/VERCEL.md) antes de publicar e executar as [verificações locais](#verificações).
 
 ## Desenvolver o site localmente
 
@@ -43,7 +57,7 @@ Nas próximas vezes, execute somente `npm run dev`. O comando aplica as migraç�
 
 Alterações nas telas aparecem ao salvar; alterações da API são recarregadas pelo Wrangler. `Ctrl+C` encerra os dois servidores. Se uma porta estiver ocupada, encerre o servidor anterior; são usadas 3000 (site) e 8788 (API interna).
 
-Esse ambiente usa a configuração `apps/api/dev/wrangler.jsonc`, um token fictício e o D1 `zelumi-local-demo`, persistido em `.wrangler/local-dev/`. Não requer Telegram, conta Cloudflare nem arquivo `.env`. Os lançamentos podem ser editados/apagados e essas mudanças permanecem após reiniciar. O seed não recria dados apagados; as datas ficam no mês em que ele foi criado. O SQLite do bot, o D1 publicado e o banco usado pelo comando antigo `cf:dev` são separados.
+Esse ambiente usa a configuração `apps/api/dev/wrangler.jsonc`, um token fictício e o D1 `zelumi-local-demo`, persistido em `.wrangler/local-dev/`. Não requer Telegram, conta Cloudflare nem arquivo `.env`. Os lançamentos podem ser editados/apagados e essas mudanças permanecem após reiniciar. O seed não recria dados apagados; as datas ficam no mês em que ele foi criado. O SQLite do bot, o D1 publicado e o banco usado pelo fluxo alternativo `cf:dev` são separados.
 
 O login de teste pertence a uma entrada Worker exclusiva de desenvolvimento. O build publicado continua estático e usa o login Telegram.
 
@@ -86,11 +100,11 @@ Na publicação, o site consulta os registros reais da mesma conta Telegram. Vis
 
 A versão para nuvem está implementada em `apps/api/src/`. Ela usa webhook autenticado, D1 com deduplicação transacional, isolamento por usuário e fila persistente de respostas. O bot local permanece disponível para desenvolvimento.
 
-Siga [CLOUDFLARE.md](docs/infraestrutura/CLOUDFLARE.md) para configuração e manutenção. O banco e o webhook do piloto já existem; atualizações não exigem recriá-los ou reimportar registros. O bot local deve permanecer parado enquanto o webhook estiver ativo.
+Siga [CLOUDFLARE.md](docs/infraestrutura/CLOUDFLARE.md) para configuração e manutenção. As atualizações usam o banco e o webhook configurados. O bot local deve permanecer parado enquanto o webhook estiver ativo.
 
 ## Executar localmente no Telegram
 
-Requer **Node.js 22.16 ou superior** (recomendado: 24 ou superior) e acesso à internet. O bot não precisa de dependências npm, domínio ou porta pública: usa long polling. Ele funciona enquanto este processo estiver ligado.
+Requer **Node.js 22.16 ou superior** (recomendado: 24 ou superior) e acesso à internet. O bot usa os pacotes locais instalados por `npm ci` e não exige domínio ou porta pública: usa long polling. Ele funciona enquanto este processo estiver ligado.
 
 ### 1. Criar o bot
 
@@ -161,7 +175,7 @@ Use **Editar** abaixo do registro e envie a mensagem completa, por exemplo `pão
 | `/desfazer` | Apaga o último registro criado por você |
 | `/cancelar` | Cancela a pergunta ou edição pendente |
 
-Também aceita a consulta `quanto gastei hoje?`. **Comportamento atual:** `/mes` e o site somam as parcelas dos respectivos meses. `/hoje` e `/resumo` usam os valores integrais das compras/receitas cuja data é hoje. A primeira parcela começa no mês da compra por padrão; no site, é possível ajustar o mês inicial. Edição no site atua na compra inteira, incluindo meses anteriores; consulte [as decisões do projeto](docs/DECISOES.md). Não representam saldo bancário nem fechamento de fatura. O cronograma de parcelas é calculado e salvo, com centavos distribuídos para preservar o total.
+Também aceita a consulta `quanto gastei hoje?`. **Comportamento atual:** `/mes` e o site somam as parcelas dos respectivos meses. `/hoje` e `/resumo` usam os valores integrais das compras/receitas cuja data é hoje. A primeira parcela começa no mês da compra por padrão; no site, é possível ajustar o mês inicial. Edição no site atua na compra inteira, incluindo meses anteriores; consulte [as regras do bot e dos registros](docs/produto/BOT.md#valores-e-parcelas). Não representam saldo bancário nem fechamento de fatura. O cronograma de parcelas é calculado e salvo, com centavos distribuídos para preservar o total.
 
 ### Dados e funcionamento
 
@@ -169,7 +183,7 @@ Também aceita a consulta `quanto gastei hoje?`. **Comportamento atual:** `/mes`
 - Cursor de atualização, alterações financeiras e respostas pendentes são persistidos em uma transação SQLite. Reenvios do mesmo `update_id` não duplicam o lançamento.
 - Respostas que falham por rede ou limite de uso ficam na fila para nova tentativa. Uma confirmação pode aparecer duas vezes se o processo cair após enviá-la e antes de confirmar sua entrega localmente; o lançamento financeiro continua único.
 - Conversas de grupo são ignoradas. Áudios, imagens, transferências, pagamentos de fatura e lembretes automáticos ainda não estão disponíveis.
-- Use uma única instância do processo por bot e banco. O processo local precisa ficar ligado durante o teste. O piloto publicado já recebe mensagens por webhook na Cloudflare, sem manter esse processo local ativo.
+- Use uma única instância do processo por bot e banco. O processo local precisa ficar ligado durante o teste. O bot publicado recebe mensagens por webhook na Cloudflare, sem manter esse processo local ativo.
 - Para backup local consistente, pare o bot com Ctrl+C antes de copiar o arquivo SQLite. O banco contém seus dados financeiros em texto legível pelo processo e por quem tem acesso ao arquivo.
 
 ### Se não conectar
@@ -200,4 +214,4 @@ Os testes cobrem interpretação de valores e parcelas, persistência após rein
 
 ## Consistência dos lançamentos
 
-A busca não diferencia acentos/maiúsculas e pesquisa todas as parcelas. A primeira consulta pode preparar índices antigos em lotes, sem mostrar totais parciais. Alterações concorrentes entre bot e site pedem revisão da versão atual. Reenvios de edição/exclusão usam chave idempotente; em rede incerta, o site oferece verificar o resultado antes de reenviar. Uma troca de conta encerra editores e limpa consultas da conta anterior. A importação só avança a versão do histórico quando adiciona compras novas e preserva perguntas já pendentes.
+A busca não diferencia acentos/maiúsculas e pesquisa todas as parcelas. As consultas preparam projeções ausentes em lotes, sem mostrar totais parciais. Alterações concorrentes entre bot e site pedem revisão da versão atual. Reenvios de edição/exclusão usam chave idempotente; em rede incerta, o site oferece verificar o resultado antes de reenviar. Uma troca de conta encerra editores e limpa consultas da conta anterior. A importação só avança a versão do histórico quando adiciona compras novas e preserva perguntas já pendentes.

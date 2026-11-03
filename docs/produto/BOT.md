@@ -2,21 +2,26 @@
 
 - Nome: **Zelumi**.
 - Username: **@zelumi_bot**.
-- ID: `9056845961`.
 - Site: https://usezelumi.vercel.app.
-- Produção: webhook e Cloudflare D1; token e segredo ficam somente no servidor.
-- SQLite local padrão: `data/zelumi.sqlite`, separado do D1 e inicialmente vazio.
+- Produção: webhook em Cloudflare Workers e armazenamento D1.
+- Desenvolvimento local: long polling e SQLite em `data/zelumi.sqlite`.
 
-A integração atual já foi validada com login real e consulta `/hoje`. Não é necessário repetir a troca de bot. As credenciais, bancos e notas da transição concluída foram preservados em backup privado externo ao projeto.
+## Acesso e registros
 
-## Proteção dos dados
+O cadastro é aberto, com identificação pelo ID numérico do Telegram e isolamento dos registros por usuário. O site usa a mesma identidade e acessa os lançamentos por API autenticada. Token do bot e segredo do webhook ficam no servidor.
 
-Manter a verificação de identidade do bot e a migração `0004_bot_transition.sql`: impedem que uma configuração incompatível processe mensagens ou acesse dados. São proteções permanentes, sem dependência de um bot anterior específico.
+As mensagens são interpretadas por regras locais, sem IA. Categorias são compartilhadas pelo bot e pelo painel; consultar [CATEGORIAS.md](CATEGORIAS.md). A ajuda (`/ajuda`, `/start` e `/help`) fornece exemplos e o botão **Abrir meu painel**. Os demais comandos e formatos de mensagem estão no [README](../../README.md#comandos).
 
-Não iniciar o processo local com o token de produção enquanto seu webhook estiver ativo. Para desenvolver o site, usar `npm run dev`, que fornece conta e registros de demonstração isolados. Um bot de desenvolvimento separado precisa de token e banco próprios.
+## Valores e parcelas
 
-## Manutenção
+Os valores são armazenados em centavos. `/mes` e a Visão geral somam as parcelas atribuídas a cada mês; `/hoje` e `/resumo` usam os valores integrais pela data da compra. O resultado é receitas menos despesas, não saldo bancário.
 
-Seguir [CLOUDFLARE.md](../infraestrutura/CLOUDFLARE.md) para publicar e verificar a configuração. Um rollback deve preservar a compatibilidade entre token, username e identidade vinculada ao D1. Não restaurar um dump sobre lançamentos posteriores nem apagar tabelas para reverter código.
+A primeira parcela começa no mês da compra por padrão; o painel permite ajustar o mês inicial. A distribuição preserva a soma exata dos centavos. Edição e exclusão no painel afetam a compra inteira e todas as suas parcelas. O bot edita pela mensagem completa, preservando a data quando nenhuma outra é informada. Não há fechamento ou vencimento de fatura.
 
-A atualização dos nomes dos recursos remotos segue [NOMES-INFRAESTRUTURA.md](../infraestrutura/NOMES-INFRAESTRUTURA.md).
+## Desenvolvimento e manutenção
+
+Não executar long polling com o token de um bot que tenha webhook ativo. Para desenvolver o site, usar `npm run dev`, com conta fictícia e D1 isolado. Para testar um bot local, usar token e banco próprios.
+
+Preservar a verificação de identidade vinculada ao D1 e todos os arquivos SQL em `apps/api/migrations/`. A configuração de token e username precisa corresponder à identidade do bot vinculada ao banco.
+
+Seguir [CLOUDFLARE.md](../infraestrutura/CLOUDFLARE.md) para publicar e verificar a configuração. Ao restaurar código, preservar a compatibilidade entre token, username e identidade vinculada ao D1; não sobrescrever lançamentos com um dump nem apagar tabelas para reverter código.

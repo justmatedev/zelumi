@@ -1,17 +1,15 @@
 # Categorias prontas
 
-Desenho aprovado em 02/11/2026; implementação local, ainda sem publicação.
-
-## Objetivo
-
-Oferecer categorias prontas mais completas e melhorar a classificação automática das mensagens do Telegram. O usuário escolheu ampliar a lista compartilhada, em vez de criar categorias personalizadas.
+O bot, a API e o painel compartilham 13 categorias de despesas e a categoria Receitas. A lista é fixa; não há cadastro de categorias personalizadas.
 
 ## Categorias
 
-Alimentação, Transporte, Casa e Saúde continuam disponíveis, com mais termos reconhecidos. Outros reúne descrições sem correspondência ou com conflito entre categorias. As categorias adicionais são:
-
 | Categoria | Exemplos de reconhecimento |
 | --- | --- |
+| Alimentação | mercado, padaria, Uber Eats |
+| Transporte | Uber, táxi, ônibus |
+| Casa | aluguel, conta de água, energia elétrica |
+| Saúde | farmácia, médico, plano de saúde |
 | Educação | faculdade, escola, curso, material escolar |
 | Lazer | cinema, show, teatro, jogos |
 | Compras | roupas, calçados, notebook, celular |
@@ -20,8 +18,9 @@ Alimentação, Transporte, Casa e Saúde continuam disponíveis, com mais termos
 | Pets | veterinário, pet shop, ração |
 | Viagens | passagem aérea, hotel, hospedagem |
 | Impostos e taxas | IPTU, IPVA, imposto de renda, tarifa bancária |
+| Outros | Sem correspondência ou com conflito entre categorias |
 
-São 13 categorias de despesas e a categoria Receitas, que continua reunindo as entradas.
+Receitas reúne as entradas.
 
 ## Comportamento
 
@@ -30,15 +29,10 @@ São 13 categorias de despesas e a categoria Receitas, que continua reunindo as 
 - Expressões específicas são reconhecidas antes dos termos gerais: Uber Eats → Alimentação; ração para cachorro → Pets; material escolar → Educação; plano de saúde → Saúde; seguro viagem → Viagens; assinatura de jogos → Assinaturas.
 - Os termos internos dessas expressões não geram outra classificação, mas outras despesas na mesma descrição continuam sendo consideradas. Uber Eats e táxi → Outros; mercado e farmácia → Outros; mercado e padaria → Alimentação.
 - Sem correspondência reconhecida, o lançamento fica em Outros. Marcas ambíguas como Amazon ou Google isoladamente não determinam a categoria.
-- Novos lançamentos e mensagens reenviadas para edição no bot passam pelas regras novas. Registros salvos mantêm sua categoria até uma edição explícita; editar apenas o nome no painel mantém a categoria escolhida.
-- Todas as novas categorias aparecem nos filtros e no editor existentes.
+- Novos lançamentos e mensagens reenviadas para edição no bot passam pelas regras do catálogo. Registros salvos mantêm sua categoria até uma edição explícita; editar apenas o nome no painel mantém a categoria escolhida.
+- Todas as categorias aparecem nos filtros e no editor do painel.
 
-## Alternativas consideradas
-
-1. Ampliar a lista pronta: escolhida pelo usuário; mantém o fluxo simples e permite classificação consistente.
-2. Categorias personalizadas: permite organização individual, mas exige cadastro, persistência por conta e tratamento de renomeação/exclusão; fora desta entrega.
-
-A implementação usa regras locais, sem serviço de IA ou dependências novas. Não inclui subcategorias, aprendizagem com correções ou recategorização em massa.
+A classificação usa regras locais, sem IA. Não há subcategorias, aprendizagem com correções ou recategorização em massa.
 
 ## Exemplos no bot
 

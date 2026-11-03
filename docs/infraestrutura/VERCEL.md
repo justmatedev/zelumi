@@ -1,66 +1,42 @@
-# Site na Vercel e backend na Cloudflare
+# Site na Vercel
 
-Endereço escolhido: **https://usezelumi.vercel.app**. O projeto Vercel já está conectado ao GitHub. A configuração remota conhecida ainda usa `web` como Root Directory; a reestruturação local exige mudar para `apps/web` antes da próxima publicação. O Next.js continua gerando arquivos estáticos; não é necessário migrar o D1, o webhook ou os segredos do Telegram.
+## Configuração
 
-## Implementação e validação
+| Campo | Valor |
+| --- | --- |
+| Projeto | `zelumi` |
+| Site | `https://usezelumi.vercel.app` |
+| Root Directory | `apps/web` |
+| Instalação | `cd ../.. && npm ci` |
+| Build | `cd ../.. && npm run web:build` |
+| Saída | `out/`, relativa à aplicação |
+| Backend | `https://zelumi-bot.zelumi.workers.dev` |
 
-Registro da configuração e publicações anteriores. A mudança de Root Directory exigida pela reestruturação permanece pendente, conforme a seção de publicação abaixo.
+Habilitar o acesso às fontes fora da Root Directory no build: o site importa `@zelumi/finance` de `packages/finance/` e usa o lockfile da raiz. A configuração de instalação, build, rotas e cabeçalhos está em [apps/web/vercel.json](../../apps/web/vercel.json).
 
-- [x] Configurar `apps/web/vercel.json` para servir `out/`, encaminhar somente `/auth` e `/api` ao Worker e preservar cookies, métodos, corpos e parâmetros. Não adicionar redirecionamentos que mudem as rotas da API ou o arquivo do widget.
-- [x] Aplicar cabeçalhos de segurança na Vercel, com CSP própria para o documento isolado do widget. Desativar cache das respostas autenticadas.
-- [x] Separar os visitantes no limite de tentativas de login por trás do proxy. Confiar em `X-Real-IP` apenas quando o proxy apresentar um segredo próprio, sem reutilizar o token Telegram.
-- [x] Testar limites com visitantes distintos e cabeçalhos forjados; testar login/sessão/logout com origem Vercel e destino Worker. Rodar backend, interface, tipos, build/export e dry-run.
-- [x] Configurar o segredo do proxy na Vercel e na Cloudflare, publicar os arquivos e verificar o encaminhamento no endereço público.
-- [x] Atualizar a origem autorizada do Worker e vincular o domínio no BotFather ao bot definitivo `@zelumi_bot`.
-- [x] Confirmar login, dados reais e resposta do bot com o usuário.
+O site usa exportação estática do Next.js. `framework: null` mantém a entrega estática com as rotas explícitas do projeto. Os arquivos finais ficam em `apps/web/out/`.
 
-## Configuração da Vercel
+## Proxy e autenticação
 
-Usar o projeto existente `zelumi`, sem criar outro. Root Directory desejada: `apps/web` (ajuste remoto pendente). Habilitar “Include source files outside of the Root Directory in the Build Step”, pois o site usa `@zelumi/finance` em `packages/finance/`. O arquivo `apps/web/vercel.json` define instalação, build e saída estática, além das rotas e cabeçalhos.
+As rotas `/auth` e `/api` são encaminhadas ao Worker, preservando cookies, métodos, corpos e parâmetros. Respostas autenticadas usam `no-store`; assets estáticos recebem os cabeçalhos definidos na configuração.
 
-O domínio principal é `usezelumi.vercel.app`. Os endereços temporários de preview não são origens autorizadas para login ou edição em produção.
+`VERCEL_PROXY_SECRET` deve existir nas variáveis privadas da Vercel e ter o mesmo valor no Worker. Essa chave identifica o proxy ao separar os limites de login por visitante. Não usar prefixo `NEXT_PUBLIC_`. Token Telegram e segredo do webhook pertencem ao backend.
 
-`framework: null` seleciona a entrega estática da Vercel: o build continua sendo Next.js. As rotas explícitas preservam `/telegram-widget.html` e os caminhos sem barra final da API, sem normalização automática do preset Next.js.
+A origem autorizada do Worker é `https://usezelumi.vercel.app`. O domínio informado ao BotFather para `@zelumi_bot` é `usezelumi.vercel.app`. Endereços de preview não são origens autorizadas para login ou edição em produção.
 
-Na implementação local do botão próprio, `/telegram-widget.html` é uma ponte oculta para o SDK legado, sem widget visual. Sua CSP permite script de `telegram.org` e conexão a `oauth.telegram.org`, sem `unsafe-eval`; a CSP principal não carrega esse SDK. Publicar frontend e Worker com `GET /auth/telegram/config` compatíveis antes de conferir o login real. A configuração de domínio do bot continua a mesma.
+O arquivo `/telegram-widget.html` é uma ponte isolada para a autorização Telegram. Sua CSP permite o script de `telegram.org` e a conexão com `oauth.telegram.org`; a página principal não carrega esse SDK. Preservar a rota do widget sem normalizações que alterem seu endereço.
 
-Adicionar `VERCEL_PROXY_SECRET` nas variáveis de ambiente do projeto Vercel. O mesmo valor deve existir como secret no Worker. É um valor aleatório independente, usado somente para identificar o proxy ao separar os limites de login. Nunca usar prefixo `NEXT_PUBLIC_`. Token Telegram e segredo do webhook ficam exclusivamente na Cloudflare e no `.env` local ignorado.
+## Publicação e verificação
 
-## Publicação após a reestruturação
+A integração Git publica o frontend ao atualizar a branch conectada. Antes de enviar código, executar na raiz:
 
-A reorganização local não publicou o site nem mudou o projeto remoto. Antes de integrar à branch que dispara deploy, ajustar a Root Directory para `apps/web` e permitir fontes externas. O `vercel.json` executa `cd ../.. && npm ci` na instalação, `cd ../.. && npm run web:build` no build e serve `out/` relativo à aplicação. Validar um preview sem ampliar as origens de login permitidas.
+```sh
+npm run check
+npm run cf:check
+```
 
-Para retornar à revisão anterior, restaurar também a Root Directory `web`. Manter domínio, proxy, segredos e recursos existentes. Referências oficiais: [monorepositórios](https://vercel.com/docs/monorepos) e [acesso fora da raiz](https://vercel.com/docs/monorepos/monorepo-faq).
+Um preview permite conferir páginas, fontes, marca, widget e encaminhamento das respostas anônimas. O login real deve ser conferido no domínio autorizado, sem ampliar a lista de origens para testar um preview.
 
-## Troca do login
+Depois do deploy, verificar o estado Ready na Vercel, entrar pelo Telegram e conferir Perfil, lançamentos e totais. Usar um lançamento de teste para conferir edição e exclusão. `/hoje` e `/mes` validam a operação do bot; `/mes` deve ser consistente com as parcelas do mês no site.
 
-Depois de validar a publicação e a API no novo endereço:
-
-1. Definir `APP_ORIGIN` do Worker como `https://usezelumi.vercel.app` e publicar o Worker existente.
-2. No BotFather, enviar `/setdomain`, selecionar `@zelumi_bot` e informar `usezelumi.vercel.app`.
-3. Entrar novamente pelo novo domínio. Cookies anteriores pertencem ao endereço antigo; a nova sessão encontra os mesmos registros pelo ID Telegram.
-4. Conferir Perfil, totais com `/mes`, edição/exclusão de um lançamento de teste e resposta de `/hoje` com o bot local desligado.
-
-O webhook continua no Worker configurado em `apps/api/wrangler.jsonc`, na rota `/telegram/webhook`. Não recriar o banco, reimportar registros ou trocar o token do bot durante esta migração. O bot definitivo é `@zelumi_bot`, com nome Zelumi. A transição está registrada em [BOT.md](../produto/BOT.md); a foto pode ser ajustada separadamente.
-
-## Estado da publicação — 02/11/2026
-
-O usuário confirmou a chave do proxy na Vercel (Production e Preview). A mesma chave foi cadastrada como secret no Worker, sem substituir os segredos existentes. O commit `1955e8d` foi enviado à `main`; a Vercel confirmou sucesso na [publicação](https://vercel.com/justmateteam/zelumi/CJXLoLQMsyZX2Ayn7nppBgyV6cUv).
-
-Worker atualizado para `APP_ORIGIN=https://usezelumi.vercel.app`, versão `6a9b984d-a3c0-45f3-a645-41f983c9654e`. A versão financeira anterior era `d3edc342-66e2-43fa-b1b1-05d3578bab11`; nenhuma migração de banco foi executada nesta troca.
-
-Verificações: 69 testes de backend/D1, 15 de interface, tipos, build/export e dry-run passaram. Em produção, as quatro páginas e o documento do widget retornaram 200; a API anônima retornou JSON 401 sem cache; rota desconhecida retornou 404 e método incorreto 405. O início do login pelo domínio Vercel retornou 200 com o bot correto e cookie HttpOnly/Secure/SameSite=Lax preservado. Origens externas, preview e endereço antigo retornaram 403. Saúde do Worker 200 e webhook sem segredo 401. A revisão independente não encontrou problemas críticos ou importantes.
-
-Atualização posterior: o usuário criou o bot definitivo `@zelumi_bot` e confirmou a vinculação de `usezelumi.vercel.app` a ele no BotFather. O Worker foi atualizado para esse bot, versão `5994e736-d2c5-4158-b527-3a22bee0c81b`, preservando os 7 lançamentos e perfis. A troca está registrada em [BOT.md](../produto/BOT.md).
-
-Validação externa concluída: o usuário confirmou resposta do novo `@zelumi_bot` a `/hoje` com o programa local desligado, além de novo login pelo Telegram com Perfil e lançamentos anteriores corretos em `https://usezelumi.vercel.app`.
-
-## Retorno ao endereço anterior
-
-Se a integração não passar nas verificações, manter/restaurar `APP_ORIGIN` para o endereço do Worker e o mesmo domínio no BotFather. O Worker preserva os assets anteriores como alternativa; a troca da hospedagem do site não altera as tabelas financeiras. Um rollback da Vercel não troca automaticamente a configuração do Worker ou do Telegram.
-
-## Referências
-
-- [Rewrites para origens externas](https://vercel.com/docs/routing/rewrites)
-- [Configuração de rotas e cabeçalhos](https://vercel.com/docs/project-configuration/vercel-json)
-- [Login Widget clássico do Telegram](https://core.telegram.org/widgets/login-legacy)
+O Worker é publicado separadamente, conforme [CLOUDFLARE.md](CLOUDFLARE.md). Alterações nos contratos de autenticação ou API exigem compatibilidade entre frontend e backend. Restaurar uma revisão do site não altera o Worker, o D1, o webhook ou as variáveis do outro serviço.

@@ -1,9 +1,5 @@
 # Guia visual do Zelumi
 
-Versão 1.2 · atualizada em 02/11/2026 com os controles próprios do painel, mantendo a identidade consolidada na auditoria.
-
-O escopo, os achados e as limitações da revisão estão no [relatório de auditoria visual](AUDITORIA-VISUAL.md).
-
 Este é o guia de referência para criar e alterar interfaces do Zelumi. Ele reúne a identidade da marca e os padrões atuais do produto. Preserva a direção escolhida: clareza financeira com uma aparência acolhedora, organizada e próxima.
 
 ## 1. Onde está cada definição
@@ -14,10 +10,10 @@ Este é o guia de referência para criar e alterar interfaces do Zelumi. Ele re�
 | [tokens.css](../apps/web/app/tokens.css) | Valores compartilhados de cor, tipografia, espaço e dimensões |
 | [globals.css](../apps/web/app/globals.css) | Estilos e adaptações de cada componente |
 | [Componentes da interface](../apps/web/components/ui) | Implementação reutilizável de botões e cards |
-| [Decisões do projeto](../docs/DECISOES.md) | Histórico das aprovações e decisões de produto |
-| [Arquivos da marca](zelumi/conceitos) | Logos e símbolos escolhidos |
+| [Arquitetura](desenvolvimento/ARQUITETURA.md) | Organização das aplicações e pacotes |
+| [Arquivos da marca](marca) | Logos e símbolos escolhidos |
 
-Os tokens contêm os valores executados pelo site; o guia explica seu uso. Ao mudar um padrão, atualizar os dois na mesma alteração. Se houver divergência, conferir a última decisão aprovada e reconciliar os arquivos antes de criar outra variação. O histórico não substitui este guia para construir telas novas.
+Os tokens contêm os valores executados pelo site; o guia explica seu uso. Ao mudar um padrão, atualizar os dois na mesma alteração. Se houver divergência, reconciliar guia, tokens e implementação antes de criar outra variação.
 
 ## 2. Personalidade e marca
 
@@ -31,14 +27,14 @@ A marca escolhida é **Conversa**: balão com a letra Z, acompanhado de **zelumi
 
 | Aplicação | Arquivo/componente |
 | --- | --- |
-| Exportação original clara | [Logo claro](zelumi/conceitos/02-conversa-light.svg) |
-| Exportação original escura | [Logo escuro](zelumi/conceitos/02-conversa-dark.svg) |
-| Símbolo isolado | [Claro](zelumi/conceitos/02-conversa-simbolo-light.svg) / [Escuro](zelumi/conceitos/02-conversa-simbolo-dark.svg) |
+| Exportação original clara | [Logo claro](marca/02-conversa-light.svg) |
+| Exportação original escura | [Logo escuro](marca/02-conversa-dark.svg) |
+| Símbolo isolado | [Claro](marca/02-conversa-simbolo-light.svg) / [Escuro](marca/02-conversa-simbolo-dark.svg) |
 | Marca horizontal e símbolo no site | [Brand e Symbol](../apps/web/components/brand.tsx) |
 | Favicon | [Símbolo SVG](../apps/web/public/brand/simbolo.svg) |
-| Telegram | [Avatar claro](zelumi/telegram/avatar-1024.png) / [Avatar escuro](zelumi/telegram/avatar-dark-1024.png) |
+| Telegram | Avatar derivado do símbolo escolhido, respeitando as cores e proporções da marca |
 
-No site, a marca horizontal segue a variante monocromática de `Brand`: símbolo original em SVG e nome em Manrope, ambos na cor `--accent`. Os arquivos de conceito preservam a exportação original, que também contém lettering bicolor. A variante em uso no produto é a referência para as telas; não substituir uma pela outra sem atualizar esta regra. O símbolo não foi redesenhado nesta revisão.
+No site, a marca horizontal segue a variante monocromática de `Brand`: símbolo original em SVG e nome em Manrope, ambos na cor `--accent`. Os arquivos de conceito preservam a exportação original, que também contém lettering bicolor. A variante em uso no produto é a referência para as telas; não substituir uma pela outra sem atualizar esta regra.
 
 Usar a marca horizontal na entrada e na navegação expandida. Usar o símbolo isolado na barra recolhida, favicon e avatar. Não distorcer, acrescentar efeitos, trocar a fonte ou usar outra cor principal. A composição ilustrativa de conversa da entrada conserva seus próprios detalhes de balão.
 
@@ -77,7 +73,7 @@ A sequência atual é `--chart-1` a `--chart-5`: `#B94B24`, `#6C8067`, `#D6A663`
 
 ## 4. Tipografia e hierarquia
 
-**Manrope:** marca e títulos. **Inter:** textos, controles, informações de apoio e valores financeiros. Usar as [fontes locais e licenças](zelumi/fonts), carregadas no [layout do site](../apps/web/app/layout.tsx).
+**Manrope:** marca e títulos. **Inter:** textos, controles, informações de apoio e valores financeiros. Usar as [fontes locais e licenças](../apps/web/app/fonts), carregadas no [layout do site](../apps/web/app/layout.tsx).
 
 | Uso | Token | Tamanho de referência |
 | --- | --- | --- |
@@ -247,4 +243,4 @@ Antes de criar uma variação:
 
 Para alterações de implementação, executar os testes apropriados e o build. A suíte da interface é `npm run web:test`; a validação de tipos, testes e exportação pode ser feita com `npm run web:check`. Para revisão manual, usar `npm run dev` e conferir ao menos 320, 390, 760, 1068 e 1280 px.
 
-A auditoria removeu regras obsoletas e declarações superadas e organizou o CSS para leitura. Regras em contextos responsivos distintos continuam necessárias. Mudanças futuras devem preservar o resultado visual; não eliminar regras em massa sem comparar as telas.
+Regras em contextos responsivos distintos continuam necessárias. Preservar o resultado visual ao reorganizar CSS; não eliminar regras em massa sem comparar as telas.
