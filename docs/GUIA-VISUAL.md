@@ -135,6 +135,7 @@ Reutilizar [Button](../apps/web/components/ui/button.tsx) e [Card](../apps/web/c
 - Título e descrição formam o bloco esquerdo da página.
 - Mês e atualizar ficam agrupados e centralizados verticalmente em relação a esse bloco quando estão na mesma linha.
 - No celular os controles ficam abaixo da descrição; atualizar pode ser apenas um ícone nomeado.
+- O botão central do seletor de mês mantém 12 px de espaço horizontal entre o texto e as bordas do fundo de interação, tanto em repouso quanto no hover.
 - Indicadores apresentam rótulo, valor e observação. O valor tem a maior ênfase.
 - Despesas mostram **“Parcelas: R$ …”** e **“À vista: R$ …”** em linhas separadas.
 - Não recolocar uma faixa vazia exclusiva para atualizar entre cabeçalho e indicadores.
