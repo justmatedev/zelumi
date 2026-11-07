@@ -66,6 +66,8 @@
 
   /* Shared form controls and anchored menus. Colors follow the active theme. */
   --field-radius: var(--radius-control);
+  --field-focus-width: 2px;
+  --field-focus-offset: 2px;
   --field-surface: var(--bg);
   --field-hover-border: color-mix(in srgb, var(--accent) 55%, var(--border));
   --control-selected-bg: var(--accent-soft);

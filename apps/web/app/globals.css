@@ -2816,13 +2816,13 @@ body {
 }
 
 .purchase-search:focus-within {
-  outline: 3px solid var(--accent);
-  outline-offset: 3px;
+  outline: var(--field-focus-width) solid var(--accent);
+  outline-offset: var(--field-focus-offset);
   box-shadow: none;
 }
 
 .month-picker label:focus-within {
-  outline-width: 3px;
+  outline-width: var(--field-focus-width);
 }
 
 .nav-item.active, .button-ghost:hover, .sidebar-note a:hover {

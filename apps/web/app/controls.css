@@ -16,7 +16,7 @@
 .zelumi-input::placeholder { color: var(--muted); }
 .record-form .zelumi-input, .finance-filters .zelumi-input { border-radius: var(--field-radius); }
 .zelumi-input:hover:not(:disabled) { border-color: var(--field-hover-border); }
-.zelumi-input:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.zelumi-input:focus-visible { outline: var(--field-focus-width) solid var(--accent); outline-offset: var(--field-focus-offset); }
 .zelumi-input[aria-invalid=true] { border-color: var(--accent); }
 .zelumi-input:disabled, .zelumi-segment:has(input:disabled), .zelumi-month-grid button:disabled {
   opacity: .55;
@@ -128,12 +128,14 @@
   cursor: pointer;
 }
 .zelumi-segment input:checked + span { background: var(--control-selected-bg); color: var(--control-selected-ink); box-shadow: inset 0 0 0 1px var(--field-hover-border); }
-.zelumi-segment input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
+.zelumi-segment input:focus-visible + span { outline: var(--field-focus-width) solid var(--accent); outline-offset: var(--field-focus-offset); }
 .zelumi-number, .zelumi-money, .zelumi-date-field { position: relative; display: flex; align-items: center; min-width: 0; }
 .zelumi-number { border: 1px solid var(--border); border-radius: var(--field-radius); background: var(--field-surface); }
 .zelumi-number > .zelumi-input { border: 0; border-radius: 0; padding-inline: 0; background: transparent; text-align: center; font-variant-numeric: tabular-nums; }
 .zelumi-number > .zelumi-icon-button { width: 40px; min-width: 40px; }
 .zelumi-number:focus-within, .zelumi-money:focus-within { border-color: var(--accent); }
+.zelumi-number:has(> .zelumi-input:focus-visible) { outline: var(--field-focus-width) solid var(--accent); outline-offset: var(--field-focus-offset); }
+.zelumi-number > .zelumi-input:focus-visible { outline: none; }
 .zelumi-number:has([aria-invalid=true]) { border-color: var(--accent); }
 .record-dialog, .zelumi-popover, .zelumi-menu-options { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 .record-dialog, .mobile-drawer { overscroll-behavior: contain; }

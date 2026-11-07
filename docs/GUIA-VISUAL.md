@@ -217,7 +217,7 @@ Breakpoints em media/container queries permanecem literais no CSS: custom proper
 - Usar o conjunto **Lucide** já instalado. A marca usa seu próprio símbolo, não um ícone genérico de conversa.
 - Ícones funcionais ficam normalmente entre 15 e 21 px; fundos de ícones podem ser maiores. Não aumentar todos os ícones ao aumentar textos.
 - Ícones decorativos não precisam de nome; ações com ícone precisam.
-- Foco padrão visível de 3 px em links, botões, campos e resumos expansíveis; lançamentos usam 2 px com afastamento de 2 px. Busca e seletor de mês podem mostrar o anel no contêiner. Não remover foco sem oferecer substituição visível.
+- Foco padrão visível de 3 px em links, botões de ação e resumos expansíveis. Campos de entrada, seletores e opções segmentadas usam `--field-focus-width` de 2 px e `--field-focus-offset` de 2 px; lançamentos também usam 2 px com afastamento de 2 px. Busca pode mostrar o anel no contêiner. No campo numérico, o foco da entrada contorna o controle completo, sem outro anel no campo interno; os botões de diminuir e aumentar mantêm foco individual. Não remover foco sem oferecer substituição visível.
 - Transições atuais: cerca de 150 ms para feedback e 200 ms para a barra lateral. Respeitar `prefers-reduced-motion`.
 - Botões, linhas de lançamentos e opções de tema podem se deslocar 1 px ao interagir. Sob `prefers-reduced-motion`, esses deslocamentos ficam desativados, inclusive no hover e ao pressionar.
 - Navegação, formulários e modais precisam funcionar por teclado. Tema e cor não podem ser a única indicação de estado.
