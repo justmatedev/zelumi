@@ -2,15 +2,16 @@ import {it,expect,vi} from 'vitest';
 import {render,screen,fireEvent,waitFor,act} from '@testing-library/react';
 import {TelegramLogin} from '@/features/auth/components/telegram-login';
 const response=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status});
-const config={botId:'123',botUsername:'test_bot'},flow={botUsername:'test_bot',csrfToken:'csrf'};
-type BridgeWindow=Window&{zelumiTelegramOpenAuth?:()=>boolean};
-function message(frame:HTMLIFrameElement,type:string,user?:unknown,origin=window.location.origin){fireEvent(window,new MessageEvent('message',{origin,source:frame.contentWindow,data:{type:`zelumi.telegram.${type}`,user}}));}
+const config={botId:'123',botUsername:'test_bot'},flow={botUsername:'test_bot',csrfToken:'a'.repeat(64)};
+type BridgeWindow=Window&{zelumiTelegramOpenAuth?:(nonce:string)=>boolean};
+function message(frame:HTMLIFrameElement,type:string,user?:unknown,origin=window.location.origin){fireEvent(window,new MessageEvent('message',{origin,source:frame.contentWindow,data:{type:`zelumi.telegram.${type}`,idToken:user}}));}
 async function ready(container:HTMLElement){
  await waitFor(()=>expect(container.querySelector('iframe')).not.toBeNull());
  const frame=container.querySelector('iframe')!;(frame.contentWindow as BridgeWindow).zelumiTelegramOpenAuth=vi.fn(()=>true);message(frame,'ready');
  await waitFor(()=>expect(screen.getByRole('button',{name:'Entrar com Telegram'})).toBeEnabled());return frame;
 }
 function setup(callback=(path:string)=>Promise.resolve(response(path.endsWith('/config')?config:path.endsWith('/start')?flow:{ok:true}))){
+ vi.spyOn(crypto,'getRandomValues').mockImplementation((array:any)=>{array.fill(170);return array;});
  const fetch=vi.fn().mockImplementation(callback);vi.stubGlobal('fetch',fetch);const onSuccess=vi.fn(),view=render(<TelegramLogin onSuccess={onSuccess}/>);return {...view,fetch,onSuccess};
 }
 it('mantém botão próprio, prepara SDK sem criar fluxo e abre autorização no clique',async()=>{
@@ -18,7 +19,7 @@ it('mantém botão próprio, prepara SDK sem criar fluxo e abre autorização no
  expect(frame).toHaveAttribute('hidden');expect(frame).toHaveAttribute('aria-hidden','true');
  expect(fetch).toHaveBeenCalledOnce();expect(fetch.mock.calls[0][0]).toBe('/auth/telegram/config');
  fireEvent.click(screen.getByRole('button',{name:'Entrar com Telegram'}));
- expect((frame.contentWindow as BridgeWindow).zelumiTelegramOpenAuth).toHaveBeenCalledOnce();
+ expect((frame.contentWindow as BridgeWindow).zelumiTelegramOpenAuth).toHaveBeenCalledWith('a'.repeat(64));
  expect(screen.getByRole('button',{name:'Aguardando Telegram…'})).toHaveClass('login-button');
  await waitFor(()=>expect(fetch).toHaveBeenCalledTimes(2));expect(screen.queryByText(/botão oficial/)).not.toBeInTheDocument();
 });
@@ -26,14 +27,14 @@ it('só conclui depois da verificação do servidor e ignora retorno duplicado',
  let finish!:(r:Response)=>void;
  const {container,fetch,onSuccess}=setup(path=>path.endsWith('/callback')?new Promise<Response>(r=>{finish=r;}):Promise.resolve(response(path.endsWith('/config')?config:flow)));
  const frame=await ready(container);fireEvent.click(screen.getByRole('button',{name:'Entrar com Telegram'}));await waitFor(()=>expect(fetch).toHaveBeenCalledTimes(2));
- message(frame,'auth',{id:11,hash:'signed'});message(frame,'auth',{id:11,hash:'signed'});await waitFor(()=>expect(fetch).toHaveBeenCalledTimes(3));
- expect(fetch.mock.calls[2][1].headers['X-CSRF-Token']).toBe('csrf');expect(onSuccess).not.toHaveBeenCalled();expect(screen.getByRole('button',{name:'Confirmando acesso…'})).toBeDisabled();
+ message(frame,'auth','signed.jwt');message(frame,'auth','signed.jwt');await waitFor(()=>expect(fetch).toHaveBeenCalledTimes(3));
+ expect(fetch.mock.calls[2][1].headers['X-CSRF-Token']).toBe('a'.repeat(64));expect(JSON.parse(fetch.mock.calls[2][1].body)).toEqual({idToken:'signed.jwt'});expect(onSuccess).not.toHaveBeenCalled();expect(screen.getByRole('button',{name:'Confirmando acesso…'})).toBeDisabled();
  await act(async()=>{finish(response({ok:true}));});await waitFor(()=>expect(onSuccess).toHaveBeenCalledOnce());
 });
 it('espera o fluxo quando o Telegram responde antes da preparação do servidor',async()=>{
  let start!:(r:Response)=>void;
  const {container,fetch}=setup(path=>path.endsWith('/start')?new Promise<Response>(r=>{start=r;}):Promise.resolve(response(path.endsWith('/config')?config:{ok:true})));
- const frame=await ready(container);fireEvent.click(screen.getByRole('button',{name:'Entrar com Telegram'}));message(frame,'auth',{id:11,hash:'signed'});expect(fetch).toHaveBeenCalledTimes(2);
+ const frame=await ready(container);fireEvent.click(screen.getByRole('button',{name:'Entrar com Telegram'}));message(frame,'auth','signed.jwt');expect(fetch).toHaveBeenCalledTimes(2);
  await act(async()=>{start(response(flow));});await waitFor(()=>expect(fetch).toHaveBeenCalledTimes(3));
 });
 it('ignora mensagens sem clique, de outra janela ou de outra origem',async()=>{

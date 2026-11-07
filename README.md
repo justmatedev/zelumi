@@ -59,7 +59,7 @@ Alterações nas telas aparecem ao salvar; alterações da API são recarregadas
 
 Esse ambiente usa a configuração `apps/api/dev/wrangler.jsonc`, um token fictício e o D1 `zelumi-local-demo`, persistido em `.wrangler/local-dev/`. Não requer Telegram, conta Cloudflare nem arquivo `.env`. Os lançamentos podem ser editados/apagados e essas mudanças permanecem após reiniciar. O seed não recria dados apagados; as datas ficam no mês em que ele foi criado. O SQLite do bot, o D1 publicado e o banco usado pelo fluxo alternativo `cf:dev` são separados.
 
-O login de teste pertence a uma entrada Worker exclusiva de desenvolvimento. O build publicado continua estático e usa o login Telegram.
+O login de teste pertence a uma entrada Worker exclusiva de desenvolvimento. O build publicado continua estático e usa o login atual do Telegram, com token OIDC validado no Worker. A configuração de Allowed URLs no BotFather está no [guia da Vercel](docs/infraestrutura/VERCEL.md#proxy-e-autenticação).
 
 ### Verificações
 

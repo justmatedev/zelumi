@@ -158,7 +158,7 @@ Usar [EntryList](../apps/web/features/finance/components/entry-list.tsx) em Vis�
 
 ### Formulários, mensagens e diálogos
 
-Na entrada, o botão **Entrar com Telegram** usa o mesmo `Button` primário do Zelumi durante preparação, espera, confirmação e erro. A autorização abre na janela oficial do Telegram; o botão azul do widget não é exibido dentro da página. Exibir texto de estado em português, impedir cliques duplicados e permitir repetir após cancelar ou liberar a janela bloqueada pelo navegador. A interface externa de autorização pertence ao Telegram.
+Na entrada, o botão **Entrar com Telegram** usa o mesmo `Button` primário do Zelumi durante preparação, espera, confirmação e erro. A autorização usa o SDK atual do Telegram e abre na janela oficial para aprovação da conta; o botão azul do widget não é exibido dentro da página. Exibir texto de estado em português, impedir cliques duplicados e permitir repetir após cancelar ou liberar a janela bloqueada pelo navegador. A interface externa de autorização pertence ao Telegram.
 
 Os controles próprios ficam em [components/ui](../apps/web/components/ui) e os estilos em [controls.css](../apps/web/app/controls.css), aplicados depois das regras gerais. Reutilizar os componentes em todo o painel; evitar campos ou menus com uma aparência diferente em cada página.
 

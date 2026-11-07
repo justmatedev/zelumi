@@ -3,15 +3,14 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 import {resolve} from 'node:path';
-import {createHash,createHmac} from 'node:crypto';
+import {claims,signClaims,telegramKeys} from './helpers/telegram-oidc.mjs';
 import {createWorker} from '../apps/api/src/worker.mjs';
 
 process.env.WRANGLER_LOG_PATH=resolve('.wrangler/logs');
 process.env.WRANGLER_SEND_METRICS='false';
 const {getPlatformProxy}=await import('wrangler');
 const origin='https://test.workers.dev',token='123:fake',initial=1793617200000;
-const sign=(fields)=>({...fields,hash:createHmac('sha256',createHash('sha256').update(token).digest()).update(Object.keys(fields).sort().map(k=>`${k}=${fields[k]}`).join('\n')).digest('hex')});
-const payload=(id=11,extra={})=>sign({id,first_name:'João <>&',auth_date:initial/1000,...extra});
+const payload=(id=11,extra={})=>claims({id,...extra});
 const cookie=(res,name)=>res.headers.getSetCookie().find(v=>v.startsWith(`${name}=`))?.split(';')[0];
 
 test('sessões web com D1 local',async t=>{
@@ -20,16 +19,27 @@ test('sessões web com D1 local',async t=>{
  await migrate(db);
  let now=initial;
  const env={DB:db,TELEGRAM_BOT_TOKEN:token,TELEGRAM_WEBHOOK_SECRET:'local_test_secret_with_at_least_32_characters',APP_ORIGIN:origin,TELEGRAM_BOT_USERNAME:'test_bot'};
- const worker=createWorker({clock:()=>new Date(now),apiFactory:()=>async()=>true});
+ const worker=createWorker({clock:()=>new Date(now),apiFactory:()=>async()=>true,telegramKeys});
  const req=(path,body,options={})=>new Request(origin+path,{method:body===undefined?'GET':'POST',headers:{Origin:origin,'Content-Type':'application/json',...options.headers},...(body===undefined?{}:{body:JSON.stringify(body)}),...options, ...(options.headers?{headers:{Origin:origin,'Content-Type':'application/json',...options.headers}}:{})});
  const send=(path,body,options)=>worker.fetch(req(path,body,options),env);
  const count=async table=>(await db.prepare(`SELECT COUNT(*) n FROM ${table}`).first()).n;
  async function start(previous){const res=await send('/auth/telegram/start',{},previous?{headers:{Cookie:previous}}:undefined);assert.equal(res.status,200);return {cookie:cookie(res,'__Host-zelumi_login'),csrf:(await res.json()).csrfToken,res};}
- const callback=(flow,p=payload(),extra={})=>send('/auth/telegram/callback',{telegram:p},{headers:{Cookie:flow.cookie,'X-CSRF-Token':flow.csrf,...extra}});
+ const callback=(flow,p=payload(),extra={})=>send('/auth/telegram/callback',{idToken:typeof p==='string'?p:signClaims({...p,nonce:flow.csrf})},{headers:{Cookie:flow.cookie,'X-CSRF-Token':flow.csrf,...extra}});
  const reset=async()=>{for(const table of ['web_sessions','web_users','web_auth_accepts','web_auth_flows','web_auth_limits'])await db.prepare(`DELETE FROM ${table}`).run();now=initial;};
  await t.test('configuração pública informa apenas identificação do bot sem criar tentativa',async()=>{
   const res=await send('/auth/telegram/config');assert.equal(res.status,200);assert.deepEqual(await res.json(),{botId:'123',botUsername:'test_bot'});
   assert.equal(res.headers.get('set-cookie'),null);assert.equal(await count('web_auth_flows'),0);assert.equal(await count('web_auth_limits'),0);assert.equal((await send('/auth/telegram/config',{})).status,405);
+ });
+ await t.test('nonce da tentativa vincula JWT ao fluxo e payload legado é recusado',async()=>{
+  await reset();const nonce='a'.repeat(64);
+  for(const value of ['',null,{},'x'.repeat(64),[nonce]])assert.equal((await send('/auth/telegram/start',{nonce:value})).status,400);
+  const begun=await send('/auth/telegram/start',{nonce});assert.equal(begun.status,200);
+  const f={cookie:cookie(begun,'__Host-zelumi_login'),csrf:(await begun.json()).csrfToken};assert.equal(f.csrf,nonce);
+  assert.equal((await send('/auth/telegram/callback',{telegram:{id:11}},{headers:{Cookie:f.cookie,'X-CSRF-Token':nonce}})).status,400);
+  assert.equal((await callback(f,signClaims({...payload(),nonce:'b'.repeat(64)}))).status,401);
+  assert.equal(await count('web_users'),0);
+  assert.equal((await callback(f)).status,200);
+  await reset();
  });
  await t.test('login real cria perfil, cookie protegido, sessão e logout revogável',async()=>{
   const flow=await start();assert.match(flow.res.headers.get('set-cookie'),/Secure/);assert.match(flow.res.headers.get('set-cookie'),/HttpOnly/);
@@ -57,7 +67,7 @@ test('sessões web com D1 local',async t=>{
  await t.test('callbacks concorrentes e replay entre fluxos criam só uma sessão',async()=>{
   await reset();const f=await start();const results=await Promise.all([callback(f),callback(f)]);
   assert.deepEqual(results.map(r=>r.status).sort(),[200,401]);assert.equal(await count('web_sessions'),1);
-  assert.equal((await callback(await start())).status,401);assert.equal(await count('web_sessions'),1);
+  assert.equal((await callback(await start(),signClaims({...payload(),nonce:f.csrf}))).status,401);assert.equal(await count('web_sessions'),1);
  });
  await t.test('fluxo velho não autentica nem apaga o cookie de outra aba',async()=>{
   await reset();const old=await start(),fresh=await start(old.cookie);
@@ -66,8 +76,8 @@ test('sessões web com D1 local',async t=>{
  });
  await t.test('expiração e assinaturas inválidas não criam conta ou sessão',async()=>{
   await reset();const f=await start();
-  assert.equal((await callback(f,{...payload(),first_name:'alterado'})).status,401);
-  now+=601000;assert.equal((await callback(f,payload(11,{auth_date:Math.floor(now/1000)}))).status,401);assert.equal(await count('web_users'),0);
+  assert.equal((await callback(f,signClaims({...payload(),nonce:f.csrf}).slice(0,-20)+'x'.repeat(20))).status,401);
+  now+=601000;assert.equal((await callback(f,payload(11,{iat:Math.floor(now/1000)}))).status,401);assert.equal(await count('web_users'),0);
   await reset();const accepted=await callback(await start());const session=cookie(accepted,'__Host-zelumi_session');now+=7*86400000;
   assert.equal((await send('/api/session',undefined,{headers:{Cookie:session}})).status,401);
  });
@@ -105,7 +115,7 @@ test('sessões web com D1 local',async t=>{
   const through=(path,data,headers={})=>worker.fetch(new Request('https://backend.workers.dev'+path,{method:data===undefined?'GET':'POST',headers:{Origin:site,'Content-Type':'application/json',...headers},...(data===undefined?{}:{body:JSON.stringify(data)})}),proxyEnv);
   const begin=await through('/auth/telegram/start',{});assert.equal(begin.status,200);
   const loginCookie=cookie(begin,'__Host-zelumi_login'),csrf=(await begin.json()).csrfToken;
-  const accepted=await through('/auth/telegram/callback',{telegram:payload()},{Cookie:loginCookie,'X-CSRF-Token':csrf});assert.equal(accepted.status,200);
+  const accepted=await through('/auth/telegram/callback',{idToken:signClaims({...payload(),nonce:csrf})},{Cookie:loginCookie,'X-CSRF-Token':csrf});assert.equal(accepted.status,200);
   assert.equal(accepted.headers.getSetCookie().length,2);assert.doesNotMatch(accepted.headers.getSetCookie().join(' '),/Domain=/i);
   const session=cookie(accepted,'__Host-zelumi_session');
   const info=await through('/api/session',undefined,{Cookie:session});assert.equal(info.status,200);assert.equal(info.headers.get('cache-control'),'no-store');
@@ -116,7 +126,7 @@ test('sessões web com D1 local',async t=>{
  });
  await t.test('mesmo ID reutiliza perfil; outro ID e mesmo nome são outra conta',async()=>{
   await reset();await db.prepare("INSERT INTO cloud_records(id,owner,body) VALUES('existing','11',?)").bind(JSON.stringify({date:'2026-11-02',type:'despesa',amount:1000})).run();
-  await callback(await start());await callback(await start(),payload(22));await callback(await start(),payload(11,{username:'novo'}));
+  await callback(await start());await callback(await start(),payload(22));await callback(await start(),payload(11,{preferred_username:'novo'}));
   assert.equal(await count('web_users'),2);assert.equal((await db.prepare("SELECT username FROM web_users WHERE owner='11'").first()).username,'novo');
   assert.equal((await db.prepare("SELECT owner FROM cloud_records WHERE id='existing'").first()).owner,'11');
  });

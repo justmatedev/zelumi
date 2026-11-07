@@ -1,5 +1,5 @@
 import {AuthStore} from './store.mjs';
-import {verifyTelegramPayload,InvalidTelegramPayload} from './telegram.mjs';
+import {verifyTelegramIdToken,InvalidTelegramPayload} from './telegram.mjs';
 import {randomToken,hashToken,deriveCsrf,constantTimeEqual} from './crypto.mjs';
 import {loginNetwork} from './network.mjs';
 import {assertBotBinding} from '../telegram/bot-binding.mjs';
@@ -7,7 +7,7 @@ import {assertBotBinding} from '../telegram/bot-binding.mjs';
 const LOGIN='__Host-zelumi_login',SESSION='__Host-zelumi_session',WEEK=7*86400000;
 const routes=new Map([['/auth/telegram/config','GET'],['/auth/telegram/start','POST'],['/auth/telegram/callback','POST'],['/api/session','GET'],['/api/session/logout','POST']]);
 import {HttpError,json,cookie,setCookie,config,body} from './http.mjs';
-export async function handleAuth(request,env,{nowMs}) {
+export async function handleAuth(request,env,{nowMs,telegramKeys}) {
  const path=new URL(request.url).pathname;
  if(path==='/api/finance'||path.startsWith('/api/finance/'))return null;
  if(!['/auth','/api'].some(p=>path===p||path.startsWith(p+'/')))return null;
@@ -24,21 +24,23 @@ export async function handleAuth(request,env,{nowMs}) {
    return json({botId,botUsername:env.TELEGRAM_BOT_USERNAME});
   }
   if(path==='/auth/telegram/start') {
-   if(Object.keys(data).length)throw new HttpError(400,'Corpo inválido.');
-   const flow=randomToken(),csrf=randomToken(),previous=cookie(request,LOGIN);
+   if(Object.keys(data).some(key=>key!=='nonce')||('nonce' in data&&(typeof data.nonce!=='string'||!/^[a-f0-9]{64}$/.test(data.nonce))))throw new HttpError(400,'Corpo inválido.');
+   // The browser creates a 256-bit nonce synchronously to preserve the popup
+   // click gesture. Its hash binds both CSRF and the signed OIDC nonce to D1.
+   const flow=randomToken(),csrf=data.nonce??randomToken(),previous=cookie(request,LOGIN);
    const network=loginNetwork(request,env);
    const result=await store.startFlow({flowHash:await hashToken(flow),csrfHash:await hashToken(csrf),expiresAt:nowMs+600000,nowMs,networkKey:await deriveCsrf(network,env.TELEGRAM_BOT_TOKEN,'network'),previousFlowHash:previous?await hashToken(previous):null});
    if(!result.allowed)return json({error:'Muitas tentativas. Aguarde alguns minutos.'},429,{'Retry-After':String(result.retryAfter)});
    return json({botUsername:env.TELEGRAM_BOT_USERNAME,csrfToken:csrf},200,{'Set-Cookie':setCookie(LOGIN,flow,600)});
   }
   if(path==='/auth/telegram/callback') {
-   if(Object.keys(data).length!==1||!Object.hasOwn(data,'telegram'))throw new HttpError(400,'Corpo inválido.');
+   if(Object.keys(data).length!==1||!Object.hasOwn(data,'idToken'))throw new HttpError(400,'Corpo inválido.');
    const flow=cookie(request,LOGIN),csrf=request.headers.get('X-CSRF-Token');
    if(!flow||! /^[a-f0-9]{64}$/.test(csrf||''))throw new HttpError(403,'Fluxo de login inválido.');
    const flowHash=await hashToken(flow),csrfHash=await hashToken(csrf),pending=await store.getFlow(flowHash);
    if(!pending||pending.expires_at<=nowMs)throw new HttpError(401,'Login expirado. Tente novamente.');
    if(!constantTimeEqual(csrfHash,pending.csrf_hash))throw new HttpError(403,'Fluxo de login inválido.');
-   const profile=await verifyTelegramPayload(data.telegram,{botToken:env.TELEGRAM_BOT_TOKEN,nowMs});
+   const profile=await verifyTelegramIdToken(data.idToken,{botId:env.TELEGRAM_BOT_TOKEN.split(':')[0],nonce:csrf,nowMs,keys:telegramKeys});
    const session=randomToken();
    const accepted=await store.acceptLogin({flowHash,csrfHash,profile,payloadHash:profile.payloadHash,sessionHash:await hashToken(session),sessionExpiresAt:nowMs+WEEK,nowMs,attemptId:randomToken()});
    if(!accepted)throw new HttpError(401,'Autorização já utilizada. Tente novamente.');

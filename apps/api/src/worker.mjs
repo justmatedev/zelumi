@@ -33,11 +33,11 @@ async function readUpdate(request) {
   if(m?.text!==undefined&&typeof m.text!=='string')throw new Error('Texto inválido.');
   return update;
 }
-export function createWorker({apiFactory=createTelegram,clock=()=>new Date()}={}) {
+export function createWorker({apiFactory=createTelegram,clock=()=>new Date(),telegramKeys}={}) {
   return {
     async fetch(request,env) {
       const path=new URL(request.url).pathname;
-      const auth=await handleAuth(request,env,{nowMs:clock().getTime()});
+      const auth=await handleAuth(request,env,{nowMs:clock().getTime(),telegramKeys});
       if(auth)return auth;
       const finance=await handleFinance(request,env,{nowMs:clock().getTime()});if(finance)return finance;
       if(path==='/health'&&request.method==='GET') {
