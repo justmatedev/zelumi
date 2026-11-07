@@ -114,7 +114,7 @@ A escala preferida de espaçamento é **4, 8, 12, 16, 20, 24, 28, 32, 36, 40 e 4
 | Botão padrão | Altura mínima `--control-height` 44 px |
 | Campo de formulário | Altura mínima `--field-height` 46 px, texto de 16 px |
 | Ícones de mês/paginação | `IconButton`, com `--control-height` 44 px |
-| Área principal | Largura máxima `--content-max` 1320 px |
+| Área principal | Largura máxima `--content-max` 1320 px, compartilhada por Visão geral, Lançamentos e Perfil; sem limite adicional no contêiner do Perfil |
 
 Botões de ícone compartilhados usam área de 44 px, inclusive fechamento de diálogo, navegação móvel e alça da barra lateral. Dentro de campos numéricos, os botões de incremento usam largura de 40 px e altura de pelo menos 44 px. As opções segmentadas têm 36 px internos e campo externo de pelo menos 46 px. Essas são exceções compactas do componente; não reduzir textos ou controles para acomodar um rótulo. Sombras são reservadas principalmente para sobreposições e dicas.
 
@@ -218,6 +218,7 @@ Breakpoints em media/container queries permanecem literais no CSS: custom proper
 - Ícones decorativos não precisam de nome; ações com ícone precisam.
 - Foco padrão visível de 3 px em links, botões, campos e resumos expansíveis; lançamentos usam 2 px com afastamento de 2 px. Busca e seletor de mês podem mostrar o anel no contêiner. Não remover foco sem oferecer substituição visível.
 - Transições atuais: cerca de 150 ms para feedback e 200 ms para a barra lateral. Respeitar `prefers-reduced-motion`.
+- Botões, linhas de lançamentos e opções de tema podem se deslocar 1 px ao interagir. Sob `prefers-reduced-motion`, esses deslocamentos ficam desativados, inclusive no hover e ao pressionar.
 - Navegação, formulários e modais precisam funcionar por teclado. Tema e cor não podem ser a única indicação de estado.
 - Conferir leitura com zoom, contraste dos textos e espaço para conteúdo real. As verificações visuais descritas aqui não equivalem a uma certificação de acessibilidade.
 
