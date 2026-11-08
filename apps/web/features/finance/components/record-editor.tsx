@@ -9,11 +9,15 @@ import {Select} from '@/components/ui/select';
 import {SegmentedControl} from '@/components/ui/segmented-control';
 import {NumberField} from '@/components/ui/number-field';
 import {DateField,MonthField} from '@/components/ui/date-field';
-export function RecordEditor({record,onSave,onCancel,busy}:{record:RecordDetail;onSave:(value:EditFields)=>Promise<void>;onCancel:()=>void;busy:boolean}){
+import {normalizeCategoryDescription} from '@zelumi/finance/category-memory';
+import type {CategoryMemoryAction} from '@/features/finance/lib/finance';
+export function RecordEditor({record,onSave,onCancel,busy}:{record:RecordDetail;onSave:(value:EditFields,memoryAction:CategoryMemoryAction)=>Promise<void>;onCancel:()=>void;busy:boolean}){
  const [draft,setDraft]=useState(()=>editFields(record)),[value,setValue]=useState((record.amount/100).toFixed(2).replace('.',',')),[error,setError]=useState('');
- function field<K extends keyof EditFields>(key:K,v:EditFields[K]){setDraft(d=>({...d,[key]:v}));setError('');}
+ const [memoryAction,setMemoryAction]=useState<CategoryMemoryAction>('keep');
+ const sameDescription=normalizeCategoryDescription(draft.description)===normalizeCategoryDescription(record.description);
+ function field<K extends keyof EditFields>(key:K,v:EditFields[K]){setDraft(d=>({...d,[key]:v}));if(key==='category')setMemoryAction(v!==record.category?'remember':'keep');if(key==='description'&&memoryAction==='forget')setMemoryAction('keep');setError('');}
  const preview=useMemo(()=>{try{return schedule(validateEdit({...draft,amount:money(value)}));}catch{return [];}},[draft,value]);
- async function submit(e:React.FormEvent){e.preventDefault();try{setError('');await onSave(validateEdit({...draft,amount:money(value)}));}catch(e){setError(e instanceof Error?e.message:'Confira os campos.');}}
+ async function submit(e:React.FormEvent){e.preventDefault();try{setError('');await onSave(validateEdit({...draft,amount:money(value)}),draft.type==='despesa'?memoryAction:'keep');}catch(e){setError(e instanceof Error?e.message:'Confira os campos.');}}
  return <form onSubmit={submit} className="record-form">
   <p className="form-warning">A edição altera a compra inteira e recalcula todas as parcelas, inclusive em meses anteriores.</p>
   <fieldset disabled={busy}>
@@ -26,6 +30,12 @@ export function RecordEditor({record,onSave,onCancel,busy}:{record:RecordDetail;
     <Field label="Parcelas" id="record-parts"><NumberField id="record-parts" aria-label="Parcelas" min={1} max={120} value={draft.installments} required disabled={busy} onValueChange={value=>setDraft(d=>({...d,installments:value,installmentStartMonth:value>1?d.installmentStartMonth:null}))}/></Field>
     {draft.installments>1&&<Field label="Mês da primeira parcela" id="record-first-month"><MonthField id="record-first-month" aria-label="Mês da primeira parcela" min="1900-01" max="9990-12" disabled={busy} value={draft.installmentStartMonth||draft.date.slice(0,7)} onValueChange={value=>field('installmentStartMonth',value)}/></Field>}
    </div>
+   {draft.type==='despesa'&&<div className="category-memory-control">
+    <label className="category-memory-check"><input type="checkbox" checked={memoryAction==='remember'} onChange={e=>setMemoryAction(e.target.checked?'remember':'keep')}/><span>Lembrar categoria para esta descrição</span></label>
+    <p className="card-description">A escolha vale para novos lançamentos com a mesma descrição na sua conta.</p>
+    {sameDescription&&record.categoryMemory&&<div className="dialog-actions"><span>Categoria lembrada: {record.categoryMemory.category}.</span><Button type="button" variant="ghost" disabled={busy||memoryAction==='forget'} onClick={()=>setMemoryAction('forget')}>Esquecer associação</Button></div>}
+    {memoryAction==='forget'&&<p role="status" className="card-description">A associação será esquecida ao salvar.</p>}
+   </div>}
   </fieldset>
   <details className="schedule-preview"><summary>Prévia: {preview.length} parcela(s) · {brl(preview.reduce((s,r)=>s+r.amount,0))}</summary><ol>{preview.map((r,i)=><li key={r.date}><span>{i+1}/{preview.length} · {formatDate(r.date)}</span><strong>{brl(r.amount)}</strong></li>)}</ol></details>
   {error&&<p role="alert" className="error-message">{error}</p>}

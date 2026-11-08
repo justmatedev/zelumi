@@ -51,10 +51,29 @@ it('trocar de conta oculta editor e ignora conclusão da conta anterior',async()
 });
 it('resposta perdida exige verificar e reutiliza a chave ao reenviar',async()=>{
  Object.defineProperty(HTMLDialogElement.prototype,'showModal',{configurable:true,value:function(){this.open=true;}});
- const fetch=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({user:{firstName:'Teste',username:null,lastName:null},csrfToken:'csrf'}))).mockResolvedValueOnce(new Response(JSON.stringify(record))).mockRejectedValueOnce(new Error('response lost')).mockResolvedValueOnce(new Response(JSON.stringify(record))).mockResolvedValueOnce(new Response(JSON.stringify({ok:true})));
+ const fetch=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({user:{firstName:'Teste',username:null,lastName:null},csrfToken:'csrf'}))).mockResolvedValueOnce(new Response(JSON.stringify(record))).mockRejectedValueOnce(new Error('response lost')).mockResolvedValueOnce(new Response(JSON.stringify({found:false}))).mockResolvedValueOnce(new Response(JSON.stringify(record))).mockResolvedValueOnce(new Response(JSON.stringify({ok:true})));
  vi.stubGlobal('fetch',fetch);const changed=vi.fn();render(<SessionProvider><RecordDialog id="1" onClose={()=>{}} onChanged={changed}/></SessionProvider>);
  fireEvent.click(await screen.findByRole('button',{name:'Editar'}));fireEvent.change(screen.getByLabelText('Nome'),{target:{value:'Google corrigido'}});fireEvent.click(screen.getByRole('button',{name:'Salvar alterações'}));
  const retry=await screen.findByRole('button',{name:'Reenviar mesma ação'});expect(retry).toBeDisabled();
  fireEvent.click(screen.getByRole('button',{name:'Verificar resultado'}));await waitFor(()=>expect(retry).toBeEnabled());fireEvent.click(retry);await waitFor(()=>expect(changed).toHaveBeenCalledOnce());
- expect(fetch.mock.calls[2][1].headers['Idempotency-Key']).toBe(fetch.mock.calls[4][1].headers['Idempotency-Key']);
+ expect(fetch.mock.calls[2][1].headers['Idempotency-Key']).toBe(fetch.mock.calls[5][1].headers['Idempotency-Key']);
+});
+it('só aprende categoria após escolha explícita e permite lembrar Outros ou esquecer associação',async()=>{
+ const save=vi.fn().mockResolvedValue(undefined);
+ render(<RecordEditor record={{...record,categoryMemory:{category:'Pets',revision:1}}} onSave={save} onCancel={()=>{}} busy={false}/>);
+ expect(screen.getByRole('checkbox',{name:'Lembrar categoria para esta descrição'})).not.toBeChecked();
+ fireEvent.click(screen.getByRole('combobox',{name:'Categoria'}));fireEvent.click(await screen.findByRole('option',{name:'Compras'}));
+ expect(screen.getByRole('checkbox',{name:'Lembrar categoria para esta descrição'})).toBeChecked();
+ fireEvent.click(screen.getByRole('button',{name:'Salvar alterações'}));await waitFor(()=>expect(save).toHaveBeenCalledOnce());expect(save.mock.calls[0][1]).toBe('remember');
+ fireEvent.click(screen.getByRole('checkbox',{name:'Lembrar categoria para esta descrição'}));
+ fireEvent.click(screen.getByRole('button',{name:'Salvar alterações'}));await waitFor(()=>expect(save).toHaveBeenCalledTimes(2));expect(save.mock.calls[1][1]).toBe('keep');
+ fireEvent.click(screen.getByRole('button',{name:'Esquecer associação'}));fireEvent.click(screen.getByRole('button',{name:'Salvar alterações'}));await waitFor(()=>expect(save).toHaveBeenCalledTimes(3));expect(save.mock.calls[2][1]).toBe('forget');
+});
+it('recibo completo confirma salvamento de memória mesmo sem mudança financeira',async()=>{
+ Object.defineProperty(HTMLDialogElement.prototype,'showModal',{configurable:true,value:function(){this.open=true;}});
+ const fetch=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({user:{firstName:'Teste'},csrfToken:'csrf'}))).mockResolvedValueOnce(new Response(JSON.stringify(record))).mockRejectedValueOnce(new Error('lost')).mockResolvedValueOnce(new Response(JSON.stringify({found:true,response:{ok:true}})));
+ vi.stubGlobal('fetch',fetch);const changed=vi.fn();render(<SessionProvider><RecordDialog id="1" onClose={()=>{}} onChanged={changed}/></SessionProvider>);
+ fireEvent.click(await screen.findByRole('button',{name:'Editar'}));fireEvent.click(screen.getByRole('checkbox',{name:'Lembrar categoria para esta descrição'}));fireEvent.click(screen.getByRole('button',{name:'Salvar alterações'}));
+ fireEvent.click(await screen.findByRole('button',{name:'Verificar resultado'}));await waitFor(()=>expect(changed).toHaveBeenCalledOnce());
+ expect(String(fetch.mock.calls[3][0])).toContain('/api/finance/operations/');
 });

@@ -2,9 +2,9 @@
 
 O padrão atual de marca e interface está no [Guia visual do Zelumi](docs/GUIA-VISUAL.md), com valores compartilhados em [tokens.css](apps/web/app/tokens.css). A [arquitetura](docs/desenvolvimento/ARQUITETURA.md) descreve as aplicações, os pacotes e seus limites.
 
-Gerenciamento financeiro com registros rápidos pelo Telegram. O bot funciona em Cloudflare Workers + D1; o site usa Next.js, TypeScript, Tailwind e componentes shadcn/ui personalizados. O interpretador do bot usa regras, sem IA.
+Gerenciamento financeiro com registros rápidos pelo Telegram. O bot funciona em Cloudflare Workers + D1; o site usa Next.js, TypeScript, Tailwind e componentes shadcn/ui personalizados. O interpretador do bot usa regras locais; a categorização no Worker combina memória pessoal e regras, com Workers AI opcional como complemento operacional.
 
-Os lançamentos usam [13 categorias prontas de despesas e Receitas](docs/produto/CATEGORIAS.md). O bot reconhece palavras completas e expressões específicas; descrições sem correspondência ou com categorias conflitantes ficam em Outros. A categoria pode ser corrigida no editor do painel.
+Os lançamentos usam [13 categorias prontas de despesas e Receitas](docs/produto/CATEGORIAS.md). O bot reconhece palavras completas e expressões específicas, reaproveita correções e termos confirmados por conta e pode consultar Workers AI para descrições sem correspondência. Conflitos continuam em Outros. O editor permite lembrar uma categoria; Perfil → Categorias aprendidas permite revisar ou esquecer associações. A IA é automática quando configurada e disponível, com fallback local ao atingir limites ou falhar.
 
 A configuração do endereço `usezelumi.vercel.app`, com site na Vercel e backend na Cloudflare, está em [docs/VERCEL.md](docs/infraestrutura/VERCEL.md).
 

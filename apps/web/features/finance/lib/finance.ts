@@ -1,6 +1,7 @@
 import type {EditFields,Occurrence} from '@zelumi/finance/model';
 export type {EditFields};
-export type RecordDetail=EditFields&{id:string;version:string;schedule:Occurrence[]};
+export type CategoryMemoryAction='keep'|'remember'|'forget';
+export type RecordDetail=EditFields&{id:string;version:string;schedule:Occurrence[];categoryMemory?:{category:string;revision:number}|null;categorySource?:string};
 export type Entry={recordId:string;installment:number;installments:number;date:string;month:string;amount:number;totalAmount:number;description:string;type:'receita'|'despesa';category:string};
 export type OverviewData={month:string;snapshot:number;income:number;expense:number;installmentExpense:number;cashExpense:number;result:number;count:number;categories:{category:string;amount:number}[];recent:Entry[]};
 export type EntriesData={items:Entry[];total:number;page:number;pageSize:number;snapshot:number;categories:string[]};

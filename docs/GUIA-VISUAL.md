@@ -246,3 +246,7 @@ Antes de criar uma variação:
 Para alterações de implementação, executar os testes apropriados e o build. A suíte da interface é `npm run web:test`; a validação de tipos, testes e exportação pode ser feita com `npm run web:check`. Para revisão manual, usar `npm run dev` e conferir ao menos 320, 390, 760, 1068 e 1280 px.
 
 Regras em contextos responsivos distintos continuam necessárias. Preservar o resultado visual ao reorganizar CSS; não eliminar regras em massa sem comparar as telas.
+
+## 11. Categorias aprendidas
+
+O editor de lançamentos usa uma caixa de seleção com rótulo visível para lembrar uma categoria apenas na conta atual. A caixa fica ao lado do rótulo, com direção de linha explícita para não herdar a coluna dos campos comuns. O tamanho do controle usa `--control-check-size`; manter alvo de interação de pelo menos 44 px, foco e bloqueio durante salvamento. O Perfil reúne descrições e termos no mesmo Card e usa os controles segmentados, Select e Button existentes. Listas de associações quebram textos longos e empilham ações até 600 px; sugestões exigem confirmação explícita. Não exibir um controle de IA no Perfil.

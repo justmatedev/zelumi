@@ -37,6 +37,7 @@
   --leading-metric: 1.25;
 
   /* Preferred spacing scale; component-specific optical adjustments stay in CSS. */
+  --control-check-size: 18px;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
