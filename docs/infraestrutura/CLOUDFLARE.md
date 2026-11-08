@@ -93,3 +93,25 @@ Usar `npm run dev` para site e API com conta fictícia e D1 isolado em `.wrangle
 Antes de publicar, registrar a versão exibida por `cf:versions`. Ao restaurar código, manter token, username e vínculo do D1 compatíveis, preservar as tabelas e não sobrescrever lançamentos com um dump. A restauração do frontend e a do Worker são independentes; manter compatibilidade entre os contratos HTTP de ambos.
 
 Acompanhar consumo e erros no painel Cloudflare. Testes locais não medem a utilização da franquia em produção.
+
+## Categorização com Workers AI
+
+As migrações 0005 e 0006 criam memória por conta, procedência, orçamento, pausa e termos confirmados. Aplicar as migrações antes de publicar o Worker que usa essas tabelas. Não há recategorização do histórico.
+
+O binding `AI` e as variáveis ficam em `apps/api/wrangler.jsonc`:
+
+| Variável | Uso |
+| --- | --- |
+| CATEGORY_AI_ENABLED | `true` permite consulta automática; `false` suspende inferência para manutenção |
+| CATEGORY_AI_PLAN | `free` indica Workers Free confirmado; `unverified` bloqueia inferência enquanto o plano não foi verificado |
+| CATEGORY_AI_MODEL | Modelo Cloudflare; configuração inicial `@cf/google/gemma-4-26b-a4b-it` |
+| CATEGORY_AI_DAILY_LIMIT | Tentativas por dia UTC em todo o aplicativo, inicialmente 200 |
+| CATEGORY_AI_USER_DAILY_LIMIT | Tentativas por dia UTC por usuário, inicialmente 20 |
+
+A configuração versionada usa `CATEGORY_AI_PLAN=free`, correspondente ao plano Workers Free confirmado na conta do projeto. Essa variável é uma declaração operacional e não consulta o plano automaticamente: se ele mudar ou ficar desconhecido, usar `unverified` ou suspender a inferência. Antes da ativação em produção, verificar disponibilidade/licença do modelo e avaliar descrições sintéticas em português. O modelo e a versão do prompt participam da chave de validade do cache. O ambiente fictício tem IA desligada e não recebe binding AI.
+
+O [Workers Free oferece atualmente 10.000 neurons por dia](https://developers.cloudflare.com/workers-ai/platform/pricing/), com bloqueio no excedente. Não são 10.000 chamadas. No plano Paid, excedentes podem ser cobrados; os contadores do aplicativo não garantem custo zero nesse plano. Ao migrar a conta para Paid, suspender a inferência e rever a política de custo antes de reativar. Não adicionar créditos ou ativar plano pago como parte desta configuração.
+
+Apenas descrições necessárias e o catálogo são enviados ao Workers AI; não registrar esse conteúdo nos logs. As [regras de dados da Cloudflare](https://developers.cloudflare.com/workers-ai/platform/data-usage/) se aplicam. Os testes usam bindings simulados; nenhum teste automatizado exige chamadas reais ou mede qualidade do modelo em produção.
+
+Inferência abandonada por timeout pode continuar consumindo recursos no provedor; cada tentativa já consome uma reserva. Erro 3036 sinaliza cota diária esgotada e suspende até 00:00 UTC; outros erros temporários pausam por 60 segundos. O aplicativo continua registrando despesas pelas regras locais. Desligar inferência não apaga memória, cache ou lançamentos.

@@ -1,0 +1,25 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {sqliteD1} from './helpers/sqlite-d1.mjs';
+import {migrate} from './helpers/d1.mjs';
+import {createWorker} from '../apps/api/src/worker.mjs';
+import {hashToken,deriveCsrf} from '../apps/api/src/auth/crypto.mjs';
+test('gestão de categorias exige sessão, CSRF e isolamento e fornece recibo completo',async t=>{
+ const db=sqliteD1();t.after(()=>db.raw.close());await migrate(db);
+ const now=Date.now(),token='a'.repeat(64),env={DB:db,APP_ORIGIN:'https://test.example',TELEGRAM_BOT_USERNAME:'test_bot',TELEGRAM_BOT_TOKEN:'123:fake'};
+ await db.prepare('INSERT INTO web_users VALUES(?,?,?,?,?,?)').bind('11','Teste',null,null,now,now).run();
+ await db.prepare('INSERT INTO web_sessions VALUES(?,?,?,?)').bind(await hashToken(token),'11',now,now+86400000).run();
+ const csrf=await deriveCsrf(token,env.TELEGRAM_BOT_TOKEN,'session'),worker=createWorker({clock:()=>new Date(now)}),key=randomUUID();
+ const send=(path,method='GET',data,extra={})=>worker.fetch(new Request(env.APP_ORIGIN+path,{method,headers:{Cookie:`__Host-zelumi_session=${token}`,Origin:env.APP_ORIGIN,'X-CSRF-Token':csrf,'Idempotency-Key':key,'Content-Type':'application/json',...extra},...(data?{body:JSON.stringify(data)}:{})}),env);
+ const body={key:'Bambi',category:'Alimentação',expectedRevision:null};
+ assert.equal((await send('/api/finance/category-terms','PUT',body,{'X-CSRF-Token':'bad'})).status,403);
+ assert.equal((await send('/api/finance/category-terms','PUT',{...body,owner:'22'})).status,400);
+ assert.equal((await send('/api/finance/category-terms','PUT',body)).status,200);
+ assert.equal((await send('/api/finance/category-terms','PUT',body)).status,200);
+ assert.equal((await (await send('/api/finance/category-terms')).json()).items[0].key,'bambi');
+ assert.equal((await (await send('/api/finance/operations/'+key)).json()).found,true);
+ assert.equal((await send('/api/finance/category-memory','GET',undefined,{Cookie:''})).status,401);
+ assert.equal((await send('/api/finance/category-terms?owner=22')).status,400);
+ assert.equal((await send('/api/finance/operations/'+key,'DELETE')).status,405);
+});

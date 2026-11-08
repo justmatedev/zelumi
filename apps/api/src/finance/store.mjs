@@ -3,6 +3,8 @@ import {FinanceError,safeTotals,readStored,normalizeSearch,validateEdit,schedule
 import {recordVersion} from '@zelumi/finance/server/version';
 import {projectionInsert,projectionArgs,missingAnySQL} from '@zelumi/finance/server/sql';
 import {prepareOwner} from './projection.mjs';
+import {CategoryStore} from '../categories/store.mjs';
+import {normalizeCategoryDescription} from '@zelumi/finance/category-memory';
 const from=`FROM finance_projection p JOIN cloud_records r ON r.owner=p.owner AND r.id=p.record_id JOIN json_each(p.schedule_json) j`;
 const date="json_extract(j.value,'$.date')",amount="json_extract(j.value,'$.amount')",type="json_extract(r.body,'$.type')",category="json_extract(r.body,'$.category')",parts="json_extract(r.body,'$.installments')";
 const select=`SELECT r.id recordId,CAST(j.key AS INTEGER)+1 installment,${parts} installments,${date} date,substr(${date},1,7) month,${amount} amount,json_extract(r.body,'$.amount') totalAmount,json_extract(r.body,'$.description') description,${type} type,${category} category`;
@@ -22,7 +24,8 @@ export class FinanceStore {
  stmt(sql,...args){return this.db.prepare(sql).bind(...args);}
  state(owner){return this.stmt('SELECT COALESCE((SELECT version FROM cloud_state WHERE owner=?),0) snapshot',owner);}
  async ready(owner){const p=await prepareOwner(this.db,owner);if(p.status!=='ready')fail(p.status==='invalid'?'HISTORY_INVALID':'HISTORY_PREPARING',p.status==='invalid'?'Um lançamento antigo precisa de revisão.':'Preparando seu histórico. Tente novamente em instantes.',503);}
- async detail(owner,id){const row=await this.stmt('SELECT body FROM cloud_records WHERE owner=? AND id=?',owner,id).first();if(!row)fail('NOT_FOUND','Lançamento não encontrado.',404);return {id,version:recordVersion(row.body),...readStored(row.body)};}
+ async detail(owner,id){const row=await this.stmt('SELECT body FROM cloud_records WHERE owner=? AND id=?',owner,id).first();if(!row)fail('NOT_FOUND','Lançamento não encontrado.',404);const version=recordVersion(row.body),record={id,...readStored(row.body)};return {...record,version,...await new CategoryStore(this.db).detail(owner,record,version)};}
+ async operation(owner,key,nowMs){const row=await this.stmt('SELECT response_json FROM finance_operations WHERE owner=? AND operation_key=? AND expires_at>?',owner,key,nowMs).first();return row?{found:true,response:JSON.parse(row.response_json)}:{found:false};}
  async entries(owner,f){
   await this.ready(owner);const {where,args}=filter(owner,f),cats=filter(owner,f,true);
   const batch=await this.db.batch([this.state(owner),this.stmt(`${select} ${from} ${where} ${order} LIMIT ? OFFSET ?`,...args,f.pageSize,(f.page-1)*f.pageSize),this.stmt(`SELECT COUNT(*) total ${from} ${where}`,...args),this.stmt(`SELECT DISTINCT ${category} category ${from} ${cats.where} ORDER BY category`,...cats.args),this.stmt(missingAnySQL('cloud_records'),owner,1)]);
@@ -38,9 +41,10 @@ export class FinanceStore {
   const totals=safeTotals(batch[1].results[0]);return safeTotals({month,snapshot:batch[0].results[0].snapshot,...totals,result:totals.income-totals.expense,categories:batch[2].results.map(safeTotals),recent:batch[3].results.map(safeTotals)});
  }
  async receipt(owner,key,hash,nowMs){const row=await this.stmt('SELECT request_hash,response_json FROM finance_operations WHERE owner=? AND operation_key=? AND expires_at>?',owner,key,nowMs).first();if(!row)return null;if(row.request_hash!==hash)fail('OPERATION_KEY_REUSED','Esta ação já foi usada com outros dados.');return JSON.parse(row.response_json);}
- async mutate({owner,id,kind,expectedVersion,record,operationKey,nowMs}){
+ async mutate({owner,id,kind,expectedVersion,record,categoryMemoryAction='keep',operationKey,nowMs}){
   const validated=kind==='PUT'?validateEdit(record):null;
-  const hash=recordVersion(JSON.stringify({id,kind,expectedVersion,record:validated}));
+  if(!['keep','remember','forget'].includes(categoryMemoryAction)||categoryMemoryAction!=='keep'&&(kind!=='PUT'||validated.type!=='despesa'||!normalizeCategoryDescription(validated.description)))fail('INVALID_REQUEST','Verifique a opção de categoria.',400);
+  const hash=recordVersion(JSON.stringify({id,kind,expectedVersion,record:validated,categoryMemoryAction}));
   const replay=await this.receipt(owner,operationKey,hash,nowMs);if(replay)return replay;
   const old=await this.stmt('SELECT body FROM cloud_records WHERE owner=? AND id=?',owner,id).first();
   if(!old||recordVersion(old.body)!==expectedVersion){
@@ -53,6 +57,9 @@ export class FinanceStore {
   const edited=kind==='PUT'?{...JSON.parse(old.body),...validated,schedule:schedule(validated)}:null;
   if(edited&&!edited.installmentStartMonth)delete edited.installmentStartMonth;
   const next=edited?JSON.stringify(edited):null,response=next?{ok:true,version:recordVersion(next)}:{ok:true},attempt=randomUUID();
+  const categories=new CategoryStore(this.db),previous=JSON.parse(old.body);
+  const oldMeta=await this.stmt('SELECT source FROM category_record_meta WHERE owner=? AND record_id=? AND record_version=?',owner,id,expectedVersion).first();
+  const source=edited&&(edited.category!==previous.category||edited.type!==previous.type||categoryMemoryAction==='remember')?'manual':oldMeta?.source??'unknown';
   const gate='EXISTS(SELECT 1 FROM finance_operations WHERE attempt_id=?)';
   // Check the same session and bot in the atomic write, not only before reads.
   const auth=this.authorization;
@@ -61,6 +68,8 @@ export class FinanceStore {
   const queries=[this.stmt(`DELETE FROM finance_operations WHERE owner=? AND operation_key=? AND expires_at<=? AND ${authorized}`,owner,operationKey,nowMs,...authArgs),this.stmt(`INSERT INTO finance_operations(owner,operation_key,request_hash,attempt_id,record_id,kind,response_json,created_at,expires_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM cloud_records WHERE owner=? AND id=? AND body=?) AND EXISTS(SELECT 1 FROM cloud_state WHERE owner=? AND version=?) AND ${authorized} ON CONFLICT DO NOTHING`,owner,operationKey,hash,attempt,id,kind,JSON.stringify(response),nowMs,nowMs+86400000,owner,id,old.body,owner,state.snapshot,...authArgs)];
   queries.push(next?this.stmt(`UPDATE cloud_records SET body=? WHERE owner=? AND id=? AND ${gate}`,next,owner,id,attempt):this.stmt(`DELETE FROM cloud_records WHERE owner=? AND id=? AND ${gate}`,owner,id,attempt));
   if(next)queries.push(this.stmt(projectionInsert('cloud_records',gate),...projectionArgs(owner,id,next),attempt));
+  if(next)queries.push(categories.metaStatement(owner,id,source,recordVersion(next),gate,[attempt]));
+  if(categoryMemoryAction!=='keep')queries.push(categories.memoryStatement({owner,description:validated.description,category:validated.category,action:categoryMemoryAction,nowMs,revision:state.snapshot+1,gate,args:[attempt]}));
   queries.push(this.stmt(`UPDATE cloud_state SET version=version+1 WHERE owner=? AND ${gate}`,owner,attempt));
   const result=await this.db.batch(queries);
   if(result[1].meta.changes===1)return response;

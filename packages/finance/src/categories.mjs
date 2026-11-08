@@ -9,6 +9,7 @@ export const categories=['Receitas',...expenseCategories];
 // alimentação, mas "Uber Eats e táxi" continua sendo uma descrição ambígua.
 const phrases={
  'Alimentação':['uber eats'],
+ 'Cuidados pessoais':['cortar cabelo','corte de cabelo','corte cabelo'],
  'Casa':['energia eletrica','conta de agua','conta agua','conta de luz','conta luz'],
  'Saúde':['plano de saude','plano saude','seguro saude','seguro de saude','seguro de vida','seguro vida'],
  'Educação':['material escolar','materiais escolares','livro de receitas','livro receitas'],
@@ -19,13 +20,13 @@ const phrases={
 };
 
 const terms={
- 'Alimentação':['pao','paes','padaria','padarias','almoco','jantar','cafe','cafes','lanche','lanches','mercado','mercados','supermercado','supermercados','pizza','pizzas','pizzaria','restaurante','restaurantes','ifood','acai','hamburguer','hamburgueres','lanchonete','feira','acougue'],
+ 'Alimentação':['sorvete','sorvetes','sorveteria','pao','paes','padaria','padarias','almoco','jantar','cafe','cafes','lanche','lanches','mercado','mercados','supermercado','supermercados','pizza','pizzas','pizzaria','restaurante','restaurantes','ifood','acai','hamburguer','hamburgueres','lanchonete','feira','acougue'],
  'Transporte':['uber','onibus','gasolina','combustivel','combustiveis','metro','taxi','taxis','estacionamento','pedagio','pedagios','etanol','diesel','transporte'],
  'Casa':['aluguel','luz','agua','internet','condominio','energia','gas','reforma','limpeza','faxina','encanador','eletricista','moveis'],
  'Saúde':['farmacia','farmacias','remedio','remedios','medicamento','medicamentos','medico','medica','consulta','consultas','dentista','exame','exames','hospital','fisioterapia','terapia','psicologo','psicologa','saude'],
  'Educação':['faculdade','escola','escolas','curso','cursos','livro','livros','universidade','mensalidade escolar','creche','educacao'],
  'Lazer':['cinema','show','shows','teatro','jogo','jogos','parque','passeio','passeios','ingresso','ingressos','lazer'],
- 'Compras':['roupa','roupas','calcado','calcados','sapato','sapatos','tenis','notebook','celular','eletronico','eletronicos','computador','camiseta','camisetas','calca','calcas','vestido','vestidos'],
+ 'Compras':['cabide','cabides','roupa','roupas','calcado','calcados','sapato','sapatos','tenis','notebook','celular','eletronico','eletronicos','computador','camiseta','camisetas','calca','calcas','vestido','vestidos'],
  'Assinaturas':['netflix','spotify','assinatura','assinaturas','streaming','globoplay','disney','icloud'],
  'Cuidados pessoais':['cabeleireiro','cabeleireira','barbeiro','barbearia','manicure','pedicure','cosmetico','cosmeticos','perfume','perfumes','salao','depilacao'],
  'Pets':['veterinario','veterinaria','racao','racoes','pet','pets'],
@@ -33,15 +34,24 @@ const terms={
  'Impostos e taxas':['iptu','ipva','imposto','impostos','tributo','tributos','iof','darf','taxa','taxas','tarifa','tarifas'],
 };
 
-const normalize=value=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+export const normalizeCategoryText=value=>value.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+const normalize=normalizeCategoryText;
 const compile=rules=>Object.entries(rules).map(([category,words])=>[
  category,new RegExp(`(^| )(?:${words.map(normalize).sort((a,b)=>b.length-a.length).join('|')})(?= |$)`,'g'),
 ]);
 const phraseRules=compile(phrases),termRules=compile(terms);
 
-export function classifyExpense(description){
+export function classifyExpenseDetailed(description,{personalTerms=[]}={}){
  let remaining=normalize(description);
+ if(/\b(faturas?|transferencia|transferi)\b/.test(remaining))return {category:'Outros',reason:'excluded'};
  const matches=new Set();
+ // Uma regra pessoal consome só seu trecho; outras despesas ainda conflitam.
+ for(const {phrase,category} of [...personalTerms].sort((a,b)=>b.phrase.length-a.phrase.length)){
+  if(!expenseCategories.includes(category))continue;
+  const term=normalize(phrase);if(!term)continue;
+  const pattern=new RegExp(`(^| )${term}(?= |$)`,'g');
+  remaining=remaining.replace(pattern,match=>{matches.add(category);return ' '.repeat(match.length);});
+ }
  for(const [category,pattern] of phraseRules){
   remaining=remaining.replace(pattern,match=>{matches.add(category);return ' '.repeat(match.length);});
  }
@@ -49,5 +59,6 @@ export function classifyExpense(description){
   pattern.lastIndex=0;
   if(pattern.test(remaining))matches.add(category);
  }
- return matches.size===1?[...matches][0]:'Outros';
+ return {category:matches.size===1?[...matches][0]:'Outros',reason:matches.size===1?'matched':matches.size?'conflict':'none'};
 }
+export const classifyExpense=description=>classifyExpenseDetailed(description).category;

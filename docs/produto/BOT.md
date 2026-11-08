@@ -10,7 +10,7 @@
 
 O cadastro é aberto, com identificação pelo ID numérico do Telegram e isolamento dos registros por usuário. O site usa a mesma identidade e acessa os lançamentos por API autenticada. Token do bot e segredo do webhook ficam no servidor.
 
-As mensagens são interpretadas por regras locais, sem IA. Categorias são compartilhadas pelo bot e pelo painel; consultar [CATEGORIAS.md](CATEGORIAS.md). A ajuda (`/ajuda`, `/start` e `/help`) fornece exemplos e o botão **Abrir meu painel**. Os demais comandos e formatos de mensagem estão no [README](../../README.md#comandos).
+Valores, datas e parcelas são interpretados por regras locais. A classificação no Worker combina memória pessoal e regras, com IA quando necessária e configurada. Categorias são compartilhadas pelo bot e pelo painel; consultar [CATEGORIAS.md](CATEGORIAS.md). A ajuda (`/ajuda`, `/start` e `/help`) fornece exemplos e o botão **Abrir meu painel**. Os demais comandos e formatos de mensagem estão no [README](../../README.md#comandos).
 
 ## Valores e parcelas
 
@@ -25,3 +25,7 @@ Não executar long polling com o token de um bot que tenha webhook ativo. Para d
 Preservar a verificação de identidade vinculada ao D1 e todos os arquivos SQL em `apps/api/migrations/`. A configuração de token e username precisa corresponder à identidade do bot vinculada ao banco.
 
 Seguir [CLOUDFLARE.md](../infraestrutura/CLOUDFLARE.md) para publicar e verificar a configuração. Ao restaurar código, preservar a compatibilidade entre token, username e identidade vinculada ao D1; não sobrescrever lançamentos com um dump nem apagar tabelas para reverter código.
+
+## Categorias aprendidas
+
+O Worker combina memória pessoal, termos confirmados e catálogo local. Quando necessário e configurado, consulta Workers AI com a descrição; falhas mantêm a classificação local. A confirmação do Telegram usa a mesma categoria salva. Correções durante uma consulta impedem o commit de uma classificação obsoleta. A edição da mesma descrição e tipo preserva uma categoria manual; trocar a descrição executa a classificação novamente. No bot local SQLite permanece o catálogo local. Consulte [categorias](CATEGORIAS.md).

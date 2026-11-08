@@ -35,7 +35,7 @@ test('ambiente local usa sessões e API reais em banco de demonstração',async 
  await t.test('edição e exclusão persistem e seed não recria registros removidos',async()=>{
   const send=(path,method='GET',body)=>localWorker.fetch(request(path,method,body,{Cookie:cookie,'X-CSRF-Token':csrf,'Idempotency-Key':randomUUID()}),env);
   const path='/api/finance/records/90000001';const detail=await (await send(path)).json();
-  const {id,version,schedule,...record}=detail;
+  const {id,version,schedule,categoryMemory,categorySource,...record}=detail;
   assert.equal((await send(path,'PUT',{expectedVersion:version,record:{...record,amount:700000}})).status,200);
   const latest=await (await send(path)).json();assert.equal(latest.amount,700000);
   assert.equal((await send(path,'DELETE',{expectedVersion:latest.version})).status,200);

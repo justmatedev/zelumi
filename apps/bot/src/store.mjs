@@ -60,7 +60,7 @@ export class Store {
   pending(owner) { const row = this.db.prepare('SELECT body FROM pending WHERE owner=?').get(owner); return row ? JSON.parse(row.body) : null; }
   setPending(owner, value) { this.db.prepare('INSERT OR REPLACE INTO pending VALUES (?,?)').run(owner, JSON.stringify(value)); }
   clearPending(owner) { this.db.prepare('DELETE FROM pending WHERE owner=?').run(owner); }
-  enqueue(method, payload) { this.db.prepare('INSERT INTO outbox(method,payload) VALUES (?,?)').run(method, JSON.stringify(payload)); }
+  enqueue(method, payload) { this.db.prepare('INSERT INTO outbox(method,payload) VALUES (?,?)').run(method, JSON.stringify(typeof payload==='function'?payload():payload)); }
   nextDelivery() { const row=this.db.prepare('SELECT * FROM outbox ORDER BY id LIMIT 1').get(); return row ? {...row,payload:JSON.parse(row.payload)} : null; }
   delivered(id) { this.db.prepare('DELETE FROM outbox WHERE id=?').run(id); }
   close() { this.db.close(); }

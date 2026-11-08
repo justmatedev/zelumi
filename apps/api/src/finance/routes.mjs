@@ -3,6 +3,7 @@ import {json,body,HttpError} from '../auth/http.mjs';
 import {constantTimeEqual} from '../auth/crypto.mjs';
 import {FinanceError,validMonth,categories} from '@zelumi/finance/model';
 import {FinanceStore} from './store.mjs';
+import {CategoryStore} from '../categories/store.mjs';
 const uuid=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
 const invalid=()=>{throw new FinanceError('INVALID_REQUEST','Verifique os campos e filtros enviados.');};
 function integer(s,min,max,fallback){if(s===null)return fallback;if(!/^\d+$/.test(s))invalid();const n=Number(s);if(!Number.isSafeInteger(n)||n<min||n>max)invalid();return n;}
@@ -10,18 +11,29 @@ function params(url,allowed){const q=url.searchParams;for(const k of q.keys())if
 export async function handleFinance(request,env,{nowMs}){
  const url=new URL(request.url),path=url.pathname;if(path!=='/api/finance'&&!path.startsWith('/api/finance/'))return null;
  const match=path.match(/^\/api\/finance\/records\/([^/]+)$/),list=path==='/api/finance/entries',overview=path==='/api/finance/overview';
- if(!match&&!list&&!overview)return json({error:'Rota não encontrada.'},404);
- const methods=match?['GET','PUT','DELETE']:['GET'];if(!methods.includes(request.method))return json({error:'Método não permitido.'},405,{Allow:methods.join(', ')});
+ const operation=path.match(/^\/api\/finance\/operations\/([^/]+)$/);
+ const categoryResource=path==='/api/finance/category-memory'?'memory':path==='/api/finance/category-terms'?'terms':null;
+ if(!match&&!list&&!overview&&!operation&&!categoryResource)return json({error:'Rota não encontrada.'},404);
+ const methods=match||categoryResource?['GET','PUT','DELETE']:['GET'];if(!methods.includes(request.method))return json({error:'Método não permitido.'},405,{Allow:methods.join(', ')});
  try{
   const context=await getSessionContext(request,env,nowMs);if(!context)return json({error:'Sessão encerrada. Entre novamente.'},401);
   const store=new FinanceStore(context.db,context.authorization),owner=context.owner;
+  if(categoryResource){
+   const categoriesStore=new CategoryStore(context.db,context.authorization);
+   if(request.method==='GET'){const q=params(url,['page']);return json(await categoriesStore.list(owner,categoryResource,integer(q.get('page'),0,1000000,0)));}
+   params(url,[]);
+   if(request.headers.get('Origin')!==env.APP_ORIGIN||!constantTimeEqual(request.headers.get('X-CSRF-Token'),context.csrfToken))throw new HttpError(403,'Solicitação não autorizada.');
+   const input=await body(request),key=request.headers.get('Idempotency-Key');if(!uuid.test(key||'')||Object.keys(input).some(k=>!['key','category','expectedRevision'].includes(k))||request.method==='DELETE'&&Object.hasOwn(input,'category'))invalid();
+   return json(await categoriesStore.manage({owner,resource:categoryResource,method:request.method,key:input.key,category:input.category,expectedRevision:input.expectedRevision,operationKey:key,nowMs}));
+  }
+  if(operation){if(!uuid.test(operation[1]))invalid();params(url,[]);return json(await store.operation(owner,operation[1],nowMs));}
   if(match){
    const id=match[1];if(!uuid.test(id)&&! /^[1-9]\d{0,18}$/.test(id))invalid();params(url,[]);
    if(request.method==='GET')return json(await store.detail(owner,id));
    if(request.headers.get('Origin')!==env.APP_ORIGIN||!constantTimeEqual(request.headers.get('X-CSRF-Token'),context.csrfToken))throw new HttpError(403,'Solicitação não autorizada.');
    const input=await body(request),key=request.headers.get('Idempotency-Key');if(!uuid.test(key||''))invalid();
-   const allowed=request.method==='PUT'?['expectedVersion','record']:['expectedVersion'];if(Object.keys(input).some(k=>!allowed.includes(k))||! /^[a-f0-9]{64}$/.test(input.expectedVersion||''))invalid();
-   return json(await store.mutate({owner,id,kind:request.method,expectedVersion:input.expectedVersion,record:input.record,operationKey:key,nowMs}));
+   const allowed=request.method==='PUT'?['expectedVersion','record','categoryMemoryAction']:['expectedVersion'];if(Object.keys(input).some(k=>!allowed.includes(k))||! /^[a-f0-9]{64}$/.test(input.expectedVersion||''))invalid();
+   return json(await store.mutate({owner,id,kind:request.method,expectedVersion:input.expectedVersion,record:input.record,categoryMemoryAction:input.categoryMemoryAction,operationKey:key,nowMs}));
   }
   if(overview){const q=params(url,['month']);if(!validMonth(q.get('month'),9999))invalid();return json(await store.overview(owner,q.get('month')));}
   const q=params(url,['month','q','type','category','parts','page','pageSize','snapshot']);

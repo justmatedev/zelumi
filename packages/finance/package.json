@@ -13,6 +13,7 @@
     },
     "./parser": "./src/parser.mjs",
     "./categories": "./src/categories.mjs",
+    "./category-memory": {"types":"./src/category-memory.d.mts","default":"./src/category-memory.mjs"},
     "./server/sql": "./src/server/sql.mjs",
     "./server/version": "./src/server/version.mjs"
   },

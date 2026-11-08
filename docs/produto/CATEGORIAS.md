@@ -6,15 +6,15 @@ O bot, a API e o painel compartilham 13 categorias de despesas e a categoria Rec
 
 | Categoria | Exemplos de reconhecimento |
 | --- | --- |
-| Alimentação | mercado, padaria, Uber Eats |
+| Alimentação | mercado, padaria, Uber Eats, sorvete |
 | Transporte | Uber, táxi, ônibus |
 | Casa | aluguel, conta de água, energia elétrica |
 | Saúde | farmácia, médico, plano de saúde |
 | Educação | faculdade, escola, curso, material escolar |
 | Lazer | cinema, show, teatro, jogos |
-| Compras | roupas, calçados, notebook, celular |
+| Compras | roupas, calçados, notebook, celular, cabide |
 | Assinaturas | Netflix, Spotify, assinatura de software |
-| Cuidados pessoais | cabeleireiro, barbeiro, manicure, cosméticos |
+| Cuidados pessoais | cabeleireiro, barbeiro, manicure, cortar cabelo |
 | Pets | veterinário, pet shop, ração |
 | Viagens | passagem aérea, hotel, hospedagem |
 | Impostos e taxas | IPTU, IPVA, imposto de renda, tarifa bancária |
@@ -29,13 +29,33 @@ Receitas reúne as entradas.
 - Expressões específicas são reconhecidas antes dos termos gerais: Uber Eats → Alimentação; ração para cachorro → Pets; material escolar → Educação; plano de saúde → Saúde; seguro viagem → Viagens; assinatura de jogos → Assinaturas.
 - Os termos internos dessas expressões não geram outra classificação, mas outras despesas na mesma descrição continuam sendo consideradas. Uber Eats e táxi → Outros; mercado e farmácia → Outros; mercado e padaria → Alimentação.
 - Sem correspondência reconhecida, o lançamento fica em Outros. Marcas ambíguas como Amazon ou Google isoladamente não determinam a categoria.
-- Novos lançamentos e mensagens reenviadas para edição no bot passam pelas regras do catálogo. Registros salvos mantêm sua categoria até uma edição explícita; editar apenas o nome no painel mantém a categoria escolhida.
-- Todas as categorias aparecem nos filtros e no editor do painel.
+- Registros salvos mantêm sua categoria. Renomear no painel não executa categorização. No bot, editar a mesma descrição e tipo preserva a categoria manual ou de origem antiga desconhecida; descrever outra compra executa a classificação.
+- Todas as categorias aparecem nos filtros e no editor do painel. A lista de categorias é fixa; as associações pessoais não criam novas categorias.
 
-A classificação usa regras locais, sem IA. Não há subcategorias, aprendizagem com correções ou recategorização em massa.
+## Memória da conta
 
-## Exemplos no bot
+No editor, “Lembrar categoria para esta descrição” grava uma associação pessoal ao salvar. A opção é marcada após uma mudança explícita de categoria e pode ser desmarcada para corrigir só aquela compra. Alterar apenas nome, valor ou data não ensina. Uma escolha explícita de Outros também é lembrada e impede substituição por IA.
 
-`Netflix 39,90` → Assinaturas; `curso 120` → Educação; `veterinário 80` → Pets; `IPVA 300` → Impostos e taxas. Para corrigir manualmente, abra o registro no painel e escolha Editar → Categoria. No bot, editar exige reenviar a operação e executa a classificação novamente.
+Descrições normalizadas ignoram caixa, acentos, pontuação, espaços e as palavras funcionais removidas pelo interpretador. Valores e datas são campos separados; números significativos, como iPhone 15 e Xbox 360, permanecem na chave. A associação pertence somente à conta atual. Excluir uma compra não apaga sua memória.
 
-A lista é pronta e compartilhada entre contas. Novas palavras e categorias exigem uma atualização do catálogo no código. Um termo reconhecido não representa compreensão geral da mensagem: detalhes não cadastrados podem continuar em Outros.
+Perfil → Categorias aprendidas permite paginar, editar e esquecer descrições e termos. Uma regra por termo só é ativada por confirmação da pessoa. Sugestões usam pelo menos três descrições manuais distintas com a mesma categoria e sem evidência conflitante; repetição da mesma descrição e resultados da IA não contam. São examinadas até 1.000 associações manuais recentes, com até 20 sugestões. Cada conta pode cadastrar até 200 termos.
+
+Termos pessoais respeitam palavras completas e priorizam a expressão mais específica no trecho correspondente. Outros trechos ainda são analisados: uma regra para Bambi não resolve “Bambi e farmácia” como Alimentação. Sem uma associação exata para a descrição inteira, despesas de categorias diferentes continuam em Outros.
+
+Correção, memória e recibo são confirmados juntos, com versão, sessão e idempotência. Editar um lançamento não muda associações antigas para outro nome. Uma edição recusada não ensina nada. O histórico não é recategorizado nem usado como confirmação humana automaticamente.
+
+## Classificação no Worker
+
+A ordem é: associação pessoal da descrição → termos pessoais junto das regras gerais → regras gerais → cache IA válido → Workers AI → Outros. Receitas permanecem em Receitas. Conflitos, pagamentos de fatura e transferências não são resolvidos por IA; o produto não ganhou tratamento contábil para esses pagamentos.
+
+A IA é automática para todas as contas quando habilitada na configuração operacional, com binding disponível e plano Free verificado. Não há botão de IA no Perfil. A descrição necessária e as categorias permitidas podem ser enviadas à Cloudflare; valor, data, ID Telegram e histórico não são enviados. Prompts e respostas não entram em logs.
+
+A consulta tem prazo de dois segundos, saída de até 64 tokens e uma tentativa. Resposta inválida, abstenção, indisponibilidade ou limite mantêm a categoria local. O cache por conta e versão de modelo/prompt dura até 30 dias e nunca é confirmação para criar termos pessoais. O resultado da IA pode estar errado e pode ser corrigido no editor.
+
+Os limites iniciais são 200 tentativas diárias globais e 20 por conta, reservadas atomicamente. A cota diária da plataforma esgotada suspende consultas até a próxima meia-noite UTC; erro temporário usa pausa de 60 segundos. O dia UTC renova às 21h de Brasília. Consultar [configuração e gratuidade](../infraestrutura/CLOUDFLARE.md#categorização-com-workers-ai).
+
+No bot SQLite local, a classificação segue somente o catálogo local; memória do D1 não é sincronizada com esse banco. Desenvolvimento fictício e testes não fazem consultas reais à IA por padrão.
+
+## Exemplos
+
+`Sorvete Bambi 3` → Alimentação; `cabide 12,98` → Compras; `pente para máquina cortar cabelo 37,78` → Cuidados pessoais. Depois de corrigir “Bambi da esquina” no painel e lembrar Alimentação, repetir essa descrição com outro valor reutiliza a memória sem IA.

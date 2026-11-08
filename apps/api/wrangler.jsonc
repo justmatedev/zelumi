@@ -10,9 +10,15 @@
   "preview_urls": false,
   "vars": {
     "BOT_TIMEZONE": "America/Sao_Paulo",
+    "CATEGORY_AI_ENABLED": "true",
+    "CATEGORY_AI_PLAN": "free",
+    "CATEGORY_AI_MODEL": "@cf/google/gemma-4-26b-a4b-it",
+    "CATEGORY_AI_DAILY_LIMIT": "200",
+    "CATEGORY_AI_USER_DAILY_LIMIT": "20",
     "APP_ORIGIN": "https://usezelumi.vercel.app",
     "TELEGRAM_BOT_USERNAME": "zelumi_bot"
   },
+  "ai": { "binding": "AI" },
   "assets": {
     "directory": "../web/out",
     "binding": "ASSETS",

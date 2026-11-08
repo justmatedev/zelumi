@@ -8,6 +8,7 @@ import {cleanupAuth} from './auth/store.mjs';
 import {handleFinance} from './finance/routes.mjs';
 import {cleanupFinance} from './finance/store.mjs';
 import {assertBotBinding} from './telegram/bot-binding.mjs';
+import {cleanupCategories} from './categories/store.mjs';
 
 function settings(env) {
   if(!/^\d+:[A-Za-z0-9_-]+$/.test(env.TELEGRAM_BOT_TOKEN||''))throw new Error('Token ausente.');
@@ -55,7 +56,7 @@ export function createWorker({apiFactory=createTelegram,clock=()=>new Date(),tel
       const message=update.callback_query?.message||update.message;
       if(!message||message.chat?.type!=='private')return new Response('OK');
       try{
-        const now=clock(),store=new D1Store(env.DB,{...config,now});
+        const now=clock(),store=new D1Store(env.DB,{...config,now,aiEnv:env});
         await handleUpdate(store,update,{...config,now});
         // Só devolve 200 depois do commit. Em erro no D1 o Telegram deve reenviar.
         // A fila persistente permite confirmar o webhook mesmo com Telegram fora.
@@ -77,6 +78,7 @@ export function createWorker({apiFactory=createTelegram,clock=()=>new Date(),tel
       try{if(env.DB)await cleanupAuth(env.DB,clock().getTime());}
       catch{console.error('Falha na limpeza de sessões.');}
       try{if(env.DB)await cleanupFinance(env.DB,clock().getTime());}catch{console.error('Falha na limpeza de operações.');}
+      try{if(env.DB)await cleanupCategories(env.DB,clock().getTime());}catch{console.error('Falha na limpeza de categorias.');}
     }
   };
 }

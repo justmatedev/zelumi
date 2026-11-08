@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { parse, resolve, schedule, hasExplicitDate } from '@zelumi/finance/parser';
+import {normalizeCategoryDescription} from '@zelumi/finance/category-memory';
 
 const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const brl = cents => formatter.format(cents / 100);
@@ -25,7 +26,7 @@ google 12x 80 → 12 parcelas de R$ 80 (total R$ 960)
 /id — seu identificador no Telegram
 /ajuda — mostra esta mensagem
 
-Use Editar para substituir a compra inteira pela mensagem completa. Uso regras, não IA. Aceito texto e datas hoje/ontem ou dia/mês/ano. /mes usa as parcelas de cada mês; /hoje usa valores integrais pela data da compra. Seus registros são os mesmos do site Zelumi.
+Use Editar para substituir a compra inteira pela mensagem completa. Uso sua memória de categorias e regras locais. Quando necessário e disponível, a IA pode receber a descrição da despesa para sugerir uma categoria; valores e identificação da conta não são enviados. Você pode corrigir e lembrar categorias no painel. Aceito texto e datas hoje/ontem ou dia/mês/ano. /mes usa as parcelas de cada mês; /hoje usa valores integrais pela data da compra. Seus registros são os mesmos do site Zelumi.
 
 📊 Acompanhe seus lançamentos pelo site:
 https://usezelumi.vercel.app`;
@@ -44,7 +45,7 @@ export function handleUpdate(store, update, { timezone = 'America/Sao_Paulo', no
     const ack = text => { if(callback) store.enqueue('answerCallbackQuery', { callback_query_id: callback.id, text }); };
     if (!sender || !message || message.chat?.type !== 'private' || sender.is_bot || !Number.isSafeInteger(sender.id) || sender.id<=0 || message.chat.id!==sender.id) { ack('Use a conversa privada com o bot.'); return; }
     const owner = String(sender.id), chat = message.chat.id;
-    const reply = (text, buttons) => store.enqueue('sendMessage', { chat_id: chat, text, ...(buttons ? { reply_markup: { inline_keyboard: buttons } } : {}) });
+    const reply = (text, buttons) => {const payload=()=>({chat_id:chat,text:typeof text==='function'?text():text,...(buttons?{reply_markup:{inline_keyboard:buttons}}:{})});store.enqueue('sendMessage',typeof text==='function'?payload:payload());};
     const text = message.text?.trim() || '';
     const command = text.startsWith('/') ? text.split(/[\s@]/)[0].toLowerCase() : '';
     if (!callback && command === '/id') { reply(`Seu ID no Telegram: ${owner}`); return; }
@@ -69,11 +70,15 @@ export function handleUpdate(store, update, { timezone = 'America/Sao_Paulo', no
         if(!pending?.originalVersion||current.version!==pending.originalVersion){store.clearPending(owner);reply('Esse lançamento mudou desde o início da edição. Abra Editar novamente para revisar. Nada foi substituído.');return;}
         if(!dateWasExplicit&&record.date===pending.originalDate&&record.installments===pending.originalInstallments&&pending.originalStartMonth)record.installmentStartMonth=pending.originalStartMonth;
       }
+      const current=editing?store.record(owner,editing):null;
+      const preserve=!!current&&current.type===record.type&&normalizeCategoryDescription(current.description)===normalizeCategoryDescription(record.description)&&['manual','unknown'].includes(current.categorySource||'unknown');
+      if(preserve)record.category=current.category;
+      store.categorize?.(owner,record,{preserve,source:current?.categorySource||'unknown'});
       record.schedule = schedule(record);
       const id = editing || store.insert(owner, record);
       if(editing) store.replace(owner, id, record);
       store.clearPending(owner);
-      reply(`✅ ${editing?'Lançamento atualizado':record.type==='receita'?'Entrada registrada':'Despesa registrada'}\n${record.description} · ${brl(record.amount)}\n${record.category} · ${record.date.split('-').reverse().join('/')}${record.installments>1?`\n${record.installments} parcelas; primeira: ${brl(record.schedule[0].amount)}. Total: ${brl(record.amount)}.`:''}`, recordButtons(id));
+      reply(()=>`✅ ${editing?'Lançamento atualizado':record.type==='receita'?'Entrada registrada':'Despesa registrada'}\n${record.description} · ${brl(record.amount)}\n${record.category} · ${record.date.split('-').reverse().join('/')}${record.installments>1?`\n${record.installments} parcelas; primeira: ${brl(record.schedule[0].amount)}. Total: ${brl(record.amount)}.`:''}`, recordButtons(id));
     }
     function remove(id) {
       if(!store.remove(owner,id)) { reply('Esse lançamento não está disponível.'); return; }
