@@ -2108,6 +2108,72 @@ button {
   }
 }
 
+/* Perfil: adapte as preferências e a conta à largura real do conteúdo. */
+@container page (max-width: 500px) {
+  .account-heading {
+    display: grid;
+    grid-template-columns: 49px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .account-name {
+    grid-column: 2;
+  }
+
+  .linked-label {
+    grid-column: 2;
+    justify-self: start;
+    margin: 0;
+  }
+
+  .theme-options {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+
+  .theme-option {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-3);
+  }
+
+  .theme-swatch {
+    height: 56px;
+  }
+
+  .theme-label {
+    margin: 0;
+  }
+}
+
+@container page (max-width: 360px) {
+  .account-facts > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .account-facts dd {
+    text-align: left;
+  }
+}
+
+@media (max-width: 420px) {
+  .header-profile {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    justify-content: center;
+  }
+
+  .header-profile span {
+    display: none;
+  }
+}
+
 .breadcrumb>.breadcrumb-parent {
   color: var(--muted);
 }
