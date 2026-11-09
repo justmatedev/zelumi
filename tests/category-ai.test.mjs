@@ -37,3 +37,25 @@ test('cadeia evita IA em memória/regras/conflitos, usa cache e recua após cota
  env.AI.run=async()=>{calls++;return {response:{category:'Compras'}};};const next=Date.parse('2026-11-09T00:00:00Z');assert.equal((await resolveCategory({db,owner:'11',record:{type:'despesa',description:'mais uma'},nowMs:next,env})).category,'Compras');assert.equal(calls,3);
  assert.equal((await resolveCategory({db,owner:'11',record:{type:'despesa',description:'nova'},nowMs:next,env:{...env,CATEGORY_AI_PLAN:'unverified'}})).category,'Outros');assert.equal(calls,3);
 });
+test('Gemma entrega categoria dentro do limite sem consumir a saída com raciocínio interno',async()=>{
+ const binding={run:async(model,input,...options)=>{
+  // Replica o contrato serializável do binding e as duas respostas reais observadas.
+  if(options.length)throw new Error('Cannot stringify arbitrary non-POJOs');
+  assert.equal(model,'@cf/google/gemma-4-26b-a4b-it');
+  assert.equal(input.max_tokens,64);
+  return input.chat_template_kwargs?.enable_thinking===false
+   ?{choices:[{finish_reason:'stop',message:{role:'assistant',content:'{"category":"Assinaturas"}'}}]}
+   :{choices:[{finish_reason:'length',message:{role:'assistant',content:null,reasoning:'a resposta ainda não foi gerada'}}]};
+ }};
+ const result=await inferCategory(binding,{description:'Telegram Premium',categories:['Assinaturas','Outros']});
+ assert.deepEqual(result,{status:'ok',category:'Assinaturas'});
+});
+test('raciocínio e respostas truncadas sem conteúdo não são tratados como categoria',async()=>{
+ const result=await inferCategory({run:async()=>({choices:[{finish_reason:'length',message:{content:null,reasoning_content:'{"category":"Compras"}'}}]})},options);
+ assert.equal(result.status,'invalid');assert.equal(result.category,null);
+});
+test('cancelamento anterior à consulta não envia uma solicitação de IA',async()=>{
+ const controller=new AbortController();controller.abort();let calls=0;
+ const result=await inferCategory({run:async()=>{calls++;return {response:{category:'Compras'}};}},{...options,signal:controller.signal});
+ assert.equal(result.status,'timeout');assert.equal(calls,0);
+});
