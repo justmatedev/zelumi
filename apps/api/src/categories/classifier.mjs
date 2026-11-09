@@ -10,7 +10,7 @@ export async function resolveCategory({db,owner,record,nowMs=Date.now(),env={}})
  const terms=store.terms?await store.terms(owner):[];
  const local=chooseLocalCategory({type:record.type,description:record.description,manual:memory.manual,terms});
  if(!local.needsAI)return local;
- if(memory.ai)return {category:memory.ai,source:'ai'};
+ if(memory.ai)return {category:memory.ai,source:'ai-cache'};
  if(env.CATEGORY_AI_ENABLED!=='true'||env.CATEGORY_AI_PLAN!=='free'||!env.AI?.run||await store.blocked(nowMs))return local;
  const dayUTC=new Date(nowMs).toISOString().slice(0,10);
  if(!await store.reserveAttempt(owner,dayUTC,{global:limit(env.CATEGORY_AI_DAILY_LIMIT,200),user:limit(env.CATEGORY_AI_USER_DAILY_LIMIT,20)}))return local;
@@ -21,5 +21,5 @@ export async function resolveCategory({db,owner,record,nowMs=Date.now(),env={}})
  }
  if(result.status==='quota')await store.pause(Date.parse(dayUTC+'T00:00:00Z')+86400000,'quota');
  else if(['transient','timeout'].includes(result.status))await store.pause(nowMs+60000,result.status);
- return local;
+ return {...local,source:'ai-fallback'};
 }

@@ -77,3 +77,9 @@ it('recibo completo confirma salvamento de memória mesmo sem mudança financeir
  fireEvent.click(await screen.findByRole('button',{name:'Verificar resultado'}));await waitFor(()=>expect(changed).toHaveBeenCalledOnce());
  expect(String(fetch.mock.calls[3][0])).toContain('/api/finance/operations/');
 });
+it('mostra a categoria sem exibir origem ou uso de IA nos detalhes',async()=>{
+ Object.defineProperty(HTMLDialogElement.prototype,'showModal',{configurable:true,value:function(){this.open=true;}});
+ vi.stubGlobal('fetch',vi.fn().mockImplementation((path:string)=>Promise.resolve(new Response(JSON.stringify(path==='/api/session'?{user:{firstName:'Teste'},csrfToken:'csrf'}:{...record,category:'Assinaturas',categorySource:'ai'})))));
+ render(<SessionProvider><RecordDialog id="1" onClose={()=>{}} onChanged={()=>{}}/></SessionProvider>);
+ await screen.findByText('Assinaturas');expect(screen.queryByText('Origem da categoria')).not.toBeInTheDocument();expect(screen.queryByText('IA',{exact:true})).not.toBeInTheDocument();
+});

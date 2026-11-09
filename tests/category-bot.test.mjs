@@ -34,3 +34,14 @@ test('correção durante classificação impede commit obsoleto e falha de IA ma
  const fallback=new D1Store(db,{botId:'123',now,classify:async()=>{throw new Error('offline');}});
  await handleUpdate(fallback,message(1,'sorvete 5'),{now});assert.equal(JSON.parse((await db.prepare('SELECT body FROM cloud_records').first()).body).category,'Alimentação');
 });
+test('origem é preservada nos detalhes sem expor IA na confirmação do Telegram',async t=>{
+ const db=await setup(t);let calls=0;
+ const aiEnv={CATEGORY_AI_ENABLED:'true',CATEGORY_AI_PLAN:'free',AI:{run:async()=>{calls++;return {response:{category:'Assinaturas'}};}}};
+ const save=async(id,text)=>{await handleUpdate(new D1Store(db,{botId:'123',now,aiEnv}),message(id,text),{now});return JSON.parse((await db.prepare('SELECT payload FROM cloud_outbox ORDER BY id DESC LIMIT 1').first()).payload).text;};
+ const first=await save(1,'telegram premium 50');assert.match(first,/Assinaturas/);assert.doesNotMatch(first,/Origem:|\bIA\b/);
+ const cached=await save(2,'telegram premium 60');assert.match(cached,/Assinaturas/);assert.doesNotMatch(cached,/Origem:|\bIA\b/);assert.equal(calls,1);
+ aiEnv.AI.run=async()=>({response:{category:null}});
+ const fallback=await save(3,'compra misteriosa 5');assert.match(fallback,/Outros/);assert.doesNotMatch(fallback,/Origem:|\bIA\b/);
+ const latest=await db.prepare('SELECT id FROM cloud_records ORDER BY sequence DESC LIMIT 1').first();
+ assert.equal((await new FinanceStore(db).detail('11',latest.id)).categorySource,'ai-fallback');
+});

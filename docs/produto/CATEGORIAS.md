@@ -59,3 +59,7 @@ No bot SQLite local, a classificação segue somente o catálogo local; memória
 ## Exemplos
 
 `Sorvete Bambi 3` → Alimentação; `cabide 12,98` → Compras; `pente para máquina cortar cabelo 37,78` → Cuidados pessoais. Depois de corrigir “Bambi da esquina” no painel e lembrar Alimentação, repetir essa descrição com outro valor reutiliza a memória sem IA.
+
+## Procedência interna
+
+A procedência da categoria é armazenada internamente para preservar decisões manuais e distinguir memória, regras, cache e inferência. O painel e as confirmações do Telegram mostram a categoria sem exibir essa procedência. Registros antigos podem não distinguir consulta à IA de reutilização de cache. Esses metadados não são um relatório de consumo.
