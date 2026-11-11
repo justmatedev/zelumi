@@ -1149,7 +1149,7 @@ button {
 
 .finance-middle {
   display: grid;
-  grid-template-columns: minmax(245px,.85fr) minmax(0,1.65fr);
+  grid-template-columns: minmax(0, var(--overview-list-ratio)) minmax(245px, var(--overview-chart-ratio));
   gap: 22px;
 }
 
@@ -1587,7 +1587,7 @@ button {
   }
 
   .finance-middle {
-    grid-template-columns: minmax(220px,.9fr) minmax(0,1.5fr);
+    grid-template-columns: minmax(0, var(--overview-list-ratio)) minmax(220px, var(--overview-chart-ratio));
     gap: var(--space-4);
   }
 
@@ -1628,7 +1628,7 @@ button {
     grid-template-columns: 1fr;
   }
 
-  .finance-middle>.card:first-child {
+  .finance-middle>.card:not(.finance-transactions) {
     max-width: none;
   }
 
@@ -2280,7 +2280,7 @@ body {
 }
 
 .finance-kpi {
-  padding: var(--space-6);
+  padding: var(--metric-padding-block) var(--space-6);
 }
 
 .finance-kpi p {
@@ -2295,7 +2295,7 @@ body {
 
 .finance-kpi > strong {
   line-height: var(--leading-metric);
-  margin-block: 18px 12px;
+  margin-block: var(--metric-value-gap);
 }
 
 .finance-middle h2, .finance-transactions h2 {
@@ -2617,7 +2617,7 @@ body {
   }
 
   .finance-kpi {
-    padding: var(--space-6);
+    padding: var(--metric-padding-block) var(--space-6);
   }
 
   .linked-label {
@@ -2686,7 +2686,7 @@ body {
   }
 
   .finance-kpi {
-    padding: var(--space-6);
+    padding: var(--metric-padding-block) var(--space-6);
   }
 
   .theme-options {

@@ -136,7 +136,8 @@ Reutilizar [Button](../apps/web/components/ui/button.tsx) e [Card](../apps/web/c
 - Mês e atualizar ficam agrupados e centralizados verticalmente em relação a esse bloco quando estão na mesma linha.
 - No celular os controles ficam abaixo da descrição; atualizar pode ser apenas um ícone nomeado.
 - O botão central do seletor de mês mantém 12 px de espaço horizontal entre o texto e as bordas do fundo de interação, tanto em repouso quanto no hover.
-- Indicadores apresentam rótulo, valor e observação. O valor tem a maior ênfase.
+- A Visão geral começa diretamente pelo título, sem assinatura acima dele. Indicadores apresentam rótulo, valor e observação. O valor tem a maior ênfase; o espaço interno vertical usa `--metric-padding-block` (20 px), o horizontal mantém 24 px e os intervalos do valor usam `--metric-value-gap` (12 px).
+- Últimos lançamentos vêm antes da distribuição por categoria na leitura e no celular. Em duas colunas, recebem a maior largura, definida por `--overview-list-ratio` e `--overview-chart-ratio`; preservar o gráfico e sua legenda completos.
 - Despesas mostram **“Parcelas: R$ …”** e **“À vista: R$ …”** em linhas separadas.
 - Não recolocar uma faixa vazia exclusiva para atualizar entre cabeçalho e indicadores.
 
@@ -197,7 +198,7 @@ Os controles próprios ficam em [components/ui](../apps/web/components/ui) e os 
 A navegação é compartilhada no [layout do painel](../apps/web/app/(dashboard)/layout.tsx), com [AppShell](../apps/web/components/layout/app-shell.tsx) e [Sidebar](../apps/web/components/layout/sidebar.tsx). Não colocar outro AppShell dentro de cada página: isso recria a barra e perde seu estado intermediário ao navegar.
 
 - Barra expandida: `--sidebar-expanded` 226 px; em telas intermediárias, `--sidebar-medium` 200 px.
-- Barra recolhida: `--sidebar-collapsed` 76 px; símbolo, ícones e dicas por hover/foco. A preferência fica no navegador.
+- Barra recolhida: `--sidebar-collapsed` 76 px; símbolo, ícones e dicas por hover/foco. A barra começa expandida no primeiro acesso; a preferência de recolher/expandir fica no navegador.
 - Até **760 px**, navegação em menu modal sobre o conteúdo. Fechar por botão, Escape, toque fora ou mudança de página; devolver foco ao acionador e evitar interação com o fundo.
 - Dicas podem ser dispensadas com Escape e continuam acessíveis ao mover o ponteiro sobre elas.
 - Reorganizar pela largura disponível do componente, considerando a barra aberta/recolhida, e não apenas pela largura total da janela.
