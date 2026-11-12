@@ -2,11 +2,21 @@
 
 O padrão atual de marca e interface está no [Guia visual do Zelumi](docs/GUIA-VISUAL.md), com valores compartilhados em [tokens.css](apps/web/app/tokens.css). A [arquitetura](docs/desenvolvimento/ARQUITETURA.md) descreve as aplicações, os pacotes e seus limites.
 
-Gerenciamento financeiro com registros rápidos pelo Telegram. O bot funciona em Cloudflare Workers + D1; o site usa Next.js, TypeScript, Tailwind e componentes shadcn/ui personalizados. O interpretador do bot usa regras locais; a categorização no Worker combina memória pessoal e regras, com Workers AI opcional como complemento operacional.
+Gerenciamento financeiro com registros rápidos pelo Telegram. O bot funciona em Cloudflare Workers + D1; o site usa Next.js, TypeScript, Tailwind e componentes shadcn/ui personalizados. O interpretador do bot usa regras locais; a categorização no Worker combina memória pessoal e regras locais, recorrendo à Workers AI quando necessário e disponível.
 
 Os lançamentos usam [13 categorias prontas de despesas e Receitas](docs/produto/CATEGORIAS.md). O bot reconhece palavras completas e expressões específicas, reaproveita correções e termos confirmados por conta e pode consultar Workers AI para descrições sem correspondência. Conflitos continuam em Outros. O editor permite lembrar uma categoria; Perfil → Categorias aprendidas permite revisar ou esquecer associações. A IA é automática quando configurada e disponível, com fallback local ao atingir limites ou falhar.
 
 A configuração do endereço `usezelumi.vercel.app`, com site na Vercel e backend na Cloudflare, está em [docs/VERCEL.md](docs/infraestrutura/VERCEL.md).
+
+## O Zelumi em uso
+
+Visão geral do painel web, com receitas, despesas, parcelas e distribuição por categoria. Todos os dados desta captura são fictícios.
+
+![Painel do Zelumi no tema claro, com resumo financeiro de novembro de 2026, últimos lançamentos e gráfico de despesas por categoria.](docs/imagens/painel-web.png)
+
+Para registrar pelo Telegram, basta enviar uma mensagem. A ilustração abaixo, presente na tela de entrada do Zelumi, mostra um exemplo de uso do bot.
+
+<img src="docs/imagens/registro-telegram.png" alt="Ilustração da tela de entrada: a mensagem pão 10 recebe uma confirmação de despesa registrada de R$ 10,00." width="480">
 
 ## Organização do repositório
 
