@@ -26,6 +26,8 @@ O bot e o Worker usam `@zelumi/bot-core/engine` e `/telegram`. Não importar arq
 
 `components/ui` contém os controles comuns; `components/layout`, a navegação e a estrutura do painel. Marca, tema, hooks de modal, cliente HTTP e utilidades comuns continuam fora das funcionalidades. Seguir o [guia visual](../GUIA-VISUAL.md).
 
+A Visão geral usa `useFinance` com cache em memória por componente e sessão: até 12 consultas, válidas por 30 segundos. Após carregar o mês selecionado, antecipa o mês anterior e o próximo; meses disponíveis no cache aparecem sem nova espera. Atualizar, alterações pelo editor e retorno à aba invalidam o cache. Troca de sessão limpa os dados, e sair da página descarta essa memória; não há persistência financeira no navegador. Consultas sem cache mantêm o comportamento de busca atual.
+
 ## Comandos na raiz
 
 | Comando | Resultado |
