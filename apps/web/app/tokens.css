@@ -71,6 +71,8 @@
   --sidebar-collapsed: 76px;
   --content-max: 1320px;
   --dialog-max: 580px;
+  --demo-notice-padding: var(--space-4);
+  --demo-notice-text: var(--text-md);
 
   /* Shared form controls and anchored menus. Colors follow the active theme. */
   --field-radius: var(--radius-control);
