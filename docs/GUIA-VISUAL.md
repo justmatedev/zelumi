@@ -251,3 +251,7 @@ Regras em contextos responsivos distintos continuam necessárias. Preservar o re
 ## 11. Categorias aprendidas
 
 O editor de lançamentos usa uma caixa de seleção com rótulo visível para lembrar uma categoria apenas na conta atual. A caixa fica ao lado do rótulo, com direção de linha explícita para não herdar a coluna dos campos comuns. O tamanho do controle usa `--control-check-size`; manter alvo de interação de pelo menos 44 px, foco e bloqueio durante salvamento. O Perfil reúne descrições e termos no mesmo Card e usa os controles segmentados, Select e Button existentes. Listas de associações quebram textos longos e empilham ações até 600 px; sugestões exigem confirmação explícita. Não exibir um controle de IA no Perfil.
+
+## 12. Foto da conta
+
+Perfil e atalho do cabeçalho usam o mesmo avatar circular com a foto fornecida pelo login do Telegram. Recortar proporcionalmente, sem distorcer, e mostrar a inicial quando a foto estiver ausente ou falhar. Usar os tokens `--avatar-size`, `--avatar-compact-size` e `--avatar-text-size`; manter os nomes acessíveis dos links. A foto é decorativa ao lado do nome e atualiza no próximo login.

@@ -7,3 +7,9 @@ it('renderiza nome como texto e suporta conta sem username',async()=>{
  const {container}=render(<SessionProvider><Profile/></SessionProvider>);await screen.findByText('Não informado');expect(container.querySelector('img')).toBeNull();
  expect(screen.getByRole('button',{name:'Sair da conta'})).toBeEnabled();
 });
+
+it('mostra foto Telegram na conta',async()=>{
+ vi.stubGlobal('fetch',vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({user:{firstName:'João',lastName:null,username:null,photoUrl:'https://example.com/a.jpg'},csrfToken:'csrf'}))));
+ const {container}=render(<SessionProvider><Profile/></SessionProvider>);await screen.findByText('Não informado');
+ expect(container.querySelector('.avatar img')).toHaveAttribute('src','https://example.com/a.jpg');
+});

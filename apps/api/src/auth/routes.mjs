@@ -50,7 +50,7 @@ export async function handleAuth(request,env,{nowMs,telegramKeys}) {
   // Read-only requests must not overwrite a newer login cookie when delayed.
   if(!profile)return json({error:'Sessão encerrada. Entre novamente.'},401,path==='/api/session/logout'?{'Set-Cookie':setCookie(SESSION,'',0)}:{});
   const csrf=await deriveCsrf(session,env.TELEGRAM_BOT_TOKEN,'session');
-  if(path==='/api/session')return json({user:{firstName:profile.first_name,lastName:profile.last_name,username:profile.username},csrfToken:csrf});
+  if(path==='/api/session')return json({user:{firstName:profile.first_name,lastName:profile.last_name,username:profile.username,photoUrl:profile.photo_url??null},csrfToken:csrf});
   if(Object.keys(data).length)throw new HttpError(400,'Corpo inválido.');
   if(!constantTimeEqual(request.headers.get('X-CSRF-Token'),csrf))throw new HttpError(403,'Solicitação não autorizada.');
   await store.deleteSession(hash);return json({ok:true},200,{'Set-Cookie':setCookie(SESSION,'',0)});

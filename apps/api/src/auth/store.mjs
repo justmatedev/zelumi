@@ -20,15 +20,15 @@ export class AuthStore {
    this.query(`INSERT INTO web_auth_accepts(flow_hash,payload_hash,attempt_id,created_at)
     SELECT token_hash,?,?,? FROM web_auth_flows WHERE token_hash=? AND csrf_hash=? AND expires_at>?
     ON CONFLICT DO NOTHING`,payloadHash,attemptId,nowMs,flowHash,csrfHash,nowMs),
-   this.query(`INSERT INTO web_users(owner,first_name,last_name,username,created_at,updated_at)
-    SELECT ?,?,?,?,?,? WHERE ${gate}
-    ON CONFLICT(owner) DO UPDATE SET first_name=excluded.first_name,last_name=excluded.last_name,username=excluded.username,updated_at=excluded.updated_at`,profile.owner,profile.firstName,profile.lastName,profile.username,nowMs,nowMs,attemptId),
+   this.query(`INSERT INTO web_users(owner,first_name,last_name,username,photo_url,created_at,updated_at)
+    SELECT ?,?,?,?,?,?,? WHERE ${gate}
+    ON CONFLICT(owner) DO UPDATE SET first_name=excluded.first_name,last_name=excluded.last_name,username=excluded.username,photo_url=excluded.photo_url,updated_at=excluded.updated_at`,profile.owner,profile.firstName,profile.lastName,profile.username,profile.photoUrl??null,nowMs,nowMs,attemptId),
    this.query(`INSERT INTO web_sessions(token_hash,owner,created_at,expires_at) SELECT ?,?,?,? WHERE ${gate}`,sessionHash,profile.owner,nowMs,sessionExpiresAt,attemptId),
    this.query(`DELETE FROM web_auth_flows WHERE token_hash=? AND ${gate}`,flowHash,attemptId)
   ]);
   return results[0].meta.changes===1;
  }
- getSession(hash,nowMs){return this.query(`SELECT s.owner,u.first_name,u.last_name,u.username FROM web_sessions s
+ getSession(hash,nowMs){return this.query(`SELECT s.owner,u.first_name,u.last_name,u.username,u.photo_url FROM web_sessions s
   JOIN web_users u ON u.owner=s.owner WHERE s.token_hash=? AND s.expires_at>?`,hash,nowMs).first();}
  deleteSession(hash){return this.query('DELETE FROM web_sessions WHERE token_hash=?',hash).run();}
  async cleanup(nowMs) {

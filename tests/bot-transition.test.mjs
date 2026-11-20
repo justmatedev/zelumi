@@ -31,7 +31,7 @@ test('troca de bot preserva finanças e isola o estado operacional',async t=>{
   await db.prepare("INSERT INTO cloud_records(id,owner,body) VALUES('1','11',?)").bind(JSON.stringify(record)).run();
   await db.prepare("INSERT INTO cloud_state VALUES('11',7,'{\"mode\":\"editing\"}')").run();
   await db.prepare("INSERT INTO cloud_processed VALUES(1,'11','old',?)").bind(now.getTime()).run();
-  await db.prepare("INSERT INTO web_users VALUES('11','Teste',NULL,NULL,?,?)").bind(now.getTime(),now.getTime()).run();
+  await db.prepare("INSERT INTO web_users(owner,first_name,last_name,username,created_at,updated_at) VALUES('11','Teste',NULL,NULL,?,?)").bind(now.getTime(),now.getTime()).run();
   await db.prepare("INSERT INTO web_sessions VALUES(?,'11',?,?)").bind(await hashToken('a'.repeat(64)),now.getTime(),now.getTime()+86400000).run();
   await db.prepare("INSERT INTO web_auth_flows VALUES('flow','csrf',?,?)").bind(now.getTime(),now.getTime()+600000).run();
   await db.prepare("INSERT INTO web_auth_accepts VALUES('used','payload','attempt',?)").bind(now.getTime()).run();

@@ -14,7 +14,7 @@ test('API financeira com sessão real local, versões e idempotência',async t=>
  const p=await getPlatformProxy({configPath:'tests/wrangler.jsonc',persist:false,remoteBindings:false,envFiles:[resolve('.dev.vars.example')]});t.after(()=>p.dispose());const db=p.env.DB;await migrate(db);
  const env={DB:db,APP_ORIGIN:origin,TELEGRAM_BOT_USERNAME:'test_bot',TELEGRAM_BOT_TOKEN:'123:fake'},worker=createWorker({clock:()=>new Date(now)}),token='a'.repeat(64),csrf=await deriveCsrf(token,env.TELEGRAM_BOT_TOKEN,'session');
  for(const [owner,key] of [['11',token],['22','b'.repeat(64)]]){
- await db.prepare('INSERT INTO web_users VALUES(?,?,?,?,?,?)').bind(owner,'Teste',null,null,now,now).run();await db.prepare('INSERT INTO web_sessions VALUES(?,?,?,?)').bind(await hashToken(key),owner,now,now+86400000).run();}
+ await db.prepare('INSERT INTO web_users(owner,first_name,last_name,username,created_at,updated_at) VALUES(?,?,?,?,?,?)').bind(owner,'Teste',null,null,now,now).run();await db.prepare('INSERT INTO web_sessions VALUES(?,?,?,?)').bind(await hashToken(key),owner,now,now+86400000).run();}
  await db.prepare("INSERT INTO cloud_records(id,owner,body) VALUES('1','11',?)").bind(JSON.stringify(record)).run();
  const send=(path,method='GET',body,headers={})=>worker.fetch(new Request(origin+path,{method,headers:{Cookie:`__Host-zelumi_session=${token}`,Origin:origin,'Content-Type':'application/json','X-CSRF-Token':csrf,...headers},...(body===undefined?{}:{body:JSON.stringify(body)})}),env);
  await t.test('resumo mensal e busca Unicode/literal; isolamento e validação',async()=>{

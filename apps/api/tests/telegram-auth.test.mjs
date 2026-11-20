@@ -33,3 +33,11 @@ test('tokens e CSRF têm entropia e separação de propósito',async()=>{
  const a=randomToken(),b=randomToken();assert.notEqual(a,b);assert.match(a,/^[a-f0-9]{64}$/);assert.notEqual(await hashToken(a),a);
  assert.notEqual(await deriveCsrf(a,'123:fake','session'),await deriveCsrf(a,'123:fake','network'));
 });
+
+test('foto HTTPS é opcional e URLs inválidas não impedem login',async()=>{
+ const url='https://cdn4.telesco.pe/file/avatar.jpg';
+ assert.equal((await verify(signClaims(claims({picture:url})))).photoUrl,url);
+ for(const picture of [undefined,null,{},42,'','invalid','http://example.com/a','javascript:alert(1)','https://user:pass@example.com/a']){
+  assert.equal((await verify(signClaims(claims({picture})))).photoUrl,null);
+ }
+});

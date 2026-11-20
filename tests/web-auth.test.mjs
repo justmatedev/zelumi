@@ -46,12 +46,23 @@ test('sessões web com D1 local',async t=>{
   const accepted=await callback(flow);assert.equal(accepted.status,200);assert.deepEqual(await accepted.json(),{ok:true});
   const session=cookie(accepted,'__Host-zelumi_session');assert.ok(session);assert.match(accepted.headers.getSetCookie().join(' '),/SameSite=Lax/);assert.doesNotMatch(accepted.headers.getSetCookie().join(' '),/Domain=/i);
   const info=await send('/api/session',undefined,{headers:{Cookie:session}});assert.equal(info.status,200);assert.equal(info.headers.get('cache-control'),'no-store');
-  const data=await info.json();assert.deepEqual(data.user,{firstName:'João <>&',lastName:null,username:null});assert.ok(data.csrfToken);assert.ok(!JSON.stringify(data).includes(session.split('=')[1]));
+  const data=await info.json();assert.deepEqual(data.user,{firstName:'João <>&',lastName:null,username:null,photoUrl:null});assert.ok(data.csrfToken);assert.ok(!JSON.stringify(data).includes(session.split('=')[1]));
   const row=await db.prepare('SELECT * FROM web_sessions').first();assert.notEqual(row.token_hash,session.split('=')[1]);assert.equal(row.owner,'11');
   assert.equal((await send('/api/session/logout',{}, {headers:{Cookie:session,'X-CSRF-Token':'wrong'}})).status,403);
   const out=await send('/api/session/logout',{}, {headers:{Cookie:session,'X-CSRF-Token':data.csrfToken}});assert.equal(out.status,200);
   assert.equal((await send('/api/session',undefined,{headers:{Cookie:session}})).status,401);
   assert.equal((await send('/api/session/logout',{}, {headers:{Cookie:session,'X-CSRF-Token':data.csrfToken}})).status,401);
+ });
+ await t.test('foto persiste, muda e é removida sem afetar outra conta',async()=>{
+  await reset();
+  const login=async(id,picture)=>{const res=await callback(await start(),payload(id,{picture}));assert.equal(res.status,200);return cookie(res,'__Host-zelumi_session');};
+  const photo='https://cdn4.telesco.pe/file/first.jpg',next='https://cdn4.telesco.pe/file/next.jpg';
+  const session=await login(11,photo);
+  const read=async key=>(await (await send('/api/session',undefined,{headers:{Cookie:key}})).json()).user.photoUrl;
+  assert.equal(await read(session),photo);
+  const other=await login(22,photo);
+  await login(11,next);assert.equal(await read(session),next);assert.equal(await read(other),photo);
+  await login(11,undefined);assert.equal(await read(session),null);assert.equal(await read(other),photo);
  });
  await t.test('rejeita CSRF, origem, método e corpo excessivo antes de autenticar',async()=>{
   await reset();const f=await start();

@@ -3,7 +3,7 @@ import {render,screen,fireEvent,within,waitFor} from '@testing-library/react';
 import {AppShell} from '@/components/layout/app-shell';
 let path='/visao-geral/';
 vi.mock('next/navigation',()=>({usePathname:()=>path,useRouter:()=>({replace:vi.fn()})}));
-vi.mock('@/features/auth/providers/session-provider',()=>({useSession:()=>({status:'authenticated',user:{firstName:'Teste'},csrfToken:'csrf'})}));
+vi.mock('@/features/auth/providers/session-provider',()=>({useSession:()=>({status:'authenticated',user:{firstName:'Teste',photoUrl:'https://example.com/a.jpg'},csrfToken:'csrf'})}));
 beforeEach(()=>{
  localStorage.clear();path='/visao-geral/';
  vi.stubGlobal('matchMedia',vi.fn().mockImplementation(()=>Object.assign(new EventTarget(),{matches:false,media:'(max-width: 760px)'})));
@@ -87,4 +87,9 @@ it('layout compartilhado mantém a mesma barra recolhida entre páginas reais',a
  expect(screen.getByRole('complementary',{name:'Barra lateral'})).toBe(sidebar);
  expect(screen.getByRole('button',{name:'Expandir barra lateral'})).toBeInTheDocument();
  expect(within(sidebar).getByRole('link',{name:'Perfil'})).toHaveAttribute('aria-current','page');
+});
+
+it('mostra foto no atalho de perfil mantendo seu nome acessível',()=>{
+ render(<AppShell>Conteúdo</AppShell>);
+ expect(screen.getByRole('link',{name:'Abrir perfil'}).querySelector('img')).toHaveAttribute('src','https://example.com/a.jpg');
 });

@@ -13,6 +13,10 @@ function positiveInteger(value) {
  if(typeof value!=='string'||! /^[1-9]\d{0,15}$/.test(value))return null;
  return Number.isSafeInteger(Number(value))?value:null;
 }
+function profilePhoto(value) {
+ if(typeof value!=='string'||value.length>4096)return null;
+ try {const url=new URL(value);return url.protocol==='https:'&&!url.username&&!url.password?url.href:null;}catch{return null;}
+}
 export async function verifyTelegramIdToken(token,{botId,nonce,nowMs,keys=telegramKeys}) {
  const invalid=()=>{throw new InvalidTelegramPayload();};
  if(typeof token!=='string'||token.length>12000||!token)invalid();
@@ -39,5 +43,5 @@ export async function verifyTelegramIdToken(token,{botId,nonce,nowMs,keys=telegr
  if(!owner||typeof firstName!=='string'||!firstName||firstName.length>512)invalid();
  if(payload.name!==undefined&&(typeof payload.name!=='string'||!payload.name||payload.name.length>512))invalid();
  for(const key of ['family_name','preferred_username'])if(key in payload&&(typeof payload[key]!=='string'||payload[key].length>4096))invalid();
- return {owner,firstName,lastName:payload.family_name??null,username:payload.preferred_username??null,payloadHash:await hashToken(token)};
+ return {owner,firstName,photoUrl:profilePhoto(payload.picture),lastName:payload.family_name??null,username:payload.preferred_username??null,payloadHash:await hashToken(token)};
 }

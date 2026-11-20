@@ -18,7 +18,7 @@ export async function seedDemo(db,now=new Date()){
  ];
  await db.batch([
   db.prepare("INSERT OR IGNORE INTO cloud_meta(key,value) VALUES('bot_id','999000')"),
-  db.prepare('INSERT INTO web_users VALUES(?,?,?,?,?,?)').bind(DEMO_OWNER,'Conta de teste',null,'zelumi_local',now.getTime(),now.getTime()),
+  db.prepare('INSERT INTO web_users(owner,first_name,last_name,username,created_at,updated_at) VALUES(?,?,?,?,?,?)').bind(DEMO_OWNER,'Conta de teste',null,'zelumi_local',now.getTime(),now.getTime()),
   ...records.map(([description,type,category,amount,installments],index)=>db.prepare('INSERT INTO cloud_records(id,owner,body) VALUES(?,?,?)').bind(String(90000001+index),DEMO_OWNER,JSON.stringify({description,type,category,amount,installments,date:month+'-01',installmentStartMonth:installments>1?month:null}))),
   db.prepare("INSERT INTO cloud_meta(key,value) VALUES('local_demo_seeded',?)").bind(month)
  ]);

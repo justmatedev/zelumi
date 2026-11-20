@@ -1,7 +1,7 @@
 'use client';
 import {createContext,useCallback,useContext,useEffect,useRef,useState,type ReactNode} from 'react';
 import {api,ApiError} from '@/lib/api';
-type User={firstName:string;lastName:string|null;username:string|null};
+type User={firstName:string;lastName:string|null;username:string|null;photoUrl:string|null};
 type Status='loading'|'authenticated'|'anonymous'|'error';
 type Session={user:User|null;csrfToken:string|null;status:Status;refresh:()=>Promise<void>;logout:()=>Promise<void>;expire:()=>void};
 const Context=createContext<Session|null>(null);
