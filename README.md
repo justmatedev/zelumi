@@ -64,6 +64,8 @@ A integração Git da Vercel publica o frontend ao atualizar a branch conectada.
 
 O [workflow CI](.github/workflows/ci.yml) executa `npm ci`, `npm run check`, `npm run cf:check` e `npm run demo:check` em pull requests e pushes na `main`, além de permitir execução manual pela aba Actions. Usa Node.js 24 e não precisa de credenciais do Telegram ou da Cloudflare. Os dry-runs não publicam Workers nem alteram o D1 remoto. O repositório é privado, portanto o histórico das execuções e o badge dependem de acesso ao GitHub.
 
+Após as verificações passarem na `main`, o job **Publicar demonstração** aplica as migrações do D1 exclusivo, publica a demonstração com o código daquele commit e confere `/health`. Também pode ser executado manualmente selecionando a `main` na aba Actions. PRs e outras branches não publicam. O deploy precisa dos secrets `CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_API_TOKEN`; veja o [guia da demonstração](docs/infraestrutura/DEMONSTRACAO.md#publicação-automática-pelo-github-actions). O Worker do produto continua com publicação separada.
+
 Para exigir essas verificações antes de integrar alterações, configurar uma regra de proteção da `main` no GitHub com pull request obrigatório e o check **Testes e build** como obrigatório, após a primeira execução. O workflow sozinho não bloqueia merges nem a publicação direta pela integração da Vercel.
 
 ## Desenvolver o site localmente

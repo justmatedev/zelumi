@@ -53,4 +53,21 @@ As sessões duram até 24 horas, com cookie `Secure`, `HttpOnly` e `SameSite=Lax
 
 O cron horário remove até 100 contas vencidas por execução, incluindo sessões, registros, projeções, operações idempotentes e categorias aprendidas. O acesso expira independentemente da limpeza física. Logout revoga o acesso imediatamente, mas os dados fictícios da conta anterior aguardam essa limpeza. Monitore erros do cron e os limites de uso do D1/Workers na Cloudflare; um acúmulo acima de 100 contas vencidas por hora exige ampliar a rotina ou sua frequência.
 
-O pipeline de CI valida o pacote; a publicação da demonstração continua explícita por `demo:deploy`. Não publica nem modifica o Worker do produto.
+## Publicação automática pelo GitHub Actions
+
+O [workflow CI](../../.github/workflows/ci.yml) publica a demonstração após as verificações passarem em um push na `main`. Uma execução manual pela aba Actions, selecionando a `main`, repete o mesmo fluxo. PRs e outras branches executam apenas as verificações, sem receber credenciais de publicação.
+
+O job **Publicar demonstração** instala as dependências do commit verificado, executa `demo:db:migrate`, executa `demo:deploy` e valida a resposta de `/health`. As migrações preservam os dados existentes; uma publicação não recria os exemplos de sessões ativas. Se uma etapa falhar, o job falha e as seguintes não são executadas. Uma falha de publicação após migrações não desfaz as migrações; mantenha-as compatíveis com a versão anterior do Worker.
+
+As publicações são serializadas. Um novo push na `main` não cancela uma publicação em andamento. Em PRs, verificações substituídas podem ser canceladas. O frontend e a API da demonstração são publicados juntos pelo Worker exclusivo, sem atualizar o Worker do produto ou o site Vercel.
+
+Configurar em **Settings → Secrets and variables → Actions → Repository secrets**:
+
+| Secret | Valor |
+| --- | --- |
+| `CLOUDFLARE_ACCOUNT_ID` | Identificador da conta que contém `zelumi-demo` e `zelumi-public-demo` |
+| `CLOUDFLARE_API_TOKEN` | API Token autorizado a publicar Workers e aplicar migrações D1 nessa conta |
+
+O login OAuth local do Wrangler não é usado pelo Actions. Crie um API Token na Cloudflare com o modelo **Edit Cloudflare Workers**, inclua **D1 → Edit** e limite os recursos à conta do projeto. Siga a [documentação oficial de autenticação no GitHub Actions](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/). Cadastre o token diretamente no GitHub, sem incluí-lo no código, em logs ou mensagens. Ao revogá-lo ou expirá-lo, substitua o secret antes da próxima publicação.
+
+O job verifica a presença dos dois secrets e falha com uma mensagem de configuração quando algum está ausente. Para confirmar a ativação, execute o workflow na `main`, confira o job **Publicar demonstração** e abra o endereço público. O comando local `demo:deploy` permanece disponível para manutenção.

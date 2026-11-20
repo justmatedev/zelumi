@@ -11,7 +11,7 @@ permissions:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   check:
@@ -40,3 +40,47 @@ jobs:
         run: npm run cf:check
       - name: Verificar demonstração sem publicar
         run: npm run demo:check
+
+  deploy-demo:
+    name: Publicar demonstração
+    needs: check
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: zelumi-public-demo-deploy
+      cancel-in-progress: false
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - name: Obter código verificado
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Configurar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Instalar dependências
+        run: npm ci
+      - name: Aplicar migrações e publicar demonstração
+        shell: bash
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ] || [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo '::error::Configure CLOUDFLARE_ACCOUNT_ID e CLOUDFLARE_API_TOKEN nos secrets do repositório.'
+            exit 1
+          fi
+          npm run demo:db:migrate
+          npm run demo:deploy
+      - name: Conferir demonstração publicada
+        shell: bash
+        run: |
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 --retry-all-errors --max-time 20 \
+            https://zelumi-demo.zelumi.workers.dev/health \
+            | node -e 'let body=""; process.stdin.on("data", chunk => body += chunk); process.stdin.on("end", () => { const data=JSON.parse(body); if(data.service!=="zelumi-demo" || data.status!=="configured") process.exit(1); console.log("Demonstração disponível."); });'
