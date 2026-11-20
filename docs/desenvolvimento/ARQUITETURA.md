@@ -39,12 +39,16 @@ O bot e o Worker usam `@zelumi/bot-core/engine` e `/telegram`. Não importar arq
 | `npm run web:check` | Build/export, tipos e testes da interface |
 | `npm run check` | Testes de backend e `web:check` |
 | `npm run cf:check` | Build do site e dry-run do Worker, sem publicar |
+| `npm run demo:dev` | Demonstração interativa isolada em `https://localhost:8789` |
+| `npm run demo:check` | Build da demonstração e dry-run do Worker exclusivo |
 
 Os demais comandos `cf:*` continuam disponíveis. Os testes específicos também podem ser executados por workspace, por exemplo `npm test --workspace @zelumi/finance`. A integração entre adaptadores permanece em `tests/` na raiz.
 
 ## Configuração e dados locais
 
 A configuração publicada é [apps/api/wrangler.jsonc](../../apps/api/wrangler.jsonc); as migrações ficam em [apps/api/migrations](../../apps/api/migrations). O ambiente fictício tem configuração e entrada próprias em `apps/api/dev/`; a entrada de produção não importa o login local.
+
+A demonstração pública possui outra entrada em `apps/api/demo/`, com Worker e D1 exclusivos. Reutiliza autenticação de sessão e API financeira de `apps/api/src/`, mas bloqueia login Telegram e webhook. O frontend usa uma exportação com `NEXT_PUBLIC_DEMO=1`, guardada em `build/demo-assets/`; a exportação normal permanece separada. O [guia da demonstração](../infraestrutura/DEMONSTRACAO.md) descreve isolamento, expiração, cron e publicação.
 
 `.env`, `.dev.vars`, `data/` e `.wrangler/` permanecem na raiz. `npm run dev` preserva o D1 em `.wrangler/local-dev/`, incluindo certificados. O fluxo alternativo `cf:dev` usa `.wrangler/state/`. O SQLite local padrão permanece `data/zelumi.sqlite`.
 

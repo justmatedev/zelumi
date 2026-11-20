@@ -160,6 +160,8 @@ Usar [EntryList](../apps/web/features/finance/components/entry-list.tsx) em Vis�
 
 ### Formulários, mensagens e diálogos
 
+A demonstração pública reutiliza o layout e os componentes do painel. A entrada oferece **Explorar demonstração**, informa que os dados são fictícios e que o acesso dura até 24 horas. No painel, o aviso `.demo-notice` aparece antes do conteúdo de todas as páginas, com `--demo-notice-padding` e `--demo-notice-text` em [tokens.css](../apps/web/app/tokens.css), cores do tema e texto com quebra natural. O Perfil identifica uma conta de demonstração, sem afirmar vínculo com o Telegram. Preservar o aviso no celular e o acesso ao Perfil para sair e recomeçar.
+
 Na entrada, o botão **Entrar com Telegram** usa o mesmo `Button` primário do Zelumi durante preparação, espera, confirmação e erro. A autorização usa o SDK atual do Telegram e abre na janela oficial para aprovação da conta; o botão azul do widget não é exibido dentro da página. Exibir texto de estado em português, impedir cliques duplicados e permitir repetir após cancelar ou liberar a janela bloqueada pelo navegador. A interface externa de autorização pertence ao Telegram.
 
 Os controles próprios ficam em [components/ui](../apps/web/components/ui) e os estilos em [controls.css](../apps/web/app/controls.css), aplicados depois das regras gerais. Reutilizar os componentes em todo o painel; evitar campos ou menus com uma aparência diferente em cada página.

@@ -1,5 +1,7 @@
 # Zelumi
 
+[![CI](https://github.com/justmatedev/zelumi/actions/workflows/ci.yml/badge.svg)](https://github.com/justmatedev/zelumi/actions/workflows/ci.yml)
+
 O padrão atual de marca e interface está no [Guia visual do Zelumi](docs/GUIA-VISUAL.md), com valores compartilhados em [tokens.css](apps/web/app/tokens.css). A [arquitetura](docs/desenvolvimento/ARQUITETURA.md) descreve as aplicações, os pacotes e seus limites.
 
 Gerenciamento financeiro com registros rápidos pelo Telegram. O bot funciona em Cloudflare Workers + D1; o site usa Next.js, TypeScript, Tailwind e componentes shadcn/ui personalizados. O interpretador do bot usa regras locais; a categorização no Worker combina memória pessoal e regras locais, recorrendo à Workers AI quando necessário e disponível.
@@ -7,6 +9,14 @@ Gerenciamento financeiro com registros rápidos pelo Telegram. O bot funciona em
 Os lançamentos usam [13 categorias prontas de despesas e Receitas](docs/produto/CATEGORIAS.md). O bot reconhece palavras completas e expressões específicas, reaproveita correções e termos confirmados por conta e pode consultar Workers AI para descrições sem correspondência. Conflitos continuam em Outros. O editor permite lembrar uma categoria; Perfil → Categorias aprendidas permite revisar ou esquecer associações. A IA é automática quando configurada e disponível, com fallback local ao atingir limites ou falhar.
 
 A configuração do endereço `usezelumi.vercel.app`, com site na Vercel e backend na Cloudflare, está em [docs/VERCEL.md](docs/infraestrutura/VERCEL.md).
+
+## Explorar com dados fictícios
+
+[Abrir demonstração online](https://zelumi-demo.zelumi.workers.dev) — clique em **Explorar demonstração**, sem precisar de conta Telegram.
+
+A demonstração interativa possui entrada sem Telegram, exemplos próprios por visitante e acesso de até 24 horas. Permite editar e excluir lançamentos usando o mesmo painel e API do produto, em Worker e banco separados. O [guia da demonstração](docs/infraestrutura/DEMONSTRACAO.md) descreve a configuração, publicação e manutenção.
+
+Para explorar localmente sem configurar contas externas, execute `npm ci` e `npm run demo:dev`, abra **https://localhost:8789** e clique em **Explorar demonstração**. O ambiente de desenvolvimento com recarga automática continua disponível por `npm run dev`.
 
 ## O Zelumi em uso
 
@@ -51,6 +61,12 @@ git diff --cached
 `git diff --cached` mostra somente o conteúdo preparado para o próximo commit. Exportações financeiras e backups ficam em `data/`, ignorada pelo Git; migrações em `apps/api/migrations/` são código versionado e não devem conter dados exportados. IDs e URLs no Wrangler são configuração; o acesso ao D1 remoto depende de autorização na conta Cloudflare. Antes de tornar o repositório público, revisar também o histórico.
 
 A integração Git da Vercel publica o frontend ao atualizar a branch conectada. O Worker exige publicação separada por `npm run cf:deploy`; push no GitHub não o atualiza. Conferir a [configuração da Vercel](docs/infraestrutura/VERCEL.md) antes de publicar e executar as [verificações locais](#verificações).
+
+O [workflow CI](.github/workflows/ci.yml) executa `npm ci`, `npm run check`, `npm run cf:check` e `npm run demo:check` em pull requests e pushes na `main`, além de permitir execução manual pela aba Actions. Usa Node.js 24 e não precisa de credenciais do Telegram ou da Cloudflare. Os dry-runs não publicam Workers nem alteram o D1 remoto. O repositório é privado, portanto o histórico das execuções e o badge dependem de acesso ao GitHub.
+
+Após as verificações passarem na `main`, o job **Publicar demonstração** aplica as migrações do D1 exclusivo, publica a demonstração com o código daquele commit e confere `/health`. Também pode ser executado manualmente selecionando a `main` na aba Actions. PRs e outras branches não publicam. O deploy precisa dos secrets `CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_API_TOKEN`; veja o [guia da demonstração](docs/infraestrutura/DEMONSTRACAO.md#publicação-automática-pelo-github-actions). O Worker do produto continua com publicação separada.
+
+Para exigir essas verificações antes de integrar alterações, configurar uma regra de proteção da `main` no GitHub com pull request obrigatório e o check **Testes e build** como obrigatório, após a primeira execução. O workflow sozinho não bloqueia merges nem a publicação direta pela integração da Vercel.
 
 ## Desenvolver o site localmente
 
